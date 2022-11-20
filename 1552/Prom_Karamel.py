@@ -5,7 +5,7 @@ import lxml
 import requests
 import csv
 from bs4 import BeautifulSoup
-
+#Проверка
 
 def get_date(url):
     headers = {
