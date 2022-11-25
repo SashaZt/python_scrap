@@ -63,12 +63,10 @@ def get_content(url):
         for i in range(5):
             drp_select_avto_year.select_by_index(i)
             time.sleep(5)
+            soup = BeautifulSoup(driver.page_source, 'lxml')
+            table = soup.find('div', attrs={'data-id': 'c7fb3b8'})
+            driver.implicitly_wait(5)
 
-
-            # soup = BeautifulSoup(driver.page_source, 'lxml')
-            # table = soup.find('div', attrs={'data-id': 'c7fb3b8'})
-            #
-            # driver.implicitly_wait(5)
 
 
 
