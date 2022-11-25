@@ -1,6 +1,7 @@
 import time
 import pickle
 import csv
+import re
 import time
 from random import randint
 import requests
@@ -49,11 +50,29 @@ def get_content(url):
     # Окно браузера на весь экран
     driver.maximize_window()
     driver.get(url=url)
-    time.sleep(10)
+    driver.implicitly_wait(5)
     avto = driver.find_elements(By.XPATH, '//select[@class="jet-select__control depth-0"]')
+    avto_year = driver.find_elements(By.XPATH, '//select[@class="jet-select__control depth-1"]')
     select_avto = avto[1]
+    select_avto_year = avto_year[1]
     drp_select_avto = Select(select_avto)
-    drp_select_avto.select_by_index(12)
+    drp_select_avto_year = Select(select_avto_year)
+    for item in range(1):
+        drp_select_avto.select_by_index(item)
+        driver.implicitly_wait(5)
+        for i in range(1):
+            drp_select_avto_year.select_by_index(i)
+            time.sleep(5)
+
+
+            # soup = BeautifulSoup(driver.page_source, 'lxml')
+            # table = soup.find('div', attrs={'data-id': 'c7fb3b8'})
+            #
+            # driver.implicitly_wait(5)
+
+
+
+
 
 
 
