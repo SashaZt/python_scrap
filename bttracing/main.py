@@ -57,10 +57,10 @@ def get_content(url):
     select_avto_year = avto_year[1]
     drp_select_avto = Select(select_avto)
     drp_select_avto_year = Select(select_avto_year)
-    for item in range(1):
+    for item in range(1, 2):
         drp_select_avto.select_by_index(item)
-        driver.implicitly_wait(5)
-        for i in range(1):
+        driver.implicitly_wait(2)
+        for i in range(5):
             drp_select_avto_year.select_by_index(i)
             time.sleep(5)
 
