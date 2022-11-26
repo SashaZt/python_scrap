@@ -1,3 +1,4 @@
+import select
 import time
 import pickle
 import csv
@@ -11,11 +12,6 @@ from selenium.webdriver.support.ui import Select
 # Нажатие клавиш
 # from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
-# Работа с БД sqlite
-import sqlite3
-from sqlite3 import Error
-# Работа с БД sqlite
-
 
 # Для работы с драйвером селениум по Хром необходимо эти две строчки
 from selenium.webdriver.chrome.service import Service
@@ -29,8 +25,6 @@ options.add_argument(
 options.add_argument("--disable-blink-features=AutomationControlled")
 
 
-
-
 def get_content(url):
     header = {
         "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
@@ -39,7 +33,6 @@ def get_content(url):
 
     # Перебираем все ссылки
     resp = requests.get(url, headers=header)
-
 
     # Настройка WEB драйвера
     driver_service = Service(executable_path="C:\\scrap_tutorial-master\\chromedriver.exe")
@@ -51,27 +44,33 @@ def get_content(url):
     driver.maximize_window()
     driver.get(url=url)
     driver.implicitly_wait(5)
+    # Находим выпадающий списко №1
     avto = driver.find_elements(By.XPATH, '//select[@class="jet-select__control depth-0"]')
+    # Находим выпадающий списко №1
     avto_year = driver.find_elements(By.XPATH, '//select[@class="jet-select__control depth-1"]')
+    # Если Xpath несколько выбираем необходимый
     select_avto = avto[1]
+    # Если Xpath несколько выбираем необходимый
     select_avto_year = avto_year[1]
+    # Делаем выбор через Select
     drp_select_avto = Select(select_avto)
+    # Делаем выбор через Select
     drp_select_avto_year = Select(select_avto_year)
     for item in range(1, 2):
+        # Черезе цикл выбираем поочереди каждый пункт выпадающего списка
         drp_select_avto.select_by_index(item)
-        driver.implicitly_wait(2)
-        for i in range(5):
+        # Получаем название каждого выпадающего из списка названия
+        name_avto = drp_select_avto.first_selected_option.text
+        # Ставим обезательно время что-бы прогрузилась страница
+        time.sleep(2)
+        for i in range(1, 2):
+            driver.implicitly_wait(5)
             drp_select_avto_year.select_by_index(i)
-            time.sleep(5)
+            driver.implicitly_wait(5)
+            name_year = drp_select_avto_year.first_selected_option.text
             soup = BeautifulSoup(driver.page_source, 'lxml')
             table = soup.find('div', attrs={'data-id': 'c7fb3b8'})
             driver.implicitly_wait(5)
-
-
-
-
-
-
 
 
 def parse_content():
