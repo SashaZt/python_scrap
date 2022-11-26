@@ -57,20 +57,30 @@ def get_content(url):
     # Делаем выбор через Select
     drp_select_avto_year = Select(select_avto_year)
     for item in range(1, 2):
+        time.sleep(5)
         # Черезе цикл выбираем поочереди каждый пункт выпадающего списка
         drp_select_avto.select_by_index(item)
         # Получаем название каждого выпадающего из списка названия
         name_avto = drp_select_avto.first_selected_option.text
         # Ставим обезательно время что-бы прогрузилась страница
-        time.sleep(2)
+
+        print(name_avto)
         for i in range(1, 2):
+            time.sleep(5)
             driver.implicitly_wait(5)
             drp_select_avto_year.select_by_index(i)
             driver.implicitly_wait(5)
             name_year = drp_select_avto_year.first_selected_option.text
+            print(name_year)
+            time.sleep(5)
             soup = BeautifulSoup(driver.page_source, 'lxml')
             table = soup.find('div', attrs={'data-id': 'c7fb3b8'})
-            driver.implicitly_wait(5)
+            tale_card = table.find_all('div', attrs={'class': re.compile('^jet-listing-grid__.*')})
+
+            for j in tale_card:
+                href = j.find_next('h3', attrs={'class': 'elementor-heading-title elementor-size-default'}).find('a').get("href")
+                print(href)
+
 
 
 def parse_content():
