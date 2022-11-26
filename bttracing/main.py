@@ -72,6 +72,8 @@ def get_content(url):
             driver.implicitly_wait(5)
             name_year = drp_select_avto_year.first_selected_option.text
             print(name_year)
+
+            #Даем время прогрузится странице
             time.sleep(5)
             soup = BeautifulSoup(driver.page_source, 'lxml')
             table = soup.find('div', attrs={'data-id': 'c7fb3b8'})
