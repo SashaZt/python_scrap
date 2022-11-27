@@ -101,7 +101,7 @@ def get_content(url):
 
 
 def parse_content():
-    url = "https://www.olx.ua/d/uk/dom-i-sad/instrumenty/q-%D0%B3%D0%B5%D0%BD%D0%B5%D1%80%D0%B0%D1%82%D0%BE%D1%80/?currency=UAH&courier=1&search%5Bphotos%5D=1&search%5Bfilter_float_price:from%5D=20000&search%5Bfilter_float_price:to%5D=30000"
+    url = "https://www.olx.ua/d/uk/dom-i-sad/instrumenty/q-%D0%B3%D0%B5%D0%BD%D0%B5%D1%80%D0%B0%D1%82%D0%BE%D1%80/?currency=UAH&search%5Bprivate_business%5D=business&search%5Bfilter_float_price:from%5D=20000&search%5Bfilter_float_price:to%5D=30000"
     get_content(url)
 
 if __name__ == '__main__':
