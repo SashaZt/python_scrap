@@ -77,11 +77,17 @@ def get_content(url):
             time.sleep(5)
             soup = BeautifulSoup(driver.page_source, 'lxml')
             table = soup.find('div', attrs={'data-id': 'c7fb3b8'})
-            tale_card = table.find_all('div', attrs={'class': re.compile('^jet-listing-grid__.*')})
 
+            tale_card = table.find_all('div', attrs={'class': re.compile('^jet-listing-grid__.*')}) # Поиск частичного елемента
+            card_urls = []
             for j in tale_card:
                 href = j.find_next('h3', attrs={'class': 'elementor-heading-title elementor-size-default'}).find('a').get("href")
-                print(href)
+                card_urls.append(href)
+            for k in card_urls:
+                driver.get(f"{href}")
+            card_name = driver.find_elements(By.XPATH, '//h1[@class="product_title entry-title elementor-heading-title elementor-size-default"]').text.strip()
+            print(card_name)
+
 
 
 
