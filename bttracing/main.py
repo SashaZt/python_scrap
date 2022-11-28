@@ -56,7 +56,7 @@ def get_content(url):
     drp_select_avto = Select(select_avto)
     # Делаем выбор через Select
     drp_select_avto_year = Select(select_avto_year)
-    for item in range(1, 2):
+    for item in range(10, 12):
         time.sleep(5)
         # Черезе цикл выбираем поочереди каждый пункт выпадающего списка
         drp_select_avto.select_by_index(item)
@@ -65,7 +65,7 @@ def get_content(url):
         # Ставим обезательно время что-бы прогрузилась страница
 
         print(name_avto)
-        for i in range(1, 2):
+        for i in range(2, 3):
             time.sleep(5)
             driver.implicitly_wait(5)
             drp_select_avto_year.select_by_index(i)
@@ -85,8 +85,15 @@ def get_content(url):
                 card_urls.append(href)
             for k in card_urls:
                 driver.get(f"{href}")
-            card_name = driver.find_elements(By.XPATH, '//h1[@class="product_title entry-title elementor-heading-title elementor-size-default"]').text.strip()
-            print(card_name)
+                if driver.find_elements(By.XPATH, '//div[@class="wp-die-message"]'):
+                    print('Sorry, your request cannot be accepted')
+                else:
+                    # card_name = soup.find('h1', attrs={'class': 'product_title entry-title elementor-heading-title elementor-size-default'})
+                    title = soup.find('h1', class_='product_title entry-title elementor-heading-title elementor-size-default')
+                    card_name = title.get_text()
+                    # card_name = soup.select('h1.product_title entry-title elementor-heading-title elementor-size-default')[0].text.strip()
+                print(card_name)
+
 
 
 
