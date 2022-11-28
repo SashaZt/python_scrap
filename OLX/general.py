@@ -19,6 +19,7 @@ from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 
 options = webdriver.ChromeOptions()
+# Отключение режима WebDriver
 options.add_experimental_option('useAutomationExtension', False)
 options.add_argument(
     "user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.90 Safari/537.36"
