@@ -17,6 +17,8 @@ import pickle
 # Для работы webdriver____________________________________________________
 # Для работы с драйвером селениум по Хром необходимо эти две строчки
 from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
 
 options = webdriver.ChromeOptions()
@@ -74,34 +76,45 @@ def get_content(url):
             isNextDisable = False
             while not isNextDisable:
                 try:
+                    soup = BeautifulSoup(driver.page_source, 'lxml')
+                    table_firma = soup.find('table', attrs={'class': 'enf-list-table'})
+                    # Получаем таблицу всех фирм на странице
+                    firma_url = table_firma.find('tbody').find_all('tr')
+                    # Получаем ссылку на каждую фирму
+                    for href in firma_url:
+                        url = href.find_next('td').find('a').get("href")
+                        # Добавляем ссылки на фирмы в список
+                        url_firma.append(url)
                     time.sleep(5)
-                    next_page = driver.find_element(By.XPATH, '//i[@class="fa fa-chevron-right"]')
-                    next_page.click()
+                    try:
+                        next_button = WebDriverWait(driver, 5).until(EC.element_to_be_clickable((By.XPATH, '//i[@class="fa fa-chevron-right"]')))
+                        # next_page = driver.find_element(By.XPATH, '//i[@class="fa fa-chevron-right"]').click()
+                        # next_page_class = next_page.get_attribute('protocol')
+                        if next_button:
+                            print('Есть')
+                            next_button.click()
+                        else:
+                            isNextDisable = True
+                        time.sleep(1)
+                    except Exception as ex:
+                        print(ex)
+
+
+
                 except:
                     isNextDisable = True
             # Листать по страницам ---------------------------------------------------------------------------
 
 
-        # for d in firma:
-        # driver.implicitly_wait(5)
-        # driver.get(f'{d}')
-        # firma_url = d.find_next('td').find('a').get("href")
-        # soup = BeautifulSoup(driver.page_source, 'lxml')
-        # pagan = soup.find('ul', attrs={'class': 'pagination enf-pagination'})
-        # print(d)
-        #     next_firma = driver.find_element(By.XPATH, '//i[@class="fa fa-chevron-right"]')
-        #     next_firma.click()
-        #     driver.implicitly_wait(5)
-        #     url_firma.append(firma_url)
-        # with open("all_link_site.json", 'w') as file:
-        #     json.dump(url_firma, file, indent=4, ensure_ascii=False)
 
-        # print(url_firma)
-        # for q in url_firma[1:2]:
-        #     driver.get(f"{q}")
-        #     time.sleep(5)
-        #     firma_name = driver.find_element(By.XPATH, '//h1[@class="blue-title"]').text
-        #     print(firma_name)
+
+
+
+
+
+
+
+
 
     except Exception as ex:
         print(ex)
