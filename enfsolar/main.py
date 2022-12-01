@@ -1,6 +1,4 @@
 import json
-import os
-from multiprocessing import Pool
 import csv
 import lxml
 import time
@@ -12,7 +10,8 @@ from bs4 import BeautifulSoup
 from selenium.webdriver.common.by import By
 import csv
 from selenium import webdriver
-import pickle
+import random
+from fake_useragent import UserAgent
 
 # Для работы webdriver____________________________________________________
 # Для работы с драйвером селениум по Хром необходимо эти две строчки
@@ -21,11 +20,15 @@ from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
 
+useragent = UserAgent()
 options = webdriver.ChromeOptions()
 # Отключение режима WebDriver
 options.add_experimental_option('useAutomationExtension', False)
+# # Работа в фоновом режиме
+# options.headless = True
 options.add_argument(
-    "user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.90 Safari/537.36"
+    # "user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.90 Safari/537.36"
+    f"user-agent={useragent.random}"
 )
 driver_service = Service(executable_path="C:\\scrap_tutorial-master\\chromedriver.exe")
 driver = webdriver.Chrome(
@@ -40,10 +43,23 @@ driver = webdriver.Chrome(
 
 # Для работы webdriver____________________________________________________
 
+
+# Для работы undetected_chromedriver ---------------------------------------
+
+# import undetected_chromedriver as uc
+# driver = uc.Chrome()
+
+
+# Для работы undetected_chromedriver ---------------------------------------
+
+
+# "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:107.0) Gecko/20100101 Firefox/107.0"
+
 def get_content(url):
     header = {
         "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
-        "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:107.0) Gecko/20100101 Firefox/107.0"
+        "user-agent": f"{useragent.random}"
+
     }
 
     try:
@@ -59,7 +75,7 @@ def get_content(url):
             for j in country_list:
                 href = 'https://www.enfsolar.com' + j.find_next('a').get("href")
                 url_country.append(href)
-        print(url_country)
+
         for item in url_country[0:1]:
             driver.implicitly_wait(5)
             driver.get(f'{item}')
