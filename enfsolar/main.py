@@ -72,7 +72,7 @@ def get_content(url):
         for item in url_country[0:1]:
             driver.implicitly_wait(5)
             driver.get(f'{item}')
-            #Листать по страницам ---------------------------------------------------------------------------
+            # Листать по страницам ---------------------------------------------------------------------------
             isNextDisable = False
             while not isNextDisable:
                 try:
@@ -86,34 +86,17 @@ def get_content(url):
                         # Добавляем ссылки на фирмы в список
                         url_firma.append(url)
                     time.sleep(5)
-                    try:
-                        next_button = WebDriverWait(driver, 5).until(EC.element_to_be_clickable((By.XPATH, '//i[@class="fa fa-chevron-right"]')))
-                        # next_page = driver.find_element(By.XPATH, '//i[@class="fa fa-chevron-right"]').click()
-                        # next_page_class = next_page.get_attribute('protocol')
-                        if next_button:
-                            print('Есть')
-                            next_button.click()
-                        else:
-                            isNextDisable = True
-                        time.sleep(1)
-                    except Exception as ex:
-                        print(ex)
-
-
-
+                    # Если необходимо подождать елемент тогда WebDriverWait
+                    # next_button = WebDriverWait(driver, 5).until(EC.element_to_be_clickable((By.XPATH, '//i[@class="fa fa-chevron-right"]')))
+                    next_button = driver.find_element(By.XPATH, '//i[@class="fa fa-chevron-right"]')
+                    # Проверка на наличие кнопки следующая страница, если есть, тогда листаем!
+                    if next_button:
+                        next_button.click()
+                    else:
+                        isNextDisable = True
                 except:
                     isNextDisable = True
             # Листать по страницам ---------------------------------------------------------------------------
-
-
-
-
-
-
-
-
-
-
 
 
     except Exception as ex:
