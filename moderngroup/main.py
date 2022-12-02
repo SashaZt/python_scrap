@@ -88,6 +88,44 @@ def get_content(url):
         card_product_url = driver.find_elements(By.XPATH, '//h4[@class="card-title"]/a')
         for item in card_product_url[0:21]:
             product_url.append(item.get_attribute("href"))
+        # Листать по страницам ---------------------------------------------------------------------------
+        isNextDisable = False
+        while not isNextDisable:
+            try:
+                soup = BeautifulSoup(driver.page_source, 'lxml')
+                table_firma = soup.find('table', attrs={'class': 'enf-list-table'})
+                # Получаем таблицу всех фирм на странице
+                firma_url = table_firma.find('tbody').find_all('tr')
+                # Получаем ссылку на каждую фирму
+                for href in firma_url:
+                    url = href.find_next('td').find('a').get("href")
+                    # Добавляем ссылки на фирмы в список
+                    url_firma.append(url)
+                time.sleep(5)
+                # Если необходимо подождать елемент тогда WebDriverWait
+                # next_button = WebDriverWait(driver, 5).until(EC.element_to_be_clickable((By.XPATH, '//i[@class="fa fa-chevron-right"]')))
+                next_button = driver.find_element(By.XPATH, '//i[@class="fa fa-chevron-right"]')
+                # Проверка на наличие кнопки следующая страница, если есть, тогда листаем!
+                if next_button[0:1]:
+                    next_button.click()
+                else:
+                    isNextDisable = True
+            except:
+                isNextDisable = True
+        # Листать по страницам ---------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         for url in product_url:
             driver.get(f'{url}')
