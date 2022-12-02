@@ -27,7 +27,7 @@ options = webdriver.ChromeOptions()
 # Отключение режима WebDriver
 options.add_experimental_option('useAutomationExtension', False)
 # # Работа в фоновом режиме
-options.headless = True
+# options.headless = True
 options.add_argument(
     # "user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.90 Safari/537.36"
     f"user-agent={useragent.random}"
@@ -38,9 +38,8 @@ driver = webdriver.Chrome(
     options=options
 )
 
-
 # # Окно браузера на весь экран
-# driver.maximize_window()
+driver.maximize_window()
 
 
 # Для работы webdriver____________________________________________________
@@ -85,47 +84,28 @@ def get_content(url):
         # for cookie in pickle.load(open("cookies", "rb")):
         #     driver.add_cookie(cookie)
         # Блок работы с куками-----------------------------------------
-        card_product_url = driver.find_elements(By.XPATH, '//h4[@class="card-title"]/a')
-        for item in card_product_url[0:21]:
-            product_url.append(item.get_attribute("href"))
+
         # Листать по страницам ---------------------------------------------------------------------------
         isNextDisable = False
         while not isNextDisable:
             try:
-                soup = BeautifulSoup(driver.page_source, 'lxml')
-                table_firma = soup.find('table', attrs={'class': 'enf-list-table'})
-                # Получаем таблицу всех фирм на странице
-                firma_url = table_firma.find('tbody').find_all('tr')
-                # Получаем ссылку на каждую фирму
-                for href in firma_url:
-                    url = href.find_next('td').find('a').get("href")
-                    # Добавляем ссылки на фирмы в список
-                    url_firma.append(url)
-                time.sleep(5)
+                # Сначала что то ищем на первой странице, а только потом ищем на остальных
+                card_product_url = driver.find_elements(By.XPATH, '//h4[@class="card-title"]/a')
+                for item in card_product_url[0:21]:
+                    product_url.append(item.get_attribute("href"))
                 # Если необходимо подождать елемент тогда WebDriverWait
                 # next_button = WebDriverWait(driver, 5).until(EC.element_to_be_clickable((By.XPATH, '//i[@class="fa fa-chevron-right"]')))
-                next_button = driver.find_element(By.XPATH, '//i[@class="fa fa-chevron-right"]')
+                time.sleep(2)
+                next_button = driver.find_elements(By.XPATH, '//li[@class="pagination-item pagination-item--next"]')[1]
                 # Проверка на наличие кнопки следующая страница, если есть, тогда листаем!
-                if next_button[0:1]:
+                if next_button:
                     next_button.click()
+                    time.sleep(2)
                 else:
                     isNextDisable = True
             except:
                 isNextDisable = True
         # Листать по страницам ---------------------------------------------------------------------------
-
-
-
-
-
-
-
-
-
-
-
-
-
 
         for url in product_url:
             driver.get(f'{url}')
