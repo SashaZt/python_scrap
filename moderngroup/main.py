@@ -27,7 +27,7 @@ options = webdriver.ChromeOptions()
 # Отключение режима WebDriver
 options.add_experimental_option('useAutomationExtension', False)
 # # Работа в фоновом режиме
-# options.headless = True
+options.headless = True
 options.add_argument(
     # "user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.90 Safari/537.36"
     f"user-agent={useragent.random}"
@@ -38,8 +38,9 @@ driver = webdriver.Chrome(
     options=options
 )
 
+
 # # Окно браузера на весь экран
-driver.maximize_window()
+# driver.maximize_window()
 
 
 # Для работы webdriver____________________________________________________
@@ -100,7 +101,6 @@ def get_content(url):
                 # Проверка на наличие кнопки следующая страница, если есть, тогда листаем!
                 if next_button:
                     next_button.click()
-                    time.sleep(2)
                 else:
                     isNextDisable = True
             except:
@@ -127,12 +127,6 @@ def get_content(url):
                         img_product
                     )
                 )
-
-
-
-
-
-
     except Exception as ex:
         print(ex)
 
