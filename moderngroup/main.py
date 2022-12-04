@@ -65,17 +65,17 @@ def get_content(url):
     }
 
     try:
-        with open("product.csv", "w", errors='ignore') as file:
-            writer = csv.writer(file, delimiter=";", lineterminator="\r")
-            writer.writerow(
-                (
-                    'Название',
-                    'Каталожный номер',
-                    'Название группы',
-                    'Цена',
-                    'Ссылка на изображение'
-                )
-            )
+        # with open("product.csv", "w", errors='ignore') as file:
+        #     writer = csv.writer(file, delimiter=";", lineterminator="\r")
+        #     writer.writerow(
+        #         (
+        #             'Название',
+        #             'Каталожный номер',
+        #             'Название группы',
+        #             'Цена',
+        #             'Ссылка на изображение'
+        #         )
+        #     )
         driver.get(url=url)
         product_url = []
         # Блок работы с куками-----------------------------------------
@@ -87,6 +87,7 @@ def get_content(url):
         # Блок работы с куками-----------------------------------------
 
         # Листать по страницам ---------------------------------------------------------------------------
+        page_product = 0
         isNextDisable = False
         while not isNextDisable:
             try:
@@ -101,21 +102,37 @@ def get_content(url):
                 # Проверка на наличие кнопки следующая страница, если есть, тогда листаем!
                 if next_button:
                     next_button.click()
+                    page_product += 1
+                    print(page_product)
                 else:
                     isNextDisable = True
             except:
                 isNextDisable = True
         # Листать по страницам ---------------------------------------------------------------------------
 
-        for url in product_url:
+        for url in product_url[18741:]:
             driver.get(f'{url}')
-            name_product = driver.find_element(By.XPATH, '//h1[@class="productView-title"]').text
+            try:
+                name_product = driver.find_element(By.XPATH, '//h1[@class="productView-title"]').text
+            except:
+                name_product = 'Нет названия'
             sku_product = driver.find_element(By.XPATH, '//dd[@data-product-sku=""]').text
-            group_products = driver.find_elements(By.XPATH, '//a[@class="breadcrumb-label"]')[2]
-            group_product = group_products.text
-            price_products = driver.find_elements(By.XPATH, '//span[@class="price price--withoutTax"]')[0]
-            price_product = price_products.text
-            img_product = driver.find_element(By.XPATH, '//figure[@data-fancybox="gallery"]').get_attribute("href")
+            try:
+                group_products = driver.find_elements(By.XPATH, '//a[@class="breadcrumb-label"]')[2]
+                group_product = group_products.text
+            except:
+                group_products = "Нет группы"
+                group_product = group_products
+            try:
+                price_products = driver.find_elements(By.XPATH, '//span[@class="price price--withoutTax"]')[0]
+                price_product = price_products.text
+            except:
+                price_products = 'Нет цены'
+                price_product = price_products
+            try:
+                img_product = driver.find_element(By.XPATH, '//figure[@data-fancybox="gallery"]').get_attribute("href")
+            except:
+                img_product = 'Нет фото'
             with open("product.csv", "a", errors='ignore') as file:
                 writer = csv.writer(file, delimiter=";", lineterminator="\r")
                 writer.writerow(
@@ -127,6 +144,7 @@ def get_content(url):
                         img_product
                     )
                 )
+
     except Exception as ex:
         print(ex)
 
