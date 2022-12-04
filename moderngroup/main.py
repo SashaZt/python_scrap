@@ -65,19 +65,22 @@ def get_content(url):
     }
 
     try:
-        # with open("product.csv", "w", errors='ignore') as file:
-        #     writer = csv.writer(file, delimiter=";", lineterminator="\r")
-        #     writer.writerow(
-        #         (
-        #             'Название',
-        #             'Каталожный номер',
-        #             'Название группы',
-        #             'Цена',
-        #             'Ссылка на изображение'
-        #         )
-        #     )
+        #Название группы берем из ссылки, сделаем срез
+        group = url.split("/")[-2]
+        with open(f"{group}.csv", "w", errors='ignore') as file:
+            writer = csv.writer(file, delimiter=";", lineterminator="\r")
+            writer.writerow(
+                (
+                    'Название',
+                    'Каталожный номер',
+                    'Название группы',
+                    'Цена',
+                    'Ссылка на изображение'
+                )
+            )
         driver.get(url=url)
         product_url = []
+
         # Блок работы с куками-----------------------------------------
         # Создание куки
         # pickle.dump(driver.get_cookies(), open("cookies", "wb"))
@@ -94,7 +97,9 @@ def get_content(url):
                 # Сначала что то ищем на первой странице, а только потом ищем на остальных
                 card_product_url = driver.find_elements(By.XPATH, '//h4[@class="card-title"]/a')
                 for item in card_product_url[0:21]:
-                    product_url.append(item.get_attribute("href"))
+                    product_url.append(
+                        {'url_name': item.get_attribute("href")} # Добавляем в словарь два параметра для дальнейшего записи в json
+                    )
                 # Если необходимо подождать елемент тогда WebDriverWait
                 # next_button = WebDriverWait(driver, 5).until(EC.element_to_be_clickable((By.XPATH, '//i[@class="fa fa-chevron-right"]')))
                 time.sleep(2)
@@ -110,8 +115,15 @@ def get_content(url):
                 isNextDisable = True
         # Листать по страницам ---------------------------------------------------------------------------
 
-        for url in product_url[18741:]:
-            driver.get(f'{url}')
+        # Записываем в json
+        with open(f"{group}.json", 'w') as file:
+            json.dump(product_url, file, indent=4, ensure_ascii=False)
+        # Читание json
+        with open(f"{group}.json") as file:
+            all_site = json.load(file)
+        # С json вытягиваем только 'url_name' - это и есть ссылка
+        for item in all_site:
+            driver.get(item['url_name'])  # 'url_name' - это и есть ссылка
             try:
                 name_product = driver.find_element(By.XPATH, '//h1[@class="productView-title"]').text
             except:
@@ -157,7 +169,7 @@ def get_content(url):
 
 
 def parse_content():
-    url = "https://shop.moderngroup.com/hyster-forklift/"
+    url = "https://shop.moderngroup.com/yale-forklift/"
     get_content(url)
 
 
