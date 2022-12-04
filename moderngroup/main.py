@@ -116,7 +116,10 @@ def get_content(url):
                 name_product = driver.find_element(By.XPATH, '//h1[@class="productView-title"]').text
             except:
                 name_product = 'Нет названия'
-            sku_product = driver.find_element(By.XPATH, '//dd[@data-product-sku=""]').text
+            try:
+                sku_product = driver.find_element(By.XPATH, '//dd[@data-product-sku=""]').text
+            except:
+                sku_product = "Нет SKU"
             try:
                 group_products = driver.find_elements(By.XPATH, '//a[@class="breadcrumb-label"]')[2]
                 group_product = group_products.text
