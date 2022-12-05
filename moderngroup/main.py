@@ -1,5 +1,7 @@
+import datetime
 import json
 import csv
+import os
 import pickle
 import lxml
 import time
@@ -63,11 +65,11 @@ def get_content(url):
         "user-agent": f"{useragent.random}"
 
     }
-
+    start_time = datetime.datetime.now()
     try:
         #Название группы берем из ссылки, сделаем срез
         group = url.split("/")[-2]
-        with open(f"{group}.csv", "w", errors='ignore') as file:
+        with open(f"C:\\scrap_tutorial-master\\moderngroup\\{group}.csv", "w", errors='ignore') as file:
             writer = csv.writer(file, delimiter=";", lineterminator="\r")
             writer.writerow(
                 (
@@ -100,28 +102,34 @@ def get_content(url):
                     product_url.append(
                         {'url_name': item.get_attribute("href")} # Добавляем в словарь два параметра для дальнейшего записи в json
                     )
+
                 # Если необходимо подождать елемент тогда WebDriverWait
                 # next_button = WebDriverWait(driver, 5).until(EC.element_to_be_clickable((By.XPATH, '//i[@class="fa fa-chevron-right"]')))
-                time.sleep(2)
+                driver.implicitly_wait(5)
                 next_button = driver.find_elements(By.XPATH, '//li[@class="pagination-item pagination-item--next"]')[1]
                 # Проверка на наличие кнопки следующая страница, если есть, тогда листаем!
                 if next_button:
                     next_button.click()
                     page_product += 1
-                    print(page_product)
+                    print(f"Обработано {page_product} страниц")
                 else:
                     isNextDisable = True
             except:
                 isNextDisable = True
         # Листать по страницам ---------------------------------------------------------------------------
 
-        # Записываем в json
-        with open(f"{group}.json", 'w') as file:
-            json.dump(product_url, file, indent=4, ensure_ascii=False)
+        # Проверяем на существование файла, если нету тогда записываем в json
+        if os.path.exists(f"{group}.json"):
+            print(f"C:\\scrap_tutorial-master\\moderngroup\\{group}.json" + " уже существует")
+        else:
+            with open(f"C:\\scrap_tutorial-master\\moderngroup\\{group}.json", 'w') as file:
+                json.dump(product_url, file, indent=4, ensure_ascii=False)
+
         # Читание json
-        with open(f"{group}.json") as file:
+        with open(f"C:\\scrap_tutorial-master\\moderngroup\\{group}.json") as file:
             all_site = json.load(file)
         # С json вытягиваем только 'url_name' - это и есть ссылка
+        product_sum = 0
         for item in all_site:
             driver.get(item['url_name'])  # 'url_name' - это и есть ссылка
             try:
@@ -148,7 +156,7 @@ def get_content(url):
                 img_product = driver.find_element(By.XPATH, '//figure[@data-fancybox="gallery"]').get_attribute("href")
             except:
                 img_product = 'Нет фото'
-            with open("product.csv", "a", errors='ignore') as file:
+            with open(f"C:\\scrap_tutorial-master\\moderngroup\\{group}.csv", "a", errors='ignore') as file:
                 writer = csv.writer(file, delimiter=";", lineterminator="\r")
                 writer.writerow(
                     (
@@ -159,17 +167,22 @@ def get_content(url):
                         img_product
                     )
                 )
+            product_sum += 1
+            print(f"Обработано {product_sum} найменования")
+        diff_time = datetime.datetime.now() - start_time
 
     except Exception as ex:
         print(ex)
 
     finally:
+        print("Обработка завершена, закрываем Браузер")
+        print(diff_time)
         driver.close()
         driver.quit()
 
 
 def parse_content():
-    url = "https://shop.moderngroup.com/yale-forklift/"
+    url = "https://shop.moderngroup.com/fleetguard/"
     get_content(url)
 
 
