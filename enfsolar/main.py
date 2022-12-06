@@ -1,31 +1,22 @@
-import json
 import csv
-import lxml
 import time
+
 # Нажатие клавиш
-from selenium.webdriver.common.keys import Keys
-from random import randint
 import requests
 from bs4 import BeautifulSoup
-from selenium.webdriver.common.by import By
-import csv
-from selenium import webdriver
-import random
 from fake_useragent import UserAgent
-
+from selenium import webdriver
 # Для работы webdriver____________________________________________________
 # Для работы с драйвером селениум по Хром необходимо эти две строчки
 from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.support.wait import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.common.by import By
 
 useragent = UserAgent()
 options = webdriver.ChromeOptions()
 # Отключение режима WebDriver
 options.add_experimental_option('useAutomationExtension', False)
 # # Работа в фоновом режиме
-# options.headless = True
+options.headless = True
 options.add_argument(
     # "user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.90 Safari/537.36"
     f"user-agent={useragent.random}"
