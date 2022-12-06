@@ -156,6 +156,12 @@ def get_content(url):
                 img_product = driver.find_element(By.XPATH, '//figure[@data-fancybox="gallery"]').get_attribute("href")
             except:
                 img_product = 'Нет фото'
+            try:
+                desc_01 = driver.find_element(By.XPATH, '//div[@id="tab-description"]//p[3]').text
+                desc_02 = driver.find_element(By.XPATH, '//div[@id="tab-description"]//p[4]').text
+            except:
+                desc_01 = 'Нету описания'
+                desc_02 = 'Нету описания'
             with open(f"C:\\scrap_tutorial-master\\moderngroup\\{group}.csv", "a", errors='ignore') as file:
                 writer = csv.writer(file, delimiter=";", lineterminator="\r")
                 writer.writerow(
@@ -164,7 +170,9 @@ def get_content(url):
                         sku_product,
                         group_product,
                         price_product,
-                        img_product
+                        img_product,
+                        desc_01,
+                        desc_02
                     )
                 )
             product_sum += 1
@@ -182,7 +190,7 @@ def get_content(url):
 
 
 def parse_content():
-    url = "https://shop.moderngroup.com/fleetguard/"
+    url = "https://shop.moderngroup.com/cummins/"
     get_content(url)
 
 
