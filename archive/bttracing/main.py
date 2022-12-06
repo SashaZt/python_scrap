@@ -1,21 +1,15 @@
-import select
-import time
-import pickle
-import csv
 import re
 import time
-from random import randint
+
 import requests
 from bs4 import BeautifulSoup
 from selenium import webdriver
-from selenium.webdriver.support.ui import Select
+# Для работы с драйвером селениум по Хром необходимо эти две строчки
+from selenium.webdriver.chrome.service import Service
 # Нажатие клавиш
 # from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
-
-# Для работы с драйвером селениум по Хром необходимо эти две строчки
-from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.support.ui import Select
 
 options = webdriver.ChromeOptions()
 options.add_argument(
@@ -35,7 +29,7 @@ def get_content(url):
     resp = requests.get(url, headers=header)
 
     # Настройка WEB драйвера
-    driver_service = Service(executable_path="C:\\scrap_tutorial-master\\chromedriver.exe")
+    driver_service = Service(executable_path="/chromedriver.exe")
     driver = webdriver.Chrome(
         service=driver_service,
         options=options

@@ -60,7 +60,7 @@ def get_content(url):
         time.sleep(randint(1, 5))
         try:
             # Настройка WEB драйвера
-            driver_service = Service(executable_path="C:\\scrap_tutorial-master\\chromedriver.exe")
+            driver_service = Service(executable_path="/chromedriver.exe")
             driver = webdriver.Chrome(
                 service=driver_service,
                 options=options
