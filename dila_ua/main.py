@@ -1,3 +1,4 @@
+import datetime
 import json
 import csv
 import pickle
@@ -26,8 +27,10 @@ useragent = UserAgent()
 options = webdriver.ChromeOptions()
 # Отключение режима WebDriver
 options.add_experimental_option('useAutomationExtension', False)
+
 # # Работа в фоновом режиме
 # options.headless = True
+
 options.add_argument(
     # "user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.90 Safari/537.36"
     f"user-agent={useragent.random}"
@@ -65,6 +68,7 @@ def get_content(url):
     }
 
     try:
+        start_time = datetime.datetime.now()
         driver.get(url=url)
         # Блок работы с куками-----------------------------------------
         # Создание куки
@@ -74,19 +78,39 @@ def get_content(url):
         #     driver.add_cookie(cookie)
         # Блок работы с куками-----------------------------------------
 
-        time.sleep(10)
+        driver.implicitly_wait(10)
         drop_list_city = driver.find_element(By.XPATH, '//div[@id="js_sel_geo_region_in_popup_chosen"]').click()
-        time.sleep(5)
+        driver.implicitly_wait(10)
         drp_select_city = driver.find_element(By.XPATH, '//li[@data-option-array-index="1"]').click()
-        time.sleep(10)
+        driver.implicitly_wait(10)
         tab_research = driver.find_element(By.XPATH, '//a[@data-tab="research"]').click()
-        time.sleep(5)
+        driver.implicitly_wait(10)
+        name_header = driver.find_element(By.XPATH, '//div[@class="tabs-pane active"]//div[@class="analizes-list-table-header"]//div[@class="analizes-list-table-cell altc-name"]').text
+        price_header = driver.find_element(By.XPATH, '//div[@class="tabs-pane active"]//div[@class="analizes-list-table-header"]//div[@class="analizes-list-table-cell altc-price"]').text
+        time_header = driver.find_element(By.XPATH, '//div[@class="tabs-pane active"]//div[@class="analizes-list-table-header"]//div[@class="analizes-list-table-cell altc-time"]').text
+        name_product = driver.find_elements(By.XPATH, '//div[contains(@class,"analizes-list-table-line tab-line")]')
+        for i in name_product[0:1]:
+            print(i.text)
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+        diff_time = datetime.datetime.now() - start_time
     except Exception as ex:
         print(ex)
 
     finally:
+        print(diff_time)
         driver.close()
         driver.quit()
 
