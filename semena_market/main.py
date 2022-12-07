@@ -71,7 +71,7 @@ def get_content(url):
     try:
         start_time = datetime.datetime.now()
         driver.get(url=url)
-        groups_url = []
+
         with open(f"C:\\scrap_tutorial-master\\semena_market\\group.csv", "w", errors='ignore') as file:
             writer = csv.writer(file, delimiter=";", lineterminator="\r")
             writer.writerow(
@@ -97,106 +97,125 @@ def get_content(url):
 
         group_link = 0
         try:
-            # Сначала что то ищем на первой странице, а только потом ищем на остальных
-            card_products = driver.find_element(By.XPATH, '//ul[@class="catalog-tree"]')
-            card_product = card_products.find_elements(By.XPATH, '//li[@role="treeitem"]/a')
-            list_product = 0
-            for item in card_product[8:56]:
-                groups_url.append(
-                    {'url_name': item.get_attribute("href")} # Добавляем в словарь два параметра для дальнейшего записи в json
-                )
-                list_product += 1
-                print('-' * 50)
-                print(f"Обработано {list_product} страниц")
-                print('-' * 50)
-            # Проверяем на существование файла, если нету тогда записываем в json
+            groups_url = []
+            # Проверяем на существование файла с группами товаров
             if os.path.exists("group.json"):
                 print(f"C:\\scrap_tutorial-master\\semena_market\\group.json" + " уже существует")
+                # Читание json
+                with open(f"C:\\scrap_tutorial-master\\semena_market\\group.json") as file:
+                    all_site = json.load(file)
+                # С json вытягиваем только 'url_name' - это и есть ссылка
+                product_sum = 0
+                url_products = []
+                product_url = 0
+                for href in all_site:
+                    driver.get(href['url_name'])
+                    try:
+                        name_product = driver.find_element(By.XPATH, '//h1[@itemprop="name"]').text
+                    except:
+                        name_product = "Нет названия"
+                    try:
+                        discrip_product = driver.find_element(By.XPATH,
+                                                              '//p[@style="text-align: justify;"]//span[@style="font-size: 14px;"]').text
+                    except:
+                        discrip_product = "Нет описания"
+                    try:
+                        art_product = driver.find_element(By.XPATH, '//div[@class="artno-wrap"]//div[2]').text
+                    except:
+                        art_product = "Нет артикула"
+                    try:
+                        brand_product = driver.find_element(By.XPATH,
+                                                            '//div[@class="main-col"]//span[@class="brand"]').text
+                    except:
+                        brand_product = "Нет бренда"
+                    try:
+                        character_product = driver.find_elements(By.XPATH,
+                                                                 '//table[@class="table table-characteristic"]//tbody')
+                        for i in character_product:
+                            charac_product = i.text.replace('\n', ';')
+                    except:
+                        charac_product = 'Нет характеристик'
+                    try:
+                        avaib_product = driver.find_element(By.XPATH,
+                                                            '//div[@class="main-col"]//div[@class="balance"]').text
+                    except:
+                        avaib_product = "Нет информации"
+                    try:
+                        img_product = driver.find_element(By.XPATH, '//div[@id="bigimg"]//img').get_attribute("src")
+                    except:
+                        img_product = "Нет фото товара"
+                    try:
+                        price_product = driver.find_element(By.XPATH,
+                                                            '//div[@class="price-current"]//span[@id="calc-good-total"]').text.replace(
+                            '.', ',')
+                    except:
+                        price_product = "Нет цены"
+                    try:
+                        catalog_product = driver.find_element(By.XPATH,
+                                                              '//div[@class="producer active"]//div//a').text
+                    except:
+                        catalog_product = "Нет каталога"
+                    with open(f"C:\\scrap_tutorial-master\\semena_market\\group.csv", "a", errors='ignore') as file:
+                        writer = csv.writer(file, delimiter=";", lineterminator="\r")
+                        writer.writerow(
+                            (
+                                name_product,
+                                discrip_product,
+                                art_product,
+                                brand_product,
+                                charac_product,
+                                img_product,
+                                avaib_product,
+                                price_product,
+                                catalog_product
+                            )
+                        )
+                    product_url += 1
+                    print('-' * 50)
+                    print(f"Обработано {product_url} найменования")
+                    print('-' * 50)
+                else:
+                    for item in all_site:
+                        driver.get(item['url_name'])  # 'url_name' - это и есть ссылка
+                        next_button = driver.find_element(By.XPATH, '//div[@id="filter-limit"]').click()
+                        driver.implicitly_wait(5)
+                        # Нажимаем кнопку все позиции на странице
+                        all_product_list = driver.find_element(By.XPATH, '//a[@data-value="all"]').click()
+                        driver.implicitly_wait(5)
+                        table_product_in_list = driver.find_elements(By.XPATH,
+                                                                     '//div[@class="goods goods-items s2 view-tiles clearfix"]//article//div[@class="name-wrap"]/a')
+                        for product in table_product_in_list:
+                            url_products.append(
+                                {
+                                    'url_product': product.get_attribute("href")
+                                }
+                            )
+
+                            product_sum += 1
+                            print('-' * 50)
+                            print(f"Обработано {product_sum} продуктов")
+                            print('-' * 50)
+                with open(f"C:\\scrap_tutorial-master\\semena_market\\product.json", 'w') as file:
+                    json.dump(url_products, file, indent=4, ensure_ascii=False)
+            # Если нету файла, тогда вытаскиваем информацию и сохраняем в вайд
             else:
-                with open(f"C:\\scrap_tutorial-master\\semena_market\\group.json", 'w') as file:
+                # Сначала что то ищем на первой странице, а только потом ищем на остальных
+                card_products = driver.find_element(By.XPATH, '//ul[@class="catalog-tree"]')
+                card_product = card_products.find_elements(By.XPATH, '//li[@role="treeitem"]/a')
+                list_product = 0
+                for item in card_product[8:56]:
+                    groups_url.append(
+                        {'url_name': item.get_attribute("href")}
+                        # Добавляем в словарь два параметра для дальнейшего записи в json
+                    )
+                    list_product += 1
+                    print('-' * 50)
+                    print(f"Обработано {list_product} страниц")
+                    print('-' * 50)
+            with open(f"C:\\scrap_tutorial-master\\semena_market\\group.json", 'w') as file:
                     json.dump(groups_url, file, indent=4, ensure_ascii=False)
 
-            # Читание json
-            with open(f"C:\\scrap_tutorial-master\\semena_market\\group.json") as file:
-                all_site = json.load(file)
-            # С json вытягиваем только 'url_name' - это и есть ссылка
-            product_sum = 0
-            url_products = []
-            for item in all_site:
-                driver.get(item['url_name'])  # 'url_name' - это и есть ссылка
-                next_button = driver.find_element(By.XPATH, '//div[@id="filter-limit"]').click()
-                driver.implicitly_wait(5)
-                # Нажимаем кнопку все позиции на странице
-                all_product_list = driver.find_element(By.XPATH, '//a[@data-value="all"]').click()
-                driver.implicitly_wait(5)
-                table_product_in_list = driver.find_elements(By.XPATH, '//div[@class="goods goods-items s2 view-tiles clearfix"]//article//div[@class="name-wrap"]/a')
-                for product in table_product_in_list:
-                    url_products.append(product.get_attribute("href"))
-                    product_sum += 1
-                    print('-' * 50)
-                    print(f"Обработано {product_sum} продуктов")
-                    print('-' * 50)
-            product_url = 0
-            for href in url_products:
-                driver.get(href)
-                try:
-                    name_product = driver.find_element(By.XPATH, '//h1[@itemprop="name"]').text
-                except:
-                    name_product = "Нет названия"
-                try:
-                    discrip_product = driver.find_element(By.XPATH, '//p[@style="text-align: justify;"]//span[@style="font-size: 14px;"]').text
-                except:
-                    discrip_product = "Нет описания"
-                try:
-                    art_product = driver.find_element(By.XPATH, '//div[@class="artno-wrap"]//div[2]').text
-                except:
-                    art_product = "Нет артикула"
-                try:
-                    brand_product = driver.find_element(By.XPATH, '//div[@class="main-col"]//span[@class="brand"]').text
-                except:
-                    brand_product = "Нет бренда"
-                try:
-                    character_product = driver.find_elements(By.XPATH , '//table[@class="table table-characteristic"]//tbody')
-                    for i in character_product:
-                        character_product = i.text
-                except:
-                    character_product = 'Нет характеристик'
-                try:
-                    avaib_product = driver.find_element(By.XPATH, '//div[@class="main-col"]//div[@class="balance"]').text
-                except:
-                    avaib_product = "Нет информации"
-                try:
-                    img_product = driver.find_element(By.XPATH , '//div[@id="bigimg"]//img').get_attribute("src")
-                except:
-                    img_product = "Нет фото товара"
-                try:
-                    price_product = driver.find_element(By.XPATH, '//div[@class="price-current"]//span[@id="calc-good-total"]').text.replace('.', ',')
-                except:
-                    price_product = "Нет цены"
 
-                try:
-                    catalog_product = driver.find_element(By.XPATH, '//div[@class="producer active"]//div//a').text
-                except:
-                    catalog_product = "Нет каталога"
-                with open(f"C:\\scrap_tutorial-master\\semena_market\\group.csv", "a", errors='ignore') as file:
-                    writer = csv.writer(file, delimiter=";", lineterminator="\r")
-                    writer.writerow(
-                        (
-                            name_product,
-                            discrip_product,
-                            art_product,
-                            brand_product,
-                            character_product,
-                            img_product,
-                            avaib_product,
-                            price_product,
-                            catalog_product
-                        )
-                    )
-                product_url += 1
-                print('-' * 50)
-                print(f"Обработано {product_url} найменования")
-                print('-' * 50)
         except Exception as ex:
             print(ex)
 
