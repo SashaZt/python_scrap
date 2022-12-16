@@ -79,7 +79,7 @@ def write_csv(data):
 # Функция для создания задач для асинхронного получение данных
 async def gather_data():
     # Переходим по ссылкам
-    for page in range(1, 3):
+    for page in range(1, 278):
         url = f"https://shop.moderngroup.com/fleetguard/?sort=bestselling&page={page}"
         header = {
             "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
