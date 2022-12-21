@@ -18,6 +18,7 @@ FEEDS = {
         'indent': 4,
         'fields': None,
         'store_empty': False,
+        'item_export_kwargs'=dict(delimeter=';')
 
     }
 
