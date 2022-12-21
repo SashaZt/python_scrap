@@ -16,6 +16,10 @@ import csv
 from selenium import webdriver
 import random
 from fake_useragent import UserAgent
+# Библиотеки для Асинхронного парсинга
+import asyncio
+import aiohttp
+# Библиотеки для Асинхронного парсинга
 
 # Для работы webdriver____________________________________________________
 # Для работы с драйвером селениум по Хром необходимо эти две строчки
@@ -190,7 +194,7 @@ def get_content(url):
 
 
 def parse_content():
-    url = "https://shop.moderngroup.com/cummins/"
+    url = "https://shop.moderngroup.com/fleetguard/"
     get_content(url)
 
 

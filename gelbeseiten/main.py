@@ -54,6 +54,7 @@ driver = webdriver.Chrome(
 
 # # Окно браузера на весь экран
 driver.maximize_window()
+driver.set_window_size(1400, 3000)
 
 
 # Для работы webdriver____________________________________________________
@@ -121,9 +122,6 @@ def get_content(url):
             json.dump(url_firma, file, indent=4, ensure_ascii=False)
 
 
-        # Дубли в файле
-        # uniqlines = set(open(f"C:\\scrap_tutorial-master\\\gelbeseiten\\group.json", 'r', encoding='utf-8').readlines())
-        # gotovo = open(f"C:\\scrap_tutorial-master\\\gelbeseiten\\group_.json", 'w', encoding='utf-8').writelines(set(uniqlines))
         diff_time = datetime.datetime.now() - start_time
 
     except Exception as ex:
