@@ -19,7 +19,7 @@ FEEDS = {
         'fields': None,
         'store_empty': False,
         'item_export_kwargs':
-            dict(delimiter=';')
+            dict(delimiter=';', lineterminator="\r")
 
     }
 

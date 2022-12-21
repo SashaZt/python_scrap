@@ -6,13 +6,13 @@ from scrapy.exporters import CsvItemExporter
 
 class BookSpider(scrapy.Spider):
     name = 'avto_parts'
-    start_urls = ["https://shop.moderngroup.com/fleetguard/?sort=bestselling&page=1"]
+    start_urls = ["https://shop.moderngroup.com/fleetguard/"]
 
     def parse(self, response):
         for link in response.xpath('//h4[@class="card-title"]/a/@href').extract():
 
             yield response.follow(link, dont_filter=True, callback=self.parse_avto_tovar)
-        for i in range(1, 2):
+        for i in range(1, 10):
             next_page = f"https://shop.moderngroup.com/fleetguard/?sort=bestselling&page={i}"
             yield response.follow(next_page, callback=self.parse)
 
@@ -25,9 +25,3 @@ class BookSpider(scrapy.Spider):
             'img_product': response.xpath('//figure[@data-fancybox="gallery"]/@href').get()
 
         }
-
-class CSVkwItemExporter(CsvItemExporter):
-    kwargs['fields_to_export'] = settings.getlist('EXPORT_FIELDS') or None
-    kwargs['encoding'] = settings.get('EXPORT_ENCODING', 'utf-8')
-
-    super(CSVkwItemExporter, self).__init__(*args, **kwargs)
