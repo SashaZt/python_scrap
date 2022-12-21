@@ -36,7 +36,7 @@ options.add_argument(
     # "user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.90 Safari/537.36"
     f"user-agent={useragent.random}"
 )
-driver_service = Service(executable_path="C:\\scrap_tutorial-master\\chromedriver.exe")
+driver_service = Service(executable_path="/chromedriver.exe")
 driver = webdriver.Chrome(
     service=driver_service,
     options=options
@@ -72,7 +72,7 @@ def get_content(url):
         start_time = datetime.datetime.now()
         driver.get(url=url)
         groups_url = []
-        with open(f"C:\\scrap_tutorial-master\\semena_market\\group.csv", "w", errors='ignore') as file:
+        with open(f"/archive/semena_market/group.csv", "w", errors='ignore') as file:
             writer = csv.writer(file, delimiter=";", lineterminator="\r")
             writer.writerow(
                 (
@@ -113,11 +113,11 @@ def get_content(url):
             if os.path.exists("group.json"):
                 print(f"C:\\scrap_tutorial-master\\semena_market\\group.json" + " уже существует")
             else:
-                with open(f"C:\\scrap_tutorial-master\\semena_market\\group.json", 'w') as file:
+                with open(f"/archive/semena_market/group.json", 'w') as file:
                     json.dump(groups_url, file, indent=4, ensure_ascii=False)
 
             # Читание json
-            with open(f"C:\\scrap_tutorial-master\\semena_market\\group.json") as file:
+            with open(f"/archive/semena_market/group.json") as file:
                 all_site = json.load(file)
             # С json вытягиваем только 'url_name' - это и есть ссылка
             product_sum = 0
@@ -178,7 +178,7 @@ def get_content(url):
                     catalog_product = driver.find_element(By.XPATH, '//div[@class="producer active"]//div//a').text
                 except:
                     catalog_product = "Нет каталога"
-                with open(f"C:\\scrap_tutorial-master\\semena_market\\group.csv", "a", errors='ignore') as file:
+                with open(f"/archive/semena_market/group.csv", "a", errors='ignore') as file:
                     writer = csv.writer(file, delimiter=";", lineterminator="\r")
                     writer.writerow(
                         (

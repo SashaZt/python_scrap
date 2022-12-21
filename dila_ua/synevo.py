@@ -25,23 +25,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 def get_data_with_selenium(url):
     try:
 
-        # driver.get(url=url)
-        # time.sleep(10)
-        # # Загрузка куков
-        # pickle.dump(driver.get_cookies(), open("cookies.pkl", "wb"))
-        # #Проверерка куки
-        # driver.get(url=url)
-        # time.sleep(5)
-        # try:
-        #     driver.get(url=url)
-        #     cookie = pickle.load(open('cookies.pkl', "rb"))
-        #     for i in cookie:
-        #         driver.add_cookie(i)
-        #     print('Cookie add')
-        #     driver.refresh()
-        #     time.sleep(10)
-        # except Exception as e:
-        #     print(e)
+
 
         # with open("data/synevo.html", 'w', encoding='utf-8') as file:
         #     file.write(driver.page_source)

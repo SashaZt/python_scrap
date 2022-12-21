@@ -29,7 +29,7 @@ options = webdriver.ChromeOptions()
 options.add_experimental_option('useAutomationExtension', False)
 
 # # Работа в фоновом режиме
-# options.headless = True
+options.headless = True
 
 options.add_argument(
     # "user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.90 Safari/537.36"
@@ -70,6 +70,7 @@ def get_content(url):
     try:
         start_time = datetime.datetime.now()
         driver.get(url=url)
+        analysis_list = []
         # Блок работы с куками-----------------------------------------
         # Создание куки
         # pickle.dump(driver.get_cookies(), open("cookies", "wb"))
@@ -77,7 +78,6 @@ def get_content(url):
         # for cookie in pickle.load(open("cookies", "rb")):
         #     driver.add_cookie(cookie)
         # Блок работы с куками-----------------------------------------
-
         driver.implicitly_wait(10)
         drop_list_city = driver.find_element(By.XPATH, '//div[@id="js_sel_geo_region_in_popup_chosen"]').click()
         driver.implicitly_wait(10)
@@ -88,21 +88,73 @@ def get_content(url):
         name_header = driver.find_element(By.XPATH, '//div[@class="tabs-pane active"]//div[@class="analizes-list-table-header"]//div[@class="analizes-list-table-cell altc-name"]').text
         price_header = driver.find_element(By.XPATH, '//div[@class="tabs-pane active"]//div[@class="analizes-list-table-header"]//div[@class="analizes-list-table-cell altc-price"]').text
         time_header = driver.find_element(By.XPATH, '//div[@class="tabs-pane active"]//div[@class="analizes-list-table-header"]//div[@class="analizes-list-table-cell altc-time"]').text
-        name_product = driver.find_elements(By.XPATH, '//div[contains(@class,"analizes-list-table-line tab-line")]')
-        for i in name_product[0:1]:
-            print(i.text)
+        name_products = driver.find_elements(By.XPATH, '//div[contains(@class,"analizes-list-table-line tab-line-")]')
+        driver.implicitly_wait(10)
+        with open(f"C:\\scrap_tutorial-master\\dila_ua\\analysis.csv", "w", errors='ignore') as file:
+            writer = csv.writer(file, delimiter=";", lineterminator="\r")
+            writer.writerow(
+                (
+                    name_header,
+                    price_header,
+                    time_header
+                )
+            )
+
+        for i in name_products:
+            name_analysis = i.find_element(By.XPATH,
+                                           '//div[@class="tabs-pane active"]//div[contains(@class, "analizes-list-table-line tab-line-")]//div[@class="analizes-list-table-cell altc-name"]').text
+            price_analysis = i.find_element(By.XPATH,
+                                            '//div[@class="tabs-pane active"]//div[contains(@class, "analizes-list-table-line tab-line-")]//div[@class="analizes-list-table-cell altc-price"]').text
+            time_analysis = i.find_element(By.XPATH,
+                                           '//div[@class="tabs-pane active"]//div[contains(@class, "analizes-list-table-line tab-line-")]//div[@class="analizes-list-table-cell altc-time"]').text
+            print(name_analysis, price_analysis, time_analysis)
+
+            with open(f"C:\\scrap_tutorial-master\\dila_ua\\analysis.csv", "a", errors='ignore') as file:
+                writer = csv.writer(file, delimiter=";", lineterminator="\r")
+                writer.writerow(
+                    (
+                        name_analysis,
+                        price_analysis,
+                        time_analysis
+                    )
+                )
 
 
 
-
-
-
-
-
-
-
-
-
+        # # Листать по страницам ---------------------------------------------------------------------------
+        # page_product = 0
+        # isNextDisable = False
+        # while not isNextDisable:
+        #     try:
+        #         for i in name_products:
+        #             name_analysis = i.find_element(By.XPATH,
+        #                                            '//div[@class="tabs-pane active"]//div[contains(@class, "analizes-list-table-line tab-line-")]//div[@class="analizes-list-table-cell altc-name"]').text
+        #             price_analysis = i.find_element(By.XPATH,
+        #                                             '//div[@class="tabs-pane active"]//div[contains(@class, "analizes-list-table-line tab-line-")]//div[@class="analizes-list-table-cell altc-price"]').text
+        #             time_analysis = i.find_element(By.XPATH,
+        #                                            '//div[@class="tabs-pane active"]//div[contains(@class, "analizes-list-table-line tab-line-")]//div[@class="analizes-list-table-cell altc-time"]').text
+        #             print(name_analysis, price_analysis, time_analysis)
+        #
+        #             with open(f"C:\\scrap_tutorial-master\\dila_ua\\analysis.csv", "a", errors='ignore') as file:
+        #                 writer = csv.writer(file, delimiter=";", lineterminator="\r")
+        #                 writer.writerow(
+        #                     (
+        #                         name_analysis,
+        #                         price_analysis,
+        #                         time_analysis
+        #                     )
+        #                 )
+        #         next_button = driver.find_element(By.XPATH, '//div[@class="tabs-pane active"]//li[@class="next"]')
+        #         # Проверка на наличие кнопки следующая страница, если есть, тогда листаем!
+        #         if next_button[0:1]:
+        #             next_button.click()
+        #             page_product += 1
+        #             print(f"Обработано {page_product} страниц")
+        #         else:
+        #             isNextDisable = True
+        #     except:
+        #         isNextDisable = True
+        # # Листать по страницам ---------------------------------------------------------------------------
 
 
         diff_time = datetime.datetime.now() - start_time

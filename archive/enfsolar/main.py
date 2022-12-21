@@ -21,7 +21,7 @@ options.add_argument(
     # "user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.90 Safari/537.36"
     f"user-agent={useragent.random}"
 )
-driver_service = Service(executable_path="C:\\scrap_tutorial-master\\chromedriver.exe")
+driver_service = Service(executable_path="/chromedriver.exe")
 driver = webdriver.Chrome(
     service=driver_service,
     options=options
