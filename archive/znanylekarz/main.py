@@ -51,16 +51,17 @@ def get_content(url):
             (
                 "Имя",
                 "Специальность",
-                "Телефон"
+                "Телефон",
+                "Адресс"
             )
         )
-    for i in range(1, 3):
+    for i in range(1, 2):
         # Перебираем все ссылки
         resp = requests.get(url + f"&page={i}", headers=header)
         time.sleep(randint(1, 5))
         try:
             # Настройка WEB драйвера
-            driver_service = Service(executable_path="/chromedriver.exe")
+            driver_service = Service(executable_path="C:\scrap_tutorial-master\chromedriver.exe")
             driver = webdriver.Chrome(
                 service=driver_service,
                 options=options
@@ -76,18 +77,25 @@ def get_content(url):
                 href = item.find_next('a').get("href")
                 url_doctor.append(href)
 
-            for href in url_doctor:
+            for href in url_doctor[1:2]:
                 time.sleep(randint(1, 5))
 
                 driver.get(f"{href}")
+
+                # # Создаем cookies
+                # pickle.dump(driver.get_cookies(), open("cookies", "wb"))
+                # Читаем куки
                 for cookie in pickle.load(open("cookies", "rb")):
                     driver.add_cookie(cookie)
-                # driver.implicitly_wait(5)
+                driver.implicitly_wait(10)
                 driver.refresh()
-                driver.implicitly_wait(5)
+                driver.implicitly_wait(10)
                 specialty_doctor_list = driver.find_elements(By.XPATH, '//a[@class="text-muted"]')
                 # Получаем специальность доктора
-                specialty_doctor = specialty_doctor_list[0].text.strip()
+                try:
+                    specialty_doctor = specialty_doctor_list[0].text.strip()
+                except:
+                    specialty_doctor = "нет специальности"
                 # Получаем имя доктора
                 name_doctor = driver.find_element(By.XPATH, '//div[@data-id="profile-fullname-wrapper"]').text.strip()
                 # # Закрыть всплывающее окно
@@ -111,6 +119,15 @@ def get_content(url):
                     # Получаем номер телефона
                     phone_doctor = driver.find_element(By.XPATH,
                                                        '//a[@data-patient-app-event-name="dp-call-phone"]').text.strip()
+                try:
+                    locat_show = driver.find_element(By.XPATH, '//div[@class="location-details"]')
+                    if locat_show.is_displayed():
+                        driver.implicitly_wait(5)
+                        locat_show.click()
+                        adres = driver.find_element(By.XPATH, '//div[@class="media-body overflow-hidden"]/h5')[1].text.strip()
+                except:
+                    adres = "Нет адреса"
+
                 else:
                     phone_doctor = 'Нет номера телефона'
                 with open("doctor.csv", "a", errors='ignore') as file:
@@ -119,11 +136,12 @@ def get_content(url):
                         (
                             name_doctor,
                             specialty_doctor,
-                            phone_doctor
+                            phone_doctor,
+                            adres
                         )
                     )
-                # print(name_doctor, specialty_doctor, phone_doctor)
         except Exception as ex:
+            print(ex)
             print({href})
         finally:
             driver.close()
