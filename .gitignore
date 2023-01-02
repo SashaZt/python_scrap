@@ -6,5 +6,7 @@
 */*.xlsx
 */*.htnl
 */*.zip
-*/*.jpg
-*/*.7z
+*.jpg
+*.7z
+*/*.txt
+*/*cookies
