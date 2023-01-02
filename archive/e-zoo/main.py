@@ -15,7 +15,7 @@ def get_content(url):
     }
     resp = requests.get(url, headers=header)
     soup = BeautifulSoup(resp.text, 'lxml')
-    print(soup)
+
     # with open("zoo.csv", "w") as file:
     #     writer = csv.writer(file, delimiter=";", lineterminator="\r")
     #     writer.writerow(
@@ -26,8 +26,10 @@ def get_content(url):
     #             "Страна производитель"
     #         )
     #     )
+    pagan_list = soup.find('ul', attrs={'class': 'pagination'}).find_all('li')
 
-    # for item in range(1, 19):
+    print(pagan_list)
+    # for item in range(1, 25):
     #     if item == 1:
     #         resp = requests.get(url, headers=header)
     #     elif item > 1:
@@ -64,7 +66,6 @@ def get_content(url):
 
 def parse_content():
     url = "https://e-zoo.com.ua/ua/promo/skidki-i-podarki-ko-dnyu-rozhdeniya-e-zoo"
-    'https://e-zoo.com.ua/ua/promo/skidki-i-podarki-ko-dnyu-rozhdeniya-e-zoo/f/page/18'
     get_content(url)
 
 

@@ -6,9 +6,7 @@
 import scrapy
 
 
-class Product(scrapy.Item):
-    title = scrapy.Field()
-    price_old = scrapy.Field()
-    price_new = scrapy.Field()
-    # des = scrapy.Field()
-
+class ProbaItem(scrapy.Item):
+    # define the fields for your item here like:
+    # name = scrapy.Field()
+    pass

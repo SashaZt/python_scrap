@@ -110,39 +110,42 @@ def get_content(url):
         try:
             xapac_tovar = driver.find_elements(By.XPATH,
                                                '//div[@class="product-item-detail-tab-content"]//dl[@class="product-item-detail-properties"]/dt')
+            title_tovar = driver.find_elements(By.XPATH,
+                                               '//div[@class="product-item-detail-tab-content"]//dl[@class="product-item-detail-properties"]/dd')
 
             charac_01 = xapac_tovar[0].text
+
             charac_02 = xapac_tovar[1].text
             if charac_02 == 'Ціновий діапазон':
                 charac_02 = xapac_tovar[1].text
             else:
                 charac_02 = 'Ширина'
-            charac_03 = xapac_tovar[2].text
-            if charac_03 == 'Серія':
-                charac_03 = xapac_tovar[2].text
-            else:
-                charac_03 = 'Глибина'
-            charac_04 = xapac_tovar[3].text
-            charac_05 = xapac_tovar[4].text
-            charac_06 = xapac_tovar[5].text
-            charac_07 = xapac_tovar[6].text
-            charac_08 = xapac_tovar[7].text
-            charac_09 = xapac_tovar[8].text
-            charac_10 = xapac_tovar[9].text
-            charac_11 = xapac_tovar[10].text
-            title_tovar = driver.find_elements(By.XPATH,
-                                               '//div[@class="product-item-detail-tab-content"]//dl[@class="product-item-detail-properties"]/dd')
-            tovar_01 = title_tovar[0].text
-            tovar_02 = title_tovar[1].text
-            tovar_03 = title_tovar[2].text
-            tovar_04 = title_tovar[3].text
-            tovar_05 = title_tovar[4].text
-            tovar_06 = title_tovar[5].text
-            tovar_07 = title_tovar[6].text
-            tovar_08 = title_tovar[7].text
-            tovar_09 = title_tovar[8].text
-            tovar_10 = title_tovar[9].text
-            tovar_11 = title_tovar[10].text
+            print(charac_02)
+            # charac_03 = xapac_tovar[2].text
+            # if charac_03 == 'Серія':
+            #     charac_03 = xapac_tovar[2].text
+            # else:
+            #     charac_03 = 'Глибина'
+            # charac_04 = xapac_tovar[3].text
+            # charac_05 = xapac_tovar[4].text
+            # charac_06 = xapac_tovar[5].text
+            # charac_07 = xapac_tovar[6].text
+            # charac_08 = xapac_tovar[7].text
+            # charac_09 = xapac_tovar[8].text
+            # charac_10 = xapac_tovar[9].text
+            # charac_11 = xapac_tovar[10].text
+
+            # tovar_01 = title_tovar[0].text
+            # tovar_02 = title_tovar[1].text
+            # tovar_03 = title_tovar[2].text
+            # tovar_04 = title_tovar[3].text
+            # tovar_05 = title_tovar[4].text
+            # tovar_06 = title_tovar[5].text
+            # tovar_07 = title_tovar[6].text
+            # tovar_08 = title_tovar[7].text
+            # tovar_09 = title_tovar[8].text
+            # tovar_10 = title_tovar[9].text
+            # tovar_11 = title_tovar[10].text
         except:
             j = "header"
             k = 'title'
@@ -151,36 +154,36 @@ def get_content(url):
         except:
             text_product = "Нет описания"
 
-        data.append(
-            [name_product, old_price, new_price, tovar_01, tovar_02, tovar_03, tovar_04, tovar_05, tovar_06,
-             tovar_07, tovar_08, tovar_09, tovar_10, tovar_11, text_product]
-        )
-
-        with open("doctor.csv", "w") as file:
-            writer = csv.writer(file, delimiter=";", lineterminator="\r")
-            writer.writerow(
-                (
-                    "Название",
-                    "Старая цена",
-                    "Новая цена",
-                    charac_01,
-                    charac_02,
-                    charac_03,
-                    charac_04,
-                    charac_05,
-                    charac_06,
-                    charac_07,
-                    charac_08,
-                    charac_09,
-                    charac_10,
-                    charac_11,
-                    'Описание'
-
-                )
-            )
-            writer.writerows(
-                data
-            )
+        # data.append(
+        #     [name_product, old_price, new_price, tovar_01, tovar_02, tovar_03, tovar_04, tovar_05, tovar_06,
+        #      tovar_07, tovar_08, tovar_09, tovar_10, tovar_11, text_product]
+        # )
+        #
+        # with open("doctor.csv", "w") as file:
+        #     writer = csv.writer(file, delimiter=";", lineterminator="\r")
+        #     writer.writerow(
+        #         (
+        #             "Название",
+        #             "Старая цена",
+        #             "Новая цена",
+        #             charac_01,
+        #             charac_02,
+        #             charac_03,
+        #             charac_04,
+        #             charac_05,
+        #             charac_06,
+        #             charac_07,
+        #             charac_08,
+        #             charac_09,
+        #             charac_10,
+        #             charac_11,
+        #             'Описание'
+        #
+        #         )
+        #     )
+        #     writer.writerows(
+        #         data
+        #     )
 
     driver.close()
     driver.quit()

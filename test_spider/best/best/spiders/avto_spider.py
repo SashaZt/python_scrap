@@ -10,9 +10,8 @@ class BookSpider(scrapy.Spider):
 
     def parse(self, response):
         for link in response.xpath('//h4[@class="card-title"]/a/@href').extract():
-
             yield response.follow(link, dont_filter=True, callback=self.parse_avto_tovar)
-        for i in range(1, 10):
+        for i in range(1, 2):
             next_page = f"https://shop.moderngroup.com/fleetguard/?sort=bestselling&page={i}"
             yield response.follow(next_page, callback=self.parse)
 
