@@ -134,26 +134,21 @@ def get_content(url):
             try:
 
                 char_prod = driver.find_elements(By.XPATH, '//div[@class="product_specific_group"]//div/div/div')
-                for i in char_prod:
-                    char_prod_all.fromkeys(i.text)
-                print(char_prod_all)
-
-
-                # char_prod_01 = char_prod[0].text
-                # char_prod_02 = char_prod[1].text
-                # char_prod_03 = char_prod[2].text
-                # char_prod_04 = char_prod[3].text
-                # char_prod_05 = char_prod[4].text
-                # char_prod_06 = char_prod[5].text
-                # char_prod_07 = char_prod[6].text
-                # char_prod_08 = char_prod[7].text
-                # char_prod_09 = char_prod[8].text
-                # char_prod_10 = char_prod[9].text
-                # char_prod_11 = char_prod[10].text
-                # char_prod_12 = char_prod[11].text
-                # char_prod_13 = char_prod[12].text
-                # char_prod_14 = char_prod[13].text
-                # char_prod_15 = char_prod[14].text
+                char_prod_01 = char_prod[0].text
+                char_prod_02 = char_prod[1].text
+                char_prod_03 = char_prod[2].text
+                char_prod_04 = char_prod[3].text
+                char_prod_05 = char_prod[4].text
+                char_prod_06 = char_prod[5].text
+                char_prod_07 = char_prod[6].text
+                char_prod_08 = char_prod[7].text
+                char_prod_09 = char_prod[8].text
+                char_prod_10 = char_prod[9].text
+                char_prod_11 = char_prod[10].text
+                char_prod_12 = char_prod[11].text
+                char_prod_13 = char_prod[12].text
+                char_prod_14 = char_prod[13].text
+                char_prod_15 = char_prod[14].text
 
             except:
                 pass

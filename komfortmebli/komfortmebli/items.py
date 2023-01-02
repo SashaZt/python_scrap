@@ -10,5 +10,6 @@ class Product(scrapy.Item):
     title = scrapy.Field()
     price_old = scrapy.Field()
     price_new = scrapy.Field()
-    # des = scrapy.Field()
+    des = scrapy.Field()
+    images = scrapy.Field()
 

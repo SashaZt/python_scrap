@@ -1,5 +1,22 @@
-url = 'https://www.enfsolar.com/directory/installer/Belgium'
-url = url.split("/")[-1]
+url = 'https://lovely-professional.com/catalog/lash/'
+url = url.split("/")[-2]
 
 
 print(url)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

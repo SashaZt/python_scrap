@@ -1,12 +1,12 @@
 # Default ignored files
 /venv/
 /.idea/
-*/*.csv
+.csv
 */*.json
 */*.xlsx
 */*.htnl
 */*.zip
 *.jpg
-*.7z
+.7z
 */*.txt
 */*cookies
