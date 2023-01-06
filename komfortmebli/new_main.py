@@ -117,6 +117,7 @@ def save_link_all_product(url):
     driver.maximize_window()
 
     categoriy_product_urls = []
+    card_product_url_all = []
     categoriy_product_url = driver.find_elements(By.XPATH, '//div[@class="bx_catalog_tile"]//li/a')
     for item_categoriy in categoriy_product_url:
         categoriy_product_urls.append(
@@ -132,51 +133,21 @@ def save_link_all_product(url):
             )
     for item_prod in pod_categ_urls:
         driver.get(item_prod['url_name'])
-        time.sleep(5)
 
-# Продолжить нужно на моменте сбора карточек
+        for k in range(100):
+            time.sleep(1)
+            driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
 
+        cards = driver.find_elements(By.XPATH, '//div[@class="product-item"]//div[@class="product-item-title"]//a')
+        for href in cards:
 
+            card_product_url_all.append(
+                {'url_name': href.get_attribute("href")}
+            )
+                                        # Добавляем в словарь два параметра для дальнейшего записи в json
 
-    # print(pod_categ_urls)
-    # for k in range(1):
-    #     time.sleep(2)
-    #     driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-    # card_product_url_all = []
-    # cards = driver.find_elements(By.XPATH, '//div[@class="product-item"]//div[@class="product-item-title"]//a')
-    # for href in cards:
-    #     card_product_url_all.append(
-    #                                 {'url_name': href.get_attribute("href")}
-    #                                 # Добавляем в словарь два параметра для дальнейшего записи в json
-    #                             )
-    # print(card_product_url_all)
-
-
-
-
-        # for i in pod_categ_product_url:
-        #     time.sleep(3)
-        #     i.click()
-        #     for k in range(1):
-        #         time.sleep(2)
-        #         driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-
-    #         print(cards)
-    # #         for href in cards:
-    #             card_product_url_all.append(
-    #                             {'url_name': href.get_attribute("href")}
-    #                             # Добавляем в словарь два параметра для дальнейшего записи в json
-    #                         )
-    #
-    # print(card_product_url_all)
-
-
-    #
-    #
-    #         group_product_url_all.append(
-    #             {'url_name': item.get_attribute("href")}
-    #             # Добавляем в словарь два параметра для дальнейшего записи в json
-    #         )
+    with open(f"C:\\scrap_tutorial-master\\komfortmebli\\all_link.json", 'w') as file:
+        json.dump(card_product_url_all, file, indent=4, ensure_ascii=False)
     # for i in group_product_url_all:
     #     driver.get(i['url_name'])  # 'url_name' - это и есть ссылка
     #     group_url = i['url_name'].split("/")[-2]
@@ -222,7 +193,7 @@ def parsing_product():
 
             )
         )
-    for item in all_site:
+    for item in all_site[0:50]:
         data_table = []
         driver.get(item['url_name'])  # 'url_name' - это и есть ссылка
         # char = driver.find_element(By.XPATH, '//div[@class="col-sm-8 col-md-9"]//li[@class="product-item-detail-tab"]').click()
@@ -406,35 +377,9 @@ def parsing_product():
 
 
 
-
-
-
-#
-#         # print(header_table, data_table)
-#     write_csv(header_table, data_table)
-# def write_csv(header_table, data_table):
-#
-#     with open(f"C:\\scrap_tutorial-master\\komfortmebli\\kukhny.csv", "w", errors='ignore') as file:
-#         writer = csv.writer(file, delimiter=";", lineterminator="\r")
-#         writer.writerow(
-#             (
-#                 header_table
-#
-#             )
-#         )
-#         # Дописываем данные из списка data в файл
-#         writer.writerows(
-#             data_table
-#         )
-#
-
-
-
-
-
 if __name__ == '__main__':
     # #Сайт на который переходим
-    url = "https://komfortmebli.com.ua/ua/"
+    # url = "https://komfortmebli.com.ua/ua/"
     # Запускаем первую функцию для сбора всех url на всех страницах
-    save_link_all_product(url)
-    # parsing_product()
+    # save_link_all_product(url)
+    parsing_product()
