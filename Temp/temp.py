@@ -1,5 +1,5 @@
-url = 'https://lovely-professional.com/catalog/lash/'
-url = url.split("/")[-2]
+url = 'https://dok.ua/catalog/maslo-motornoe'
+url = url.split("/")[-1]
 
 
 print(url)
