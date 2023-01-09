@@ -119,12 +119,12 @@ def save_link_all_product(url):
     categoriy_product_urls = []
     card_product_url_all = []
     categoriy_product_url = driver.find_elements(By.XPATH, '//div[@class="bx_catalog_tile"]//li/a')
-    for item_categoriy in categoriy_product_url:
+    for item_categoriy in categoriy_product_url[0:1]:
         categoriy_product_urls.append(
             {'url_name': item_categoriy.get_attribute("href")}
         )
     pod_categ_urls = []
-    for item_pod_categ in categoriy_product_urls:
+    for item_pod_categ in categoriy_product_urls[0:1]:
         driver.get(item_pod_categ['url_name'])
         pod_categ_product_url = driver.find_elements(By.XPATH, '//div[@class="bx_catalog_tile"]//li/a')
         for item_card in pod_categ_product_url:
@@ -148,29 +148,7 @@ def save_link_all_product(url):
 
     with open(f"C:\\scrap_tutorial-master\\komfortmebli\\all_link.json", 'w') as file:
         json.dump(card_product_url_all, file, indent=4, ensure_ascii=False)
-    # for i in group_product_url_all:
-    #     driver.get(i['url_name'])  # 'url_name' - это и есть ссылка
-    #     group_url = i['url_name'].split("/")[-2]
-    #     isNextDisable = False
-    #     while not isNextDisable:
-    #         try:
-    #             pagination_button = driver.find_element(By.XPATH, '//li[@class="bx-pag-next"]')
-    #
-    #             if pagination_button:
-    #                 driver.execute_script("arguments[0].scrollIntoView();", pagination_button)
-    #                 # Ждем 60 сек и в это время листаем до самого конца страницы что бы получить все ссылки на товар
-    #                 time.sleep(70)
-    #             card_product_url = driver.find_elements(By.XPATH, '//div[@class="product-item-title"]/a')
-    #             for j in card_product_url:
-    #                 card_product_url_all.append(
-    #                     {'url_name': j.get_attribute("href")}
-    #                 )
-    #             else:
-    #                 isNextDisable = True
-    #         except:
-    #             isNextDisable = True
-    # with open(f"C:\\scrap_tutorial-master\\komfortmebli\\all_link.json", 'w') as file:
-    #     json.dump(card_product_url_all, file, indent=4, ensure_ascii=False)
+
 
     driver.close()
     driver.quit()
@@ -193,7 +171,7 @@ def parsing_product():
 
             )
         )
-    for item in all_site[0:50]:
+    for item in all_site[0:2]:
         data_table = []
         driver.get(item['url_name'])  # 'url_name' - это и есть ссылка
         # char = driver.find_element(By.XPATH, '//div[@class="col-sm-8 col-md-9"]//li[@class="product-item-detail-tab"]').click()
@@ -225,6 +203,11 @@ def parsing_product():
             images = driver.find_element(By.XPATH,'//div[@class="product-item-detail-slider-images-container"]//div//img').get_attribute("src")
         except:
             images = 'No images'
+        try:
+            des = driver.find_element(By.XPATH,'//div[@class="product-item-detail-tab-content active"]').get_attribute("outerText").replace("\n", " ")
+        except:
+            des = 'No des'
+
         try:
             n_01 = driver.find_element(By.XPATH, '//div[@class="col-xs-12"]//div[@class="product-item-detail-tab-content"]//dl//dt[1]').text
         except:
@@ -351,20 +334,21 @@ def parsing_product():
         #         'name_product','categ_product','price_new', 'price_old', n_01, n_02, n_03, n_04, n_05, n_06, n_07, n_08, n_09, n_10, n_11, n_12, n_13, n_14, n_15,'images'
         #     ]
         # )
-        data_table.append(
-            [
-                name_product, categ_product, price_new, price_old,v_01, v_02, v_03, v_04, v_05, v_06,
-                v_07, v_08, v_09, v_10, v_11, v_12, v_13, v_14, v_15, images
-            ]
-        )
-        with open(f"C:\\scrap_tutorial-master\\komfortmebli\\data.csv", "a", errors='ignore') as file:
-            writer = csv.writer(file, delimiter=";", lineterminator="\r")
-            writer.writerow(
-                (
-                    name_product, categ_product, price_new, price_old,v_01, v_02, v_03, v_04, v_05, v_06, v_07, v_08, v_09, v_10, v_11, v_12, v_13, v_14, v_15, images
-
-                )
-            )
+        # data_table.append(
+        #     [
+        #         name_product, categ_product, price_new, price_old,v_01, v_02, v_03, v_04, v_05, v_06,
+        #         v_07, v_08, v_09, v_10, v_11, v_12, v_13, v_14, v_15, images
+        #     ]
+        # )
+        print(des)
+        # with open(f"C:\\scrap_tutorial-master\\komfortmebli\\data.csv", "a", errors='ignore') as file:
+        #     writer = csv.writer(file, delimiter=";", lineterminator="\r")
+        #     writer.writerow(
+        #         (
+        #             name_product, categ_product, price_new, price_old,v_01 #, v_02, v_03, v_04, v_05, v_06, v_07, v_08, v_09, v_10, v_11, v_12, v_13, v_14, v_15, images
+        #
+        #         )
+        #     )
         # # Дописываем данные из списка data в файл
         # writer.writerows(
         #     data_table
