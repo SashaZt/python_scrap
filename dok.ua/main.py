@@ -138,36 +138,39 @@ def save_link_all_product(url):
                 {'url_name': item_card.get_attribute("href")}
             )
 
-    for item_prod in pod_categoriy_product_urls[1:3]:
+    for item_prod in pod_categoriy_product_urls:
         # time.sleep(1)
 
 
         driver.get(item_prod['url_name'])
-        group_product = item_prod['url_name'].split("/")[-1]
-        pagan = int(driver.find_element(By.XPATH,
-                                        '//div[@class="pager add-more-pages"]//ul[@class="pager__list"]//li[@class="last"]').text)
-        for page in range(1, pagan + 1):
-            products_all_url = []
-            if page == 1:
-                driver.get(item_prod['url_name'])
-            if page > 1:
-                driver.get(item_prod['url_name'] + f"?page={page}")
-            time.sleep(1)
-            products_01 = driver.find_elements(By.XPATH,'//div[@class="catalog__product-list-row"]//div[@class="product-card__layout-inside"]//div[@class="product-card__layout-inside-link"]//div[@class="advanced-tile-on"]//a')
-            products_02 = driver.find_elements(By.XPATH,'//div[@class="catalog__product-list-row"]//div[@class="product-card__layout-inside"]//div[@class="product-card__layout-inside-link"]//div[@class="advanced-tile-off"]//a')
-            if products_01:
-                products = products_01
-            elif products_02:
-                products = products_02
-
-            for href in products:
-                products_all_url.append(
-                    {'url_name': href.get_attribute("href"),
-                     'title_group': f'{group_product}'
-                     }
-                )
-            with open(f"C:\\scrap_tutorial-master\\dok.ua\\link\\{group_product}.json", 'a') as file:
-                json.dump(products_all_url, file, indent=4, ensure_ascii=False)
+        print(item_prod['url_name'])
+        time.sleep(5)
+        # group_product = item_prod['url_name'].split("/")[-1]
+        # pagan = int(driver.find_element(By.XPATH,
+        #                                 '//div[@class="pager add-more-pages"]//ul[@class="pager__list"]//li[@class="last"]').text)
+        # # Листание по страницам
+        # for page in range(1, pagan + 1):
+        #     products_all_url = []
+        #     if page == 1:
+        #         driver.get(item_prod['url_name'])
+        #     if page > 1:
+        #         driver.get(item_prod['url_name'] + f"?page={page}")
+        #     time.sleep(1)
+        #     products_01 = driver.find_elements(By.XPATH,'//div[@class="catalog__product-list-row"]//div[@class="product-card__layout-inside"]//div[@class="product-card__layout-inside-link"]//div[@class="advanced-tile-on"]//a')
+        #     products_02 = driver.find_elements(By.XPATH,'//div[@class="catalog__product-list-row"]//div[@class="product-card__layout-inside"]//div[@class="product-card__layout-inside-link"]//div[@class="advanced-tile-off"]//a')
+        #     if products_01:
+        #         products = products_01
+        #     elif products_02:
+        #         products = products_02
+        #
+        #     for href in products:
+        #         products_all_url.append(
+        #             {'url_name': href.get_attribute("href"),
+        #              'title_group': f'{group_product}'
+        #              }
+        #         )
+        #     with open(f"C:\\scrap_tutorial-master\\dok.ua\\link\\{group_product}.json", 'a') as file:
+        #         json.dump(products_all_url, file, indent=4, ensure_ascii=False)
     driver.close()
     driver.quit()
 
@@ -201,29 +204,30 @@ def parsing_product():
 
         driver = get_chromedriver(use_proxy=False,
                                   user_agent=f"{useragent.random}")
-        # Переходим по каждой ссылке товара и получаем данные
-        for item in all_site:
-            group = item['title_group']
-            with open(f"C:\\scrap_tutorial-master\\dok.ua\\data\\{group}.csv", "w", errors='ignore') as file:
-                writer = csv.writer(file, delimiter=";", lineterminator="\r")
-                writer.writerow(
-                    (
-                        '', '', '',
 
-                    )
+        group = item.replace(".json", "").split("\\")[-1]
+        with open(f"C:\\scrap_tutorial-master\\dok.ua\\data\\{group}.csv", "w", errors='ignore') as file:
+            writer = csv.writer(file, delimiter=";", lineterminator="\r")
+            writer.writerow(
+                (
+                    'name_product', 'bread', 'price_new', 'n_01', 'n_02', 'n_03', 'n_04', 'n_05', 'n_06', 'n_07',
+                    'n_08', 'n_09',
+                    'n_10', 'n_11', 'links_img'
+
                 )
-            data_table = []
-            driver.get(item['url_name'])  # 'url_name' - это и есть ссылка
+            )
+        # Переходим по каждой ссылке товара и получаем данные
+        for href_card in all_site:
+
+
+            driver.get(href_card['url_name'])  # 'url_name' - это и есть ссылка
             driver.maximize_window()
-            # char = driver.find_element(By.XPATH, '//div[@class="col-sm-8 col-md-9"]//li[@class="product-item-detail-tab"]').click()
-            # driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-            # # Обезательно ждем
-            # time.sleep(30)
-            # driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-            # driver.implicitly_wait(5)
-            block_all_price = driver.find_element(By.XPATH, '//div[@class="card-packaging"]')
-            all_price = driver.find_elements(By.XPATH,
-                                             '//div[@class="card-packaging__wrap"]//div[@class="card-packaging__col"]//a')
+            try:
+                block_all_price = driver.find_element(By.XPATH, '//div[@class="card-packaging"]')
+            except:
+                block_all_price = False
+            all_price = driver.find_elements(By.XPATH, '//div[@class="card-packaging__wrap"]//div[@class="card-packaging__col"]//a')
+
             table_price = []
             if block_all_price:
                 for i in all_price:
