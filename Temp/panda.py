@@ -29,15 +29,17 @@ import glob
 # )
 # # объединение нескольких файлов в один___________________________________________________________
 
+
+# объединение двух файлов по колонке card_code_____________________________________________________
 price_file = ("C:\\scrap_tutorial-master\\uniongroup\\data\\price.csv")
 all_file = ("C:\\scrap_tutorial-master\\uniongroup\\data\\all.csv")
-
 price_dataframe = pd.read_csv(price_file ,sep=';', encoding='cp1251')
 all_dataframe = pd.read_csv(all_file ,sep=';', encoding='cp1251')
-merge_dataframe = all_dataframe.merge(price_dataframe, on=['card_code'])
+merge_dataframe = price_dataframe.merge(all_dataframe, on=['card_code'])
 merge_dataframe.to_csv(
-    "C:\\scrap_tutorial-master\\uniongroup\\data\\prom.csv",
+    "C:\\scrap_tutorial-master\\uniongroup\\data\\prom_.csv",
     encoding='cp1251',
     index=False,
     sep=';'
 )
+# объединение двух файлов по колонке card_code_____________________________________________________
