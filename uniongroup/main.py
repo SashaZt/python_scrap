@@ -226,7 +226,7 @@ def parsing_product():
                 for h in imgs_product:
                     all_link_img.append(h.get_attribute("src"))
                     # Обьеденяим их в одну сроку, разделитель указываем в начале
-                link_img = " ; ".join(all_link_img)
+                link_img = ", ".join(all_link_img) #Для Prom.ua только такой разделитель
 
             values = driver.find_elements(By.XPATH, '//ul[@class="card-tabs-spec-list"]//p[@class="card-tabs-spec-subtitle"]')
             try:
