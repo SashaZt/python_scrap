@@ -1,10 +1,16 @@
-import pickle
+import urllib.request
+from urllib.request import urlretrieve
+from PIL import Image
+import PIL
+import re
 import zipfile
 import os
 import json
 import csv
 import time
 import requests
+from bs4 import BeautifulSoup
+import lxml
 # Нажатие клавиш
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.service import Service
@@ -22,77 +28,9 @@ from selenium.webdriver.support import expected_conditions as EC
 
 useragent = UserAgent()
 
-# Данные для прокси
-PROXY_HOST = '141.145.205.4'
-PROXY_PORT = 31281
-PROXY_USER = 'proxy_alex'
-PROXY_PASS = 'DbrnjhbZ88'
-
-# Настройка для requests чтобы использовать прокси
-proxies = {'http': f'http://{PROXY_USER}:{PROXY_PASS}@{PROXY_HOST}:{PROXY_PORT}/'}
-
-manifest_json = """
-{
-    "version": "1.0.0",
-    "manifest_version": 2,
-    "name": "Chrome Proxy",
-    "permissions": [
-        "proxy",
-        "tabs",
-        "unlimitedStorage",
-        "storage",
-        "<all_urls>",
-        "webRequest",
-        "webRequestBlocking"
-    ],
-    "background": {
-        "scripts": ["background.js"]
-    },
-    "minimum_chrome_version":"76.0.0"
-}
-"""
-
-background_js = """
-let config = {
-        mode: "fixed_servers",
-        rules: {
-        singleProxy: {
-            scheme: "http",
-            host: "%s",
-            port: parseInt(%s)
-        },
-        bypassList: ["localhost"]
-        }
-    };
-chrome.proxy.settings.set({value: config, scope: "regular"}, function() {});
-function callbackFn(details) {
-    return {
-        authCredentials: {
-            username: "%s",
-            password: "%s"
-        }
-    };
-}
-chrome.webRequest.onAuthRequired.addListener(
-            callbackFn,
-            {urls: ["<all_urls>"]},
-            ['blocking']
-);
-""" % (PROXY_HOST, PROXY_PORT, PROXY_USER, PROXY_PASS)
-
 
 def get_chromedriver(use_proxy=False, user_agent=None):
     chrome_options = webdriver.ChromeOptions()
-
-
-    if use_proxy:
-        plugin_file = 'proxy_auth_plugin.zip'
-
-        with zipfile.ZipFile(plugin_file, 'w') as zp:
-            zp.writestr('manifest.json', manifest_json)
-            zp.writestr('background.js', background_js)
-
-        chrome_options.add_extension(plugin_file)
 
     if user_agent:
         chrome_options.add_argument(f'--user-agent={user_agent}')
@@ -111,134 +49,129 @@ def save_link_all_product(url):
     driver = get_chromedriver(use_proxy=False,
                               user_agent=f"{useragent.random}")
     driver.get(url=url)
-
     driver.maximize_window()
-    time.sleep(5)
-    # driver.execute_script("window.scrollBy(0,2000)", "")
-    categoriy_product_urls = []
+    time.sleep(1)
+    # for b in range(30):
+    #     try:
+    #         button_more_card= driver.find_element(By.XPATH,
+    #                                           '//li[@class="listItem_main__8ll0k GridItem_main__33wgr listItem_hasRank__s5vh8 listItem_hasProps__tpE0W listItem_bigGrid__mSpkv GridItem_bigGrid__gcJMW listItem_showInfoIcon__2ZCb5"]//div[@class="container_innerContainer__ulE_r"]//span[text()="more"]').click()
+    #     except:
+    #         button_more_card = print('Not description')
+    more_ = False
+    while not more_:
+        try:
+            driver.find_element(By.XPATH, '//span[text() = "more"]').click()
+            driver.execute_script("window.scrollBy(0,50)", "")
+            time.sleep(1)
 
-    try:
-        button_more = driver.find_element(By.XPATH, '//li[@class="listItem_main__8ll0k GridItem_main__33wgr listItem_hasRank__s5vh8 listItem_hasProps__tpE0W listItem_bigGrid__mSpkv GridItem_bigGrid__gcJMW listItem_showInfoIcon__2ZCb5"]//div[@class="container_innerContainer__ulE_r"]//span[text()="more"]').click()
-    except:
-        button_more = print('Ops!')
-    time.sleep(5)
-    name_cart = driver.find_element(By.XPATH, '//div[@class="NodeName_nameWrapper__n32Nb"]').text
-    namber_card = driver.find_element(By.XPATH, '//div[@class="GridThumbnail_main__EmUPU"]//strong').text
-    img_cart = driver.find_element(By.XPATH, '//div[@class="GridThumbnail_main__EmUPU"]//div[@class="GridThumbnail_thumbnailWrapper__007iL"]//img').get_attribute("src")
-    try:
-        chas = driver.find_elements(By.XPATH, '//div[@class="GridItem_bottomContentWrapper__mgQqL"]//ul[@class="listItem_properties__sFwqE"]//li')
-    except:
-        chas = ' '
-    chars_01 = chas[0].text
-    chars_02 = chas[1].text
+        except:
+            break
 
-    try:
-        desc_cart = driver.find_element(By.XPATH, '//div[@class="GridItem_bottomContentWrapper__mgQqL"]//div[contains(@class,"container_container")]//span').text.replace("\n", "").replace("\t", "")
-    except:
-        desc_cart = ' '
-    with open(f"C:\\scrap_tutorial-master\\ranker.com\data.csv", "a", errors='ignore') as file:
+    next_up = False
+    while not next_up:
+        try:
+            driver.execute_script("window.scrollBy(0,200)", "")
+            time.sleep(1)
+            button_load_more = driver.find_element(By.XPATH,
+                                                   '//button[@class="sc-81a1fbb4-0 copewu button_main__b1K6d button_large__mns0w button_tertiary__jtYJm button_isFullWidth__bQMs4 paginationButton_paginationButton__gTe3k"]').click()
+            driver.execute_script("window.scrollBy(0,500)", "")
+
+
+
+
+        except:
+            break
+    # load_more = True
+    # while not load_more:
+    #     try:
+    #         # driver.execute_script("window.scrollBy(0,document.body.scrollHeight)")
+    #         button_load_more = driver.find_element(By.XPATH,'//button[@class="sc-81a1fbb4-0 copewu button_main__b1K6d button_large__mns0w button_tertiary__jtYJm button_isFullWidth__bQMs4 paginationButton_paginationButton__gTe3k"]')
+    #         if button_load_more:
+    #             button_load_more.click()
+    #             time.sleep(1)
+    #         else:
+    #             button_load_more.click()
+    #     except:
+    #         load_more = True
+
+
+
+    with open("C:\\scrap_tutorial-master\\ranker.com\\data.html", "w", encoding='utf-8') as file:
+        file.write(driver.page_source)
+
+    print("Скачал страницу")
+    driver.close()
+    driver.quit()
+def get_items(file_path):
+    with open(f"C:\\scrap_tutorial-master\\ranker.com\\data.csv", "w", errors='ignore') as file:
         writer = csv.writer(file, delimiter=";", lineterminator="\r")
         writer.writerow(
             (
-                name_cart, namber_card, img_cart, chars_01, chars_02, desc_cart
+                'Name', 'Number', "Albums", "Labels", "description","description_2"
 
             )
         )
-    print()
-    time.sleep(1)
-    driver.close()
-    driver.quit()
+    with open(file_path, encoding='utf-8') as file:
+        src = file.read()
+    soup = BeautifulSoup(src, "lxml")
+    table = soup.find('ul', attrs={'data-testid': 'list-item-ul'})
+    # cart_table = table.find_all('li', attrs={'class': 'listItem_main__'})
+    #Найти класс который содержит часть текста
+    regex_cart = re.compile('listItem_main__.*')
+    cart_table = table.find_all('li', attrs={'class': regex_cart})
+    for i in cart_table:
+        name_card = i.find('div', attrs={'class': 'NodeName_nameWrapper__n32Nb'}).text
+        namber_card = i.find('div', attrs={'class': 'GridThumbnail_rankContainer__vE6_I GridThumbnail_hasImage__kNLG_ GridThumbnail_bigGrid__UiCVo'}).text
+        regex_img = re.compile('Media_main__ex93e.*')
+        if i.find('figure', attrs={'class': regex_img}).find('img').get("data-src"):
+            img_card = i.find('figure', attrs={'class': regex_img}).find('img').get("data-src").replace("q=60&fit=crop&fm=pjpg&dpr=2&crop=faces&h=150&w=150", "q=100&fit=crop&fm=pjpg&dpr=2&crop=faces&h=250&w=250")
+        else:
+            img_card =i.find('figure', attrs={'class': regex_img}).find('img').get("src").replace("q=60&fit=crop&fm=pjpg&dpr=2&crop=faces&h=150&w=150", "q=100&fit=crop&fm=pjpg&dpr=2&crop=faces&h=250&w=250")
+        #Выкачка фото
+        img_data = requests.get(img_card)
+        with open(
+                f"C:\\scrap_tutorial-master\\ranker.com\\img\\{namber_card}.jpg",'wb') as file_img:
+            file_img.write(img_data.content)
+        try:
+            albums_card = i.find('ul', attrs={'class': 'listItem_properties__sFwqE'}).find_all('li', attrs={'class': 'properties_item__STYON'})
+        except:
+            albums_card = "not alboms"
+        try:
+            Albums = albums_card[0].text
+        except:
+            Albums = "Not Albums"
+        try:
+            Labels = albums_card[1].text
+        except:
+            Labels = "Not Labels"
+        try:
+            dest_card = i.find('div', attrs={'class': 'container_container__53t32'}).text.replace("\n", "")
+        except:
+            dest_card = "Not description"
+        try:
+            dest_card_2 = i.find('div', attrs={'class': 'richText_container__p5dag listItem_itemDescription__jxHkE listItem_blather__v_A3E'}).find('span').text.replace("\n", "")
+        except:
+            dest_card_2 = "Not description"
+        # print(img_card)
 
+        with open(f"C:\\scrap_tutorial-master\\ranker.com\\data.csv", "a", errors='ignore') as file:
+            writer = csv.writer(file, delimiter=";", lineterminator="\r")
+            writer.writerow(
+                (
+                    name_card, namber_card, Albums, Labels, dest_card, dest_card_2
 
-# def parsing_product():
-#     driver = get_chromedriver(use_proxy=True,
-#                               user_agent=f"{useragent.random}")
-#     with open(f"C:\\scrap_tutorial-master\\11800\\Alfa-Romeo.json") as file:
-#         all_site = json.load(file)
-#     with open(f"C:\\scrap_tutorial-master\\11800\\Alfa-Romeo.csv", "w", errors='ignore') as file:
-#         writer = csv.writer(file, delimiter=";", lineterminator="\r")
-#         writer.writerow(
-#             (
-#                 'name_company',
-#                 'adr_company',
-#                 'tel_company',
-#                 'tel_company_02',
-#                 'email_company',
-#                 'www_company',
-#                 'link_company',
-#                 'social_company'
-#
-#             )
-#         )
-#     # С json вытягиваем только 'url_name' - это и есть ссылка
-#     product_sum = 0
-#     for item in all_site:
-#         driver.get(item['url_name'])  # 'url_name' - это и есть ссылка
-#         try:
-#             tel_company = driver.find_element(By.XPATH, '//*[@id="entry"]/div[4]/div[1]/div/div[1]/a/div[2]').text
-#             # .replace('"', '').replace('/ №', '').replace('*', '_')  # удаляем из названия следующие символы
-#         except:
-#             tel_company = 'No phone'
-#         try:
-#             tel_company_02 = driver.find_element(By.XPATH, '//*[@id="kontakt"]').text.replace("\n", ", ")
-#             # .replace('"', '').replace('/ №', '').replace('*', '_')  # удаляем из названия следующие символы
-#         except:
-#             tel_company_02 = 'No phone additionally'
-#         try:
-#             name_company = driver.find_element(By.XPATH, '//*[@id="entry"]/div[1]/div[1]/h1').text
-#         except:
-#             name_company = driver.find_element(By.XPATH, '//*[@id="entry"]/div[2]/div[1]/h1').text
-#         try:
-#             email_company = driver.find_element(By.XPATH, '//*[@id="box-email-link"]/div[2]').text
-#             # .replace("\n", "")  # Убираем перенос с описания
-#         except:
-#             email_company = "No email"
-#         try:
-#             www_company = driver.find_element(By.XPATH, '//*[@id="entry"]/div[4]/div[2]/div/div[2]/a/div[2]').text
-#
-#         except:
-#             www_company = driver.find_element(By.XPATH, '//*[@id="entry"]/div[5]/div[2]/div/div[2]/a/div[2]').text
-#
-#         try:
-#             adr_company = driver.find_element(By.XPATH, '//*[@id="entry"]/div[4]/div[1]/div/div[3]/div/div[2]/span').text.replace("\n", "")
-#         except:
-#            adr_company = driver.find_element(By.XPATH, '//*[@id="entry"]/div[5]/div[1]/div/div[3]/div/div[2]/span').text.replace("\n", "")
-#
-#         try:
-#             social_company = driver.find_element(By.XPATH,
-#                                                  '//*[@id="entry"]/div[5]/div[2]/div/div[3]/a').get_attribute("href")
-#         except:
-#             social_company = 'No social'
-#
-#
-#         with open(f"C:\\scrap_tutorial-master\\11800\\Alfa-Romeo.csv", "a", errors='ignore') as file:
-#             writer = csv.writer(file, delimiter=";", lineterminator="\r")
-#             writer.writerow(
-#                 (
-#                     name_company,
-#                     adr_company,
-#                     tel_company,
-#                     tel_company_02,
-#                     email_company,
-#                     www_company,
-#                     item['url_name'],
-#                     social_company
-#
-#                 )
-#             )
-#
-#     driver.close()
-#     driver.quit()
-
-
-
+                )
+            )
 
 
 
 if __name__ == '__main__':
-    ##Сайт на который переходим
-    url = "https://www.ranker.com/list/favorite-male-singers-of-all-time/music-lover?ref=browse_rerank&l=1"
-    # Запускаем первую функцию для сбора всех url на всех страницах
-    save_link_all_product(url)
+    # print("Вставьте ссылку")
+    # url = input()
+    # # # # # ##Сайт на который переходим
+    # # # # # # url = "https://www.ranker.com/list/favorite-male-singers-of-all-time/music-lover?ref=browse_rerank&l=1"
+    # # # # # # Запускаем первую функцию для сбора всех url на всех страницах
+    save_link_all_product('https://www.ranker.com/list/hottest-asian-men/calistylie?ref=browse_ranking&l=1')
+    get_items('C:\\scrap_tutorial-master\\ranker.com\\data.html')
     # parsing_product()
 
