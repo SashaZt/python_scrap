@@ -30,16 +30,30 @@ import glob
 # # объединение нескольких файлов в один___________________________________________________________
 
 
-# объединение двух файлов по колонке card_code_____________________________________________________
+# # объединение двух файлов по колонке card_code_____________________________________________________
+# price_file = ("C:\\scrap_tutorial-master\\uniongroup\\data\\price.csv")
+# all_file = ("C:\\scrap_tutorial-master\\uniongroup\\data\\all.csv")
+# price_dataframe = pd.read_csv(price_file ,sep=';', encoding='cp1251')
+# all_dataframe = pd.read_csv(all_file ,sep=';', encoding='cp1251')
+# merge_dataframe = price_dataframe.merge(all_dataframe, on=['card_code'])
+# merge_dataframe.to_csv(
+#     "C:\\scrap_tutorial-master\\uniongroup\\data\\prom.csv",
+#     encoding='cp1251',
+#     index=False,
+#     sep=';'
+# )
+# # объединение двух файлов по колонке card_code_____________________________________________________
+
+# объединение двух файлов_____________________________________________________
 price_file = ("C:\\scrap_tutorial-master\\uniongroup\\data\\price.csv")
 all_file = ("C:\\scrap_tutorial-master\\uniongroup\\data\\all.csv")
 price_dataframe = pd.read_csv(price_file ,sep=';', encoding='cp1251')
 all_dataframe = pd.read_csv(all_file ,sep=';', encoding='cp1251')
-merge_dataframe = price_dataframe.merge(all_dataframe, on=['card_code'])
-merge_dataframe.to_csv(
-    "C:\\scrap_tutorial-master\\uniongroup\\data\\prom_.csv",
+concat_dataframe = pd.concat([all_dataframe,price_dataframe], axis=1)
+concat_dataframe.to_csv(
+    "C:\\scrap_tutorial-master\\uniongroup\\data\\prom_concat.csv",
     encoding='cp1251',
     index=False,
     sep=';'
 )
-# объединение двух файлов по колонке card_code_____________________________________________________
+# объединение двух файлов_____________________________________________________
