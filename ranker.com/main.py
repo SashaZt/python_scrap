@@ -1,7 +1,3 @@
-import urllib.request
-from urllib.request import urlretrieve
-from PIL import Image
-import PIL
 import re
 import zipfile
 import os
@@ -51,12 +47,7 @@ def save_link_all_product(url):
     driver.get(url=url)
     driver.maximize_window()
     time.sleep(1)
-    # for b in range(30):
-    #     try:
-    #         button_more_card= driver.find_element(By.XPATH,
-    #                                           '//li[@class="listItem_main__8ll0k GridItem_main__33wgr listItem_hasRank__s5vh8 listItem_hasProps__tpE0W listItem_bigGrid__mSpkv GridItem_bigGrid__gcJMW listItem_showInfoIcon__2ZCb5"]//div[@class="container_innerContainer__ulE_r"]//span[text()="more"]').click()
-    #     except:
-    #         button_more_card = print('Not description')
+    # Выполняется первый цик, как только он закончится сразу переходим к следующему. Подбираем настройку через Debag
     more_ = False
     while not more_:
         try:
@@ -66,7 +57,7 @@ def save_link_all_product(url):
 
         except:
             break
-
+    # После выполнения скрипта выполняем сохранение файла. Подбираем настройку через Debag
     next_up = False
     while not next_up:
         try:
@@ -76,25 +67,8 @@ def save_link_all_product(url):
                                                    '//button[@class="sc-81a1fbb4-0 copewu button_main__b1K6d button_large__mns0w button_tertiary__jtYJm button_isFullWidth__bQMs4 paginationButton_paginationButton__gTe3k"]').click()
             driver.execute_script("window.scrollBy(0,500)", "")
 
-
-
-
         except:
             break
-    # load_more = True
-    # while not load_more:
-    #     try:
-    #         # driver.execute_script("window.scrollBy(0,document.body.scrollHeight)")
-    #         button_load_more = driver.find_element(By.XPATH,'//button[@class="sc-81a1fbb4-0 copewu button_main__b1K6d button_large__mns0w button_tertiary__jtYJm button_isFullWidth__bQMs4 paginationButton_paginationButton__gTe3k"]')
-    #         if button_load_more:
-    #             button_load_more.click()
-    #             time.sleep(1)
-    #         else:
-    #             button_load_more.click()
-    #     except:
-    #         load_more = True
-
-
 
     with open("C:\\scrap_tutorial-master\\ranker.com\\data.html", "w", encoding='utf-8') as file:
         file.write(driver.page_source)
@@ -116,7 +90,7 @@ def get_items(file_path):
     soup = BeautifulSoup(src, "lxml")
     table = soup.find('ul', attrs={'data-testid': 'list-item-ul'})
     # cart_table = table.find_all('li', attrs={'class': 'listItem_main__'})
-    #Найти класс который содержит часть текста
+    #Найти класс который содержит часть текста BeautifulSoup
     regex_cart = re.compile('listItem_main__.*')
     cart_table = table.find_all('li', attrs={'class': regex_cart})
     for i in cart_table:
@@ -162,8 +136,6 @@ def get_items(file_path):
 
                 )
             )
-
-
 
 if __name__ == '__main__':
     # print("Вставьте ссылку")
