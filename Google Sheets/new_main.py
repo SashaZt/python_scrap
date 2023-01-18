@@ -2,6 +2,12 @@ from pydrive.auth import GoogleAuth
 from pydrive.drive import GoogleDrive
 import os
 
+'''
+Рабочий скрип для выгрузки файла в GoogleDrive
+Файл client_secrets.json должен всегда быть там где эта обработка
+Настройка по примеру видео
+      Работаем с Google Диск на Python ｜ Сохраняем файлы в облако ｜ Google Drive API.mp4 
+'''
 gauth = GoogleAuth()
 gauth.LocalWebserverAuth()
 
