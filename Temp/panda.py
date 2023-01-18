@@ -10,6 +10,13 @@ import glob
 #                  header=True
 #                  )
 
+# Конвертация CSV в  XLSX, читаем csv с необходимыми параметрами, а уже только потом записываев в XLSX
+csv = pd.read_csv('2023-01-18_product.csv', sep=';')
+excel = pd.ExcelWriter('2023-01-18_product.xlsx')
+csv.to_excel(excel)
+excel.save()
+
+
 # # объединение нескольких файлов в один___________________________________________________________
 # # Пути к файлам
 # # files_xlsx = glob.glob("C:\\scrap_tutorial-master\\uniongroup\\panda\\*.xlsx")
@@ -45,15 +52,15 @@ import glob
 # # объединение двух файлов по колонке card_code_____________________________________________________
 
 # объединение двух файлов_____________________________________________________
-price_file = ("C:\\scrap_tutorial-master\\uniongroup\\data\\price.csv")
-all_file = ("C:\\scrap_tutorial-master\\uniongroup\\data\\all.csv")
-price_dataframe = pd.read_csv(price_file ,sep=';', encoding='cp1251')
-all_dataframe = pd.read_csv(all_file ,sep=';', encoding='cp1251')
-concat_dataframe = pd.concat([all_dataframe,price_dataframe], axis=1)
-concat_dataframe.to_csv(
-    "C:\\scrap_tutorial-master\\uniongroup\\data\\prom_concat.csv",
-    encoding='cp1251',
-    index=False,
-    sep=';'
-)
+# price_file = ("C:\\scrap_tutorial-master\\uniongroup\\data\\price.csv")
+# all_file = ("C:\\scrap_tutorial-master\\uniongroup\\data\\all.csv")
+# price_dataframe = pd.read_csv(price_file ,sep=';', encoding='cp1251')
+# all_dataframe = pd.read_csv(all_file ,sep=';', encoding='cp1251')
+# concat_dataframe = pd.concat([all_dataframe,price_dataframe], axis=1)
+# concat_dataframe.to_csv(
+#     "C:\\scrap_tutorial-master\\uniongroup\\data\\prom_concat.csv",
+#     encoding='cp1251',
+#     index=False,
+#     sep=';'
+# )
 # объединение двух файлов_____________________________________________________
