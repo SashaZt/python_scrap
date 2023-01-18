@@ -1,18 +1,26 @@
-#import pickle
-#import zipfile
+# import pickle
+# import zipfile
+from datetime import date
+import pandas as pd
 import os
 import json
 import csv
 import time
-#import requests
+from pydrive.auth import GoogleAuth
+from pydrive.drive import GoogleDrive
+import os
+
+gauth = GoogleAuth()
+gauth.LocalWebserverAuth()
+# import requests
 # Нажатие клавиш
-#from selenium.webdriver.common.keys import Keys
+# from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
-#from selenium.webdriver.support.ui import Select
+# from selenium.webdriver.support.ui import Select
 
 from selenium import webdriver
-#import random
+# import random
 from fake_useragent import UserAgent
 
 # Для работы webdriver____________________________________________________
@@ -41,7 +49,6 @@ def get_chromedriver(use_proxy=False, user_agent=None):
 
 
 def save_link_all_product(url):
-
     driver = get_chromedriver(use_proxy=False,
                               user_agent=f"{useragent.random}")
     driver.get(url=url)
@@ -85,12 +92,14 @@ def save_link_all_product(url):
 
 
 def parsing_product():
-    with open(f"C:\\scrap_tutorial-master\\lidl\\card_url.json") as file:
+    current_date = date.today()
+    with open(f"card_url.json") as file:
         all_site = json.load(file)
     product_url = []
     data = []
     char_prod_all = {}
-    with open(f"C:\\scrap_tutorial-master\\lidl\\product.csv", "w", errors='ignore') as file:
+    files_result = f"{current_date}_product.csv"
+    with open(files_result, "w", errors='ignore') as file:
         writer = csv.writer(file, delimiter=";", lineterminator="\r")
         writer.writerow(
             (
@@ -105,7 +114,7 @@ def parsing_product():
         )
     driver = get_chromedriver(use_proxy=False,
                               user_agent=f"{useragent.random}")
-    for item in all_site:
+    for item in all_site[:10]:
         Title_group = item['title_group']
         driver.get(item['url_name'])  # 'url_name' - это и есть ссылка
         try:
@@ -127,13 +136,14 @@ def parsing_product():
             sku_product = "Not SKU"
         try:
             weight_product = driver.find_element(By.XPATH,
-                                                 '//*[@id="maincontent"]/div[3]/div/div[1]/div[1]/div[1]/div[3]/div[3]/span/span[2]').text.replace('\n', '')
+                                                 '//*[@id="maincontent"]/div[3]/div/div[1]/div[1]/div[1]/div[3]/div[3]/span/span[2]').text.replace(
+                '\n', '')
         except:
             weight_product = "Not weight_product"
 
         try:
             brand_product = driver.find_element(By.XPATH,
-                                                 '//div[@class="product-info-extrahint hidden-small"]//div[@class="brand-details"]//p[1]').text
+                                                '//div[@class="product-info-extrahint hidden-small"]//div[@class="brand-details"]//p[1]').text
         except:
             brand_product = "Not weight_product"
 
@@ -143,13 +153,15 @@ def parsing_product():
                 "href")
         except:
             img = 'no img'
+
         try:
             price = driver.find_element(By.XPATH, '//div[@class="product-info-price"]//strong').text.replace('*CHF',
                                                                                                              '').replace(
                 '.', ',')
         except:
             price = 'No price'
-        with open(f"C:\\scrap_tutorial-master\\lidl\\product.csv", "a", errors='ignore') as file:
+        #
+        with open(files_result, "a", errors='ignore') as file:
             writer = csv.writer(file, delimiter=";", lineterminator="\r")
             writer.writerow(
                 (
@@ -159,12 +171,40 @@ def parsing_product():
                     sku_product,
                     weight_product,
                     price,
-                    img
+                    f'=IMAGE("{img}")'
                 )
             )
-    print('Готово')
+
+    print('Сохарнили результат в CSV файл')
     driver.close()
     driver.quit()
+
+
+def csv_to_xlsx():
+    current_date = date.today()
+    files_csv = f"{current_date}_product.csv"
+    files_xlsx = f"data/{current_date}_product.xlsx"
+    csv_files = pd.read_csv(f'{files_csv}', sep=';')
+    excel_files = pd.ExcelWriter(f'{files_xlsx}')
+    csv_files.to_excel(excel_files)
+    excel_files.save()
+    print('Сохранили резултат в XLSX файл')
+
+def uploadGoogleDrive(dir_path='data/'):
+    try:
+        drive = GoogleDrive(gauth)
+
+        for file_name in os.listdir(dir_path):
+            my_file = drive.CreateFile({'title': f'{file_name}'})
+            my_file.SetContentFile(os.path.join(dir_path, file_name))
+            my_file.Upload()
+
+            print(f'Файл {file_name} загружен!')
+
+        return 'Success!Have a good day!'
+    except Exception as _ex:
+        return 'Got some trouble, check your code please!'
+
 
 
 if __name__ == '__main__':
@@ -172,4 +212,6 @@ if __name__ == '__main__':
     # url = "https://sortiment.lidl.ch/de/alle-kategorien.html"
     # Запускаем первую функцию для сбора всех url на всех страницах
     # save_link_all_product(url)
-    parsing_product()
+    # parsing_product()
+    # csv_to_xlsx()
+    uploadGoogleDrive()
