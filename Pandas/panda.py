@@ -16,7 +16,6 @@ excel = pd.ExcelWriter('2023-01-18_product.xlsx')
 csv.to_excel(excel)
 excel.save()
 
-
 # # объединение нескольких файлов в один___________________________________________________________
 # # Пути к файлам
 # # files_xlsx = glob.glob("C:\\scrap_tutorial-master\\uniongroup\\panda\\*.xlsx")
