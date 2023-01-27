@@ -1,14 +1,14 @@
 # import pickle
 # import zipfile
-from datetime import date
-import pandas as pd
-import os
-import json
 import csv
+import json
+import os
 import time
+from datetime import date
+
+import pandas as pd
 from pydrive.auth import GoogleAuth
 from pydrive.drive import GoogleDrive
-import os
 
 gauth = GoogleAuth()
 gauth.LocalWebserverAuth()
@@ -175,7 +175,7 @@ def parsing_product():
                 )
             )
 
-    print('Сохарнили результат в CSV файл')
+    print('Сохранил результат в CSV файл')
     driver.close()
     driver.quit()
 
@@ -189,6 +189,7 @@ def csv_to_xlsx():
     csv_files.to_excel(excel_files)
     excel_files.save()
     print('Сохранили резултат в XLSX файл')
+
 
 def uploadGoogleDrive(dir_path='data/'):
     try:
@@ -204,7 +205,6 @@ def uploadGoogleDrive(dir_path='data/'):
         return 'Success!Have a good day!'
     except Exception as _ex:
         return 'Got some trouble, check your code please!'
-
 
 
 if __name__ == '__main__':

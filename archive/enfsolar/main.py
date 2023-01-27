@@ -16,7 +16,7 @@ options = webdriver.ChromeOptions()
 # Отключение режима WebDriver
 options.add_experimental_option('useAutomationExtension', False)
 # # Работа в фоновом режиме
-options.headless = True
+# options.headless = True
 options.add_argument(
     # "user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.90 Safari/537.36"
     f"user-agent={useragent.random}"

@@ -41,6 +41,7 @@ def get_chromedriver(use_proxy=False, user_agent=None):
 
     return driver
 
+
 def save_link_all_product(url):
     driver = get_chromedriver(use_proxy=False,
                               user_agent=f"{useragent.random}")
@@ -70,18 +71,20 @@ def save_link_all_product(url):
         except:
             break
 
-    with open("C:\\scrap_tutorial-master\\ranker.com\\data.html", "w", encoding='utf-8') as file:
+    with open("data.html", "w", encoding='utf-8') as file:
         file.write(driver.page_source)
 
     print("Скачал страницу")
     driver.close()
     driver.quit()
+
+
 def get_items(file_path):
-    with open(f"C:\\scrap_tutorial-master\\ranker.com\\data.csv", "w", errors='ignore') as file:
+    with open(f"data.csv", "w", errors='ignore') as file:
         writer = csv.writer(file, delimiter=";", lineterminator="\r")
         writer.writerow(
             (
-                'Name', 'Number', "Albums", "Labels", "description","description_2"
+                'Name', 'Number', "Albums", "Labels", "first_protect", "description", "description_2"
 
             )
         )
@@ -90,24 +93,30 @@ def get_items(file_path):
     soup = BeautifulSoup(src, "lxml")
     table = soup.find('ul', attrs={'data-testid': 'list-item-ul'})
     # cart_table = table.find_all('li', attrs={'class': 'listItem_main__'})
-    #Найти класс который содержит часть текста BeautifulSoup
+    # Найти класс который содержит часть текста BeautifulSoup
     regex_cart = re.compile('listItem_main__.*')
     cart_table = table.find_all('li', attrs={'class': regex_cart})
     for i in cart_table:
         name_card = i.find('div', attrs={'class': 'NodeName_nameWrapper__n32Nb'}).text
-        namber_card = i.find('div', attrs={'class': 'GridThumbnail_rankContainer__vE6_I GridThumbnail_hasImage__kNLG_ GridThumbnail_bigGrid__UiCVo'}).text
+        namber_card = i.find('div', attrs={
+            'class': 'GridThumbnail_rankContainer__vE6_I GridThumbnail_hasImage__kNLG_ GridThumbnail_bigGrid__UiCVo'}).text
         regex_img = re.compile('Media_main__ex93e.*')
         if i.find('figure', attrs={'class': regex_img}).find('img').get("data-src"):
-            img_card = i.find('figure', attrs={'class': regex_img}).find('img').get("data-src").replace("q=60&fit=crop&fm=pjpg&dpr=2&crop=faces&h=150&w=150", "q=100&fit=crop&fm=pjpg&dpr=2&crop=faces&h=250&w=250")
+            img_card = i.find('figure', attrs={'class': regex_img}).find('img').get("data-src").replace(
+                "q=60&fit=crop&fm=pjpg&dpr=2&crop=faces&h=150&w=150",
+                "q=100&fit=crop&fm=pjpg&dpr=2&crop=faces&h=250&w=250")
         else:
-            img_card =i.find('figure', attrs={'class': regex_img}).find('img').get("src").replace("q=60&fit=crop&fm=pjpg&dpr=2&crop=faces&h=150&w=150", "q=100&fit=crop&fm=pjpg&dpr=2&crop=faces&h=250&w=250")
-        #Выкачка фото
+            img_card = i.find('figure', attrs={'class': regex_img}).find('img').get("src").replace(
+                "q=60&fit=crop&fm=pjpg&dpr=2&crop=faces&h=150&w=150",
+                "q=100&fit=crop&fm=pjpg&dpr=2&crop=faces&h=250&w=250")
+        # Выкачка фото
         img_data = requests.get(img_card)
         with open(
-                f"C:\\scrap_tutorial-master\\ranker.com\\img\\{namber_card}.jpg",'wb') as file_img:
+                f"./img/{namber_card}.jpg", 'wb') as file_img:
             file_img.write(img_data.content)
         try:
-            albums_card = i.find('ul', attrs={'class': 'listItem_properties__sFwqE'}).find_all('li', attrs={'class': 'properties_item__STYON'})
+            albums_card = i.find('ul', attrs={'class': 'listItem_properties__sFwqE'}).find_all('li', attrs={
+                'class': 'properties_item__STYON'})
         except:
             albums_card = "not alboms"
         try:
@@ -119,23 +128,30 @@ def get_items(file_path):
         except:
             Labels = "Not Labels"
         try:
+            first_protect = i.find('div', attrs={'class': 'NodeName_firstProperties__xGMas'}).text
+        except:
+            first_protect = 'Not first protect'
+        try:
             dest_card = i.find('div', attrs={'class': 'container_container__53t32'}).text.replace("\n", "")
         except:
             dest_card = "Not description"
         try:
-            dest_card_2 = i.find('div', attrs={'class': 'richText_container__p5dag listItem_itemDescription__jxHkE listItem_blather__v_A3E'}).find('span').text.replace("\n", "")
+            dest_card_2 = i.find('div', attrs={
+                'class': 'richText_container__p5dag listItem_itemDescription__jxHkE listItem_blather__v_A3E'}).find(
+                'span').text.replace("\n", "")
         except:
             dest_card_2 = "Not description"
-        # print(img_card)
+        # print(first_protect)
 
         with open(f"C:\\scrap_tutorial-master\\ranker.com\\data.csv", "a", errors='ignore') as file:
             writer = csv.writer(file, delimiter=";", lineterminator="\r")
             writer.writerow(
                 (
-                    name_card, namber_card, Albums, Labels, dest_card, dest_card_2
+                    name_card, namber_card, Albums, Labels, first_protect, dest_card, dest_card_2
 
                 )
             )
+
 
 if __name__ == '__main__':
     # print("Вставьте ссылку")
@@ -143,7 +159,6 @@ if __name__ == '__main__':
     # # # # # ##Сайт на который переходим
     # # # # # # url = "https://www.ranker.com/list/favorite-male-singers-of-all-time/music-lover?ref=browse_rerank&l=1"
     # # # # # # Запускаем первую функцию для сбора всех url на всех страницах
-    save_link_all_product('https://www.ranker.com/list/hottest-asian-men/calistylie?ref=browse_ranking&l=1')
-    get_items('C:\\scrap_tutorial-master\\ranker.com\\data.html')
+    # save_link_all_product('https://www.ranker.com/crowdranked-list/20-greatest-singers?ref=all_in_one&rlf=GRID')
+    get_items('data.html')
     # parsing_product()
-
