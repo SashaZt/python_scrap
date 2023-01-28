@@ -4,6 +4,7 @@ import requests
 from aiogram import Bot, Dispatcher, executor, types
 from aiogram.utils.markdown import hbold, hunderline, hcode, hlink
 from bs4 import BeautifulSoup
+from aiogram.dispatcher.filters import Text
 from fake_useragent import UserAgent
 
 from config import TOKEN_API
@@ -66,6 +67,11 @@ async def start(message: types.Message):
     #                f"{v['price_cart']}\n"
     #
     #     await message.answer(list_car)
+
+
+@dp.message_handler(Text(equals='ACURA'))
+async def get_discount_acura(message: types.Message):
+    await message.answer('Подождите пожалуйста...')
 
 
 if __name__ == '__main__':
