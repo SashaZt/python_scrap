@@ -69,4 +69,6 @@ def get_date(url):
 
     with open("data/cofe.json", "a", encoding='utf-8') as file:
         json.dump(product_list, file, indent=4, ensure_ascii=False)
+
+
 get_date('https://prom.ua/c2820375-internet-kofejnya-karamel.html')
