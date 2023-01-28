@@ -1,0 +1,308 @@
+[
+    {
+        "url_name": "https://www.enfsolar.com/directory/panel/monocrystalline"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/panel/polycrystalline"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/panel/crystalline_flexible"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/panel/crystalline_bipv"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/panel/perc"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/panel/bifacial"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/panel/ibc"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/panel/mwt"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/panel/hjt"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/panel/amorphous"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/panel/cisFamily"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/panel/cdTe"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/panel/thin_film_bipv"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/material/cell"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/material/ribbon"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/material/glass"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/material/crystalline_encapsulant"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/material/crystalline_backsheet"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/material/cable"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/material/junction_box"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/material/connector"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/material/frame"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/material/crystalline_other"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/material/solar_tracker_materials"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/material/inverter_materials"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/material/solar_battery_materials"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/material/wafer"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/material/metallization_paste"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/material/screen"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/material/ammonia"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/material/isopropyl_alcohol"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/material/phosphorus_oxychloride"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/material/cell_silane"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/material/cell_acids"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/material/hydroxide"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/material/ingot_block"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/material/saw_band"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/material/slurry"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/material/saw_wire"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/material/ingot_mounting_adhesives"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/material/wafer_acids"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/material/polysilicon"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/material/recycled_material"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/material/crucible"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/material/insulation_felt"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/material/seed-crystal"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/equipment/crystalline_turn-key_system"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/equipment/crystalline_inspecting_testing"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/equipment/crystalline_cleaning"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/equipment/crystalline_tabbing_stringing"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/equipment/crystalline_laminating"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/equipment/crystalline_cutting_scribing"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/equipment/crystalline_framing"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/equipment/film_cutter"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/equipment/crystalline_other"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/equipment/cell_turn-key_system"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/equipment/cell_etching"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/equipment/cell_diffusion"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/equipment/cell_coating_deposition"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/equipment/cell_screen_printing"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/equipment/cell_other_furnaces"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/equipment/cell_inspecting_testing"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/equipment/cell_other"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/equipment/wafer_turn-key_system"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/equipment/wafer_cutting"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/equipment/wafer_cleaning"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/equipment/wafer_inspecting_testing"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/equipment/polishing_grinding"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/equipment/wafer_other"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/equipment/ingot_turn-key_system"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/equipment/crystalline_ingot_growing"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/equipment/ingot_inspecting_testing"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/equipment/ingot_cutting_grinding"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/seller/Austria"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/seller/Belgium"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/seller/Czech%20Republic"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/seller/France"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/seller/Germany"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/seller/Greece"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/seller/Hungary"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/seller/Italy"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/seller/Netherlands"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/seller/Poland"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/seller/Russia"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/seller/Spain"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/seller/Switzerland"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/seller/United%20Kingdom"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/seller/other_europe"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/seller/Australia"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/seller/China"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/seller/India"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/seller/Japan"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/seller/Korea"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/seller/New%20Zealand"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/seller/Pakistan"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/seller/Thailand"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/seller/other_apac"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/seller/Brazil"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/seller/Canada"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/seller/Mexico"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/seller/United%20States"
+    },
+    {
+        "url_name": "https://www.enfsolar.com/directory/seller/other_americas"
+    }
+]
