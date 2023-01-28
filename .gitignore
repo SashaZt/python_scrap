@@ -1,28 +1,10 @@
 # Default ignored files
-/venv/
-/.idea/
 */*.csv
 */*.json
 */*.xlsx
-*/*.htnl
+*/*.html
 */*.zip
-*.jpg
-.7z
+*/*.jpg
+*/*7z
 */*.txt
 */*cookies
-/Ivrit/01.csv
-/OLX/11.py
-/11800/Alfa-Romeo.csv
-/dila_ua/analysis.csv
-/archive/enfsolar/countrys_firma.csv
-/bigwinboard/game.csv
-/archive/semena_market/group.csv
-/archive/semena_market/group.json
-/lovely-professional/lash.csv
-/lovely-professional/lash — копия+.csv
-/lovely-professional/lash — копия.csv
-/README.md
-/lovely-professional/related_materials.csv
-/lovely-professional/related_materials — копия.csv
-/Temp/test.csv
-/test.py
