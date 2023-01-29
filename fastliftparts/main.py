@@ -1,5 +1,7 @@
 import json
 import time
+
+import csv
 from datetime import datetime
 
 import requests
@@ -83,8 +85,81 @@ def save_link_all_product():
 
 
 def parsing_product():
-    pass
+    time_now = datetime.now().time()
+    header = {
+        "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
+        "user-agent": f"{useragent.random}"}
+    # Читание json
+    with open('url_product.json') as file:
+        all_site = json.load(file)
+    for item in all_site:
+        time.sleep(5)
+        try:
+            resp = requests.get(item['url_name'], headers=header)
+        except:
+            continue
+        soup = BeautifulSoup(resp.text, 'lxml')
+        try:
+            product_name = soup.find('div',
+                                     attrs={'class': 'product__info-container product__info-container--sticky'}).find(
+                "h1").text.replace("\n", "").strip()
+        except:
+            product_name = "Нет названия"
+        try:
+            product_price = soup.find('div', attrs={'class': 'price__regular'}).find('span', attrs={
+                'class': 'price-item price-item--regular'}).text.replace("\n", "")
+        except:
+            product_price = "Нет цены"
+        try:
+            product_brand = soup.find('div',
+                                      attrs={'class': 'product__info-container product__info-container--sticky'}).find(
+                'p').text
+        except:
+            product_brand = "Not brand"
+        try:
+            product_img = soup.find('div', attrs={'class': 'product__media media media--transparent'}).find("img").get(
+                "src").replace("//cdn", "cdn")
+        except:
+            product_img = "нет изображения"
+        try:
+            product_des = soup.find('div', attrs={'class': 'product__description rte'}).find("h2").text.replace("\n",
+                                                                                                                "")
+        except:
+            product_des = "Нет каталога"
+        with open("product.csv", "a", errors='ignore') as file:
+            writer = csv.writer(file, delimiter=";", lineterminator="\r")
+            writer.writerow(
+                (
+                    product_name,
+                    product_price,
+                    product_brand,
+                    product_img,
+                    product_des
+                )
+            )
+        print(f'Текущее время {time_now} ссылка {item["url_name"]}')
+
+
+# def write_csv(data):
+#     # Создаём файл с заголовками
+#     with open(f"test.csv", "w", errors='ignore') as file:
+#         writer = csv.writer(file, delimiter=";", lineterminator="\r")
+#         writer.writerow(
+#             (
+#                 'Название',
+#                 'Цена',
+#                 'Бренд',
+#                 'Ссылка на изображение',
+#                 'Название группы'
+#
+#             )
+#         )
+#         # Дописываем данные из списка data в файл
+#         writer.writerows(
+#             data
+#         )
 
 
 if __name__ == '__main__':
-    save_link_all_product()
+    # save_link_all_product()
+    parsing_product()
