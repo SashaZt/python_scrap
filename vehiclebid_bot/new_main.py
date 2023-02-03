@@ -1,6 +1,7 @@
 import glob
 import json
 import time
+from datetime import datetime
 import zipfile
 
 from fake_useragent import UserAgent
@@ -110,6 +111,7 @@ def get_chromedriver(use_proxy=True, user_agent=None):
 def save_link_all_product(url):
     driver = get_chromedriver(use_proxy=True,
                               user_agent=f"{useragent.random}")
+
     # driver.get(url=url)
     # time.sleep(10)
     # Блок работы с куками-----------------------------------------
@@ -119,52 +121,154 @@ def save_link_all_product(url):
 
     # Блок работы с куками-----------------------------------------
     card_url = []
-    for i in range(1, 101):
-        # for cookie in pickle.load(open("cookies", "rb")):
-        #     driver.add_cookie(cookie)
-        if i == 1:
-            try:
-                driver = get_chromedriver(use_proxy=True,
-                                          user_agent=f"{useragent.random}")
-                driver.get(url)
-                time.sleep(5)
-                url_cars = driver.find_elements(By.XPATH, '//div[@class="chakra-stack css-owjkmg"]/a')
-                for urls in url_cars:
-                    card_url.append(
-                        {
-                            'url_name': urls.get_attribute("href")
-                        }
-                        # Добавляем в словарь два параметра для дальнейшего записи в json
-                    )
+    car_date = 0
+    print('Введите дату в формате Год 2023, Месяц 01, День 25')
+    print('*' * 50)
+    print('Дата с какого числа')
+    data_in = input()
+    print('Дата по какое число')
+    data_out = input()
 
-                driver.close()
-                driver.quit()
-            except:
-                print(f'ошибка {url}')
-                time.sleep(1)
-                driver.close()
-                driver.quit()
-        if i > 1:
-            try:
-                driver = get_chromedriver(use_proxy=True,
-                                          user_agent=f"{useragent.random}")
+    # Текущаяя дата
+    # data_now = datetime.now().date()
+    # exit()
 
-                driver.get(url + f'?page={i}')
-                time.sleep(5)
-                url_cars = driver.find_elements(By.XPATH, '//div[@class="chakra-stack css-owjkmg"]/a')
-                for urls in url_cars:
-                    card_url.append(
-                        {
-                            'url_name': urls.get_attribute("href")
-                        }
-                        # Добавляем в словарь два параметра для дальнейшего записи в json
-                    )
-                driver.close()
-                driver.quit()
-            except:
-                print(f'ошибка на странице больше 1')
+    try:
+        driver = get_chromedriver(use_proxy=True,
+                                  user_agent=f"{useragent.random}")
+        driver.get(f'{url}?yearFrom=1960&yearTo=2022&saleDateFrom={data_in}&saleDateTo={data_out}')
+        if driver.find_element(By.XPATH, '//p[contains(text(), "Try changing the filters")]').text:
+            print(f'С {data_in} по {data_out} объявлений нету')
+        else:
+            pagin_last = int(driver.find_element(By.XPATH, '//div[@class="css-1btdty2"]//a[last()]').text)
+            for i in range(1, pagin_last + 1):
+                # for cookie in pickle.load(open("cookies", "rb")):
+                #     driver.add_cookie(cookie)
+                if i == 1:
+                    try:
+                        driver = get_chromedriver(use_proxy=True,
+                                                  user_agent=f"{useragent.random}")
+                        driver.get(f'{url}?yearFrom=1960&yearTo=2022&saleDateFrom={data_in}&saleDateTo={data_out}')
+                        if driver.find_element(By.XPATH, '//p[contains(text(), "Try changing the filters")]').text:
+                            print(f'С {data_in} по {data_out} объявлений нету')
+                            break
+                        time.sleep(5)
+                        url_cars = driver.find_elements(By.XPATH, '//div[@class="chakra-stack css-owjkmg"]/a')
+                        for urls in url_cars:
+                            data_sale = urls.find_element(By.XPATH,
+                                                          '//div[@class="chakra-card__body css-1idwstw"]//p[@class="chakra-text css-0"][2]').text.replace(
+                                'Дата продажи: ', '').replace('""', '')
+                            card_url.append(
+                                {
+                                    'url_name': urls.get_attribute("href"),
+                                    'data_sale': data_sale
+                                }
+                                # Добавляем в словарь два параметра для дальнейшего записи в json
+                            )
+                    except:
+                        print(f'ошибка {url}')
+                        time.sleep(1)
+                        driver.close()
+                        driver.quit()
+                if i > 1:
+                    try:
+                        driver = get_chromedriver(use_proxy=True,
+                                                  user_agent=f"{useragent.random}")
+
+                        driver.get(
+                            f'{url}?yearFrom=1960&yearTo=2022&saleDateFrom={data_in}&saleDateTo={data_out}&page={i}')
+                        time.sleep(5)
+                        if driver.find_element(By.XPATH, '//p[contains(text(), "Try changing the filters")]').text:
+                            print(f'С {data_in} по {data_out} объявлений нету')
+                            break
+                        url_cars = driver.find_elements(By.XPATH, '//div[@class="chakra-stack css-owjkmg"]/a')
+                        for urls in url_cars:
+                            data_sale = urls.find_element(By.XPATH,
+                                                          '//div[@class="chakra-card__body css-1idwstw"]//p[@class="chakra-text css-0"][2]').text.replace(
+                                'Дата продажи: ', '').replace('""', '')
+                            card_url.append(
+                                {
+                                    'url_name': urls.get_attribute("href"),
+                                    'data_sale': data_sale
+                                }
+                                # Добавляем в словарь два параметра для дальнейшего записи в json
+                            )
+                        driver.close()
+                        driver.quit()
+                    except:
+                        print(f'ошибка на странице {i}')
+    except:
+        print('+')
     with open("car_url.json", 'w') as file:
         json.dump(card_url, file, indent=4, ensure_ascii=False)
+
+    #
+    #
+    #
+    # for i in range(1, 3):
+    #     # for cookie in pickle.load(open("cookies", "rb")):
+    #     #     driver.add_cookie(cookie)
+    #     if i == 1:
+    #         try:
+    #             driver = get_chromedriver(use_proxy=True,
+    #                                       user_agent=f"{useragent.random}")
+    #             driver.get(f'{url}?yearFrom=1960&yearTo=2022&saleDateFrom={data_in}&saleDateTo={data_out}')
+    #             if driver.find_element(By.XPATH, '//p[contains(text(), "Try changing the filters")]').text:
+    #                 print(f'С {data_in} по {data_out} объявлений нету')
+    #                 break
+    #             time.sleep(5)
+    #             url_cars = driver.find_elements(By.XPATH, '//div[@class="chakra-stack css-owjkmg"]/a')
+    #             for urls in url_cars:
+    #                 data_sale = urls.find_element(By.XPATH,
+    #                                               '//div[@class="chakra-card__body css-1idwstw"]//p[@class="chakra-text css-0"][2]').text.replace(
+    #                     'Дата продажи: ', '').replace('""', '')
+    #                 card_url.append(
+    #                     {
+    #                         'url_name': urls.get_attribute("href"),
+    #                         'data_sale': data_sale
+    #                     }
+    #                     # Добавляем в словарь два параметра для дальнейшего записи в json
+    #                 )
+    #
+    #             driver.close()
+    #             driver.quit()
+    #         except:
+    #             print(f'ошибка {url}')
+    #             time.sleep(1)
+    #             driver.close()
+    #             driver.quit()
+    #     if i > 1:
+    #         try:
+    #             driver = get_chromedriver(use_proxy=True,
+    #                                       user_agent=f"{useragent.random}")
+    #
+    #             driver.get(f'{url}?yearFrom=1960&yearTo=2022&saleDateFrom={data_in}&saleDateTo={data_out}')
+    #             time.sleep(5)
+    #             if driver.find_element(By.XPATH, '//p[contains(text(), "Try changing the filters")]').text:
+    #                 print(f'С {data_in} по {data_out} объявлений нету')
+    #                 break
+    #             url_cars = driver.find_elements(By.XPATH, '//div[@class="chakra-stack css-owjkmg"]/a')
+    #             for urls in url_cars:
+    #                 data_sale = urls.find_element(By.XPATH,
+    #                                               '//div[@class="chakra-card__body css-1idwstw"]//p[@class="chakra-text css-0"][2]').text.replace(
+    #                     'Дата продажи: ', '').replace('""', '')
+    #                 card_url.append(
+    #                     {
+    #                         'url_name': urls.get_attribute("href"),
+    #                         'data_sale': data_sale
+    #                     }
+    #                     # Добавляем в словарь два параметра для дальнейшего записи в json
+    #                 )
+    #             driver.close()
+    #             driver.quit()
+    #         except:
+    #             print(f'ошибка на странице {i}')
+    #     car_date += 1
+    #
+    # print(car_date)
+    # with open("car_url.json", 'w') as file:
+    #     json.dump(card_url, file, indent=4, ensure_ascii=False)
+    #
 
 
 """
@@ -272,11 +376,11 @@ def scrap_html_page():
 
 if __name__ == '__main__':
     # # Собираем все ссылки на товаров
-    # url = "https://vehiclebid.info/ru/search"
-    # save_link_all_product(url)
+    url = "https://vehiclebid.info/ru/search"
+    save_link_all_product(url)
     # Парсим все товары из файлов с
     ## Сохранение html страниц каждой машины
-    save_html_page()
+    # save_html_page()
     ## Извлечение информации с каждой страницы html
     # scrap_html_page()
 """

@@ -22,7 +22,6 @@ async def get_page_data(session, i):
     }
 
     async with aiohttp.ClientSession() as session:
-
         resp_url = await session.get(i, headers=header)
         soup = BeautifulSoup(await resp_url.text(), 'lxml')
         try:
