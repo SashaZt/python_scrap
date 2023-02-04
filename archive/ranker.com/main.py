@@ -143,7 +143,7 @@ def get_items(file_path):
             dest_card_2 = "Not description"
         # print(first_protect)
 
-        with open(f"C:\\scrap_tutorial-master\\ranker.com\\data.csv", "a", errors='ignore') as file:
+        with open(f"data.csv", "a", errors='ignore') as file:
             writer = csv.writer(file, delimiter=";", lineterminator="\r")
             writer.writerow(
                 (
@@ -159,6 +159,7 @@ if __name__ == '__main__':
     # # # # # ##Сайт на который переходим
     # # # # # # url = "https://www.ranker.com/list/favorite-male-singers-of-all-time/music-lover?ref=browse_rerank&l=1"
     # # # # # # Запускаем первую функцию для сбора всех url на всех страницах
-    # save_link_all_product('https://www.ranker.com/crowdranked-list/20-greatest-singers?ref=all_in_one&rlf=GRID')
-    get_items('data.html')
+    save_link_all_product(
+        'https://www.ranker.com/list/most-famous-singers-right-now/celebrity-lists?ref=collections_top&l=2719003&collectionId=2609')
+    # get_items('data.html')
     # parsing_product()
