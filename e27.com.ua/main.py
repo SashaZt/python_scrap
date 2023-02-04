@@ -263,7 +263,7 @@ def parsing_product():
     with open(f"chandeliers-ceilings.json") as file:
         all_site = json.load(file)
     products_url = []
-    for item in all_site[14:16]:
+    for item in all_site[:50]:
 
         driver.get(item['url_name'])  # 'url_name' - это и есть ссылка
 
@@ -424,26 +424,28 @@ def parsing_product():
 
         "regex_ch_10 = 'Страна регистрац'"
         try:
-            if regex_ch_10 in desk_product[9].text:
-                ch_10 = desk_product[9].text
-            elif regex_ch_11 in desk_product[9].text:
-                ch_10 = desk_product[8].text
-            else:
-                ch_10 = desk_product[7].text
+            ch_10 = desk_product[9].text
+            # if regex_ch_10 in desk_product[9].text:
+            #     ch_10 = desk_product[9].text
+            # elif regex_ch_11 in desk_product[9].text:
+            #     ch_10 = desk_product[8].text
+            # else:
+            #     ch_10 = desk_product[7].text
         except:
             ch_10 = None
 
         "regex_ch_11 = 'Страна производ'"
         try:
-            if regex_ch_11 in desk_product[10].text:
-                ch_11 = desk_product[10].text
-            elif regex_ch_10 in desk_product[10].text:
-                ch_11 = desk_product[10].text
-            else:
-                ch_11 = desk_product[8].text
+            ch_11 = desk_product[10].text
+            # if regex_ch_11 in desk_product[10].text:
+            #     ch_11 = desk_product[10].text
+            # elif regex_ch_10 in desk_product[10].text:
+            #     ch_11 = desk_product[10].text
+            # else:
+            #     ch_11 = desk_product[8].text
         except:
             ch_11 = None
-        print(sku_product, desk_product[8].text, desk_product[9].text)
+        # print(sku_product, desk_product[8].text, desk_product[9].text)
         #
         # d1 = {'Название': [name_product_ru], 'Категория': [name_category], 'Артикул': [sku_product],
         #       'ch_02_01': [ch_02_01], 'ch_02_02': [ch_02_02], 'ch_02_03': [ch_02_03], 'ch_02_04': [ch_02_04],
@@ -461,16 +463,16 @@ def parsing_product():
         #               sep=';'
         #               )
 
-        # with open(f"C:\\scrap_tutorial-master\\e27.com.ua\\data.csv", "a", errors='ignore') as file:
-        #     writer = csv.writer(file, delimiter=";", lineterminator="\r")
-        #     writer.writerow(
-        #         (
-        #             name_product_ru, name_category, sku_product, ch_02_01, ch_02_02, ch_02_03, ch_02_04, ch_03_01,
-        #             ch_03_02, ch_03_03, ch_03_04, ch_04_01, ch_04_02, ch_04_03, ch_05_01, ch_05_02, ch_05_03, ch_06,
-        #             ch_07, ch_08, ch_09, ch_10, ch_11
-        #
-        #         )
-        #     )
+        with open(f"C:\\scrap_tutorial-master\\e27.com.ua\\data.csv", "a", errors='ignore') as file:
+            writer = csv.writer(file, delimiter=";", lineterminator="\r")
+            writer.writerow(
+                (
+                    name_product_ru, name_category, sku_product, ch_02_01, ch_02_02, ch_02_03, ch_02_04, ch_03_01,
+                    ch_03_02, ch_03_03, ch_03_04, ch_04_01, ch_04_02, ch_04_03, ch_05_01, ch_05_02, ch_05_03, ch_06,
+                    ch_07, ch_08, ch_09, ch_10, ch_11
+
+                )
+            )
 
     diff_time = datetime.datetime.now() - start_time
     print(diff_time)
