@@ -92,7 +92,7 @@ def parsing_product():
     # Читание json
     with open('url_product.json') as file:
         all_site = json.load(file)
-    for item in all_site:
+    for item in all_site[146981:]:
         time.sleep(5)
         try:
             resp = requests.get(item['url_name'], headers=header)
@@ -137,7 +137,6 @@ def parsing_product():
                     product_des
                 )
             )
-        print(f'Текущее время {time_now} ссылка {item["url_name"]}')
 
 
 # def write_csv(data):

@@ -167,16 +167,19 @@ def save_link_all_product(url):
                     'url_name': url_product
                 }
             )
+    produkt_list = []
     for j in url_products[0:1]:
         resp = requests.get(j['url_name'], headers=header)
         soup = BeautifulSoup(resp.text, 'lxml')
+
         product_avaibel = soup.find('ul', attrs={'class': 'b-product-data'}).find('li').text
         product_sku = soup.find('li', attrs={'class': 'b-product-data__item b-product-data__item_type_sku'}).text
         product_name = soup.find('h1', attrs={'class': 'cs-product__name cs-online-edit'}).find('span').text
         product_price = soup.find('p', attrs={'class': 'b-product-cost__price'}).find('span').text
         table_product_info = soup.find('table', attrs={'class': 'b-product-info'}).find_all('tr')
         for o in table_product_info[1:]:
-            print(o.text.replace("\n", ""))
+            print(o.text)
+        print("*" * 50)
 
 
 def parsing_product():

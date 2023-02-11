@@ -15,7 +15,6 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 
 # Библиотеки для Асинхронного парсинга
-# Библиотеки для Асинхронного парсинга
 
 useragent = UserAgent()
 # options = webdriver.ChromeOptions()
@@ -121,6 +120,12 @@ def get_chromedriver(use_proxy=False, user_agent=None):
             zp.writestr('background.js', background_js)
 
         chrome_options.add_extension(plugin_file)
+        # не открывается браузер
+        # chrome_options.headless = True
+        ##Необходимо тестировать!!!
+        # chrome_options.add_argument("--disable-blink-features=AutomationControlled")
+        # chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
+        # chrome_options.add_experimental_option('useAutomationExtension', False)
 
     if user_agent:
         chrome_options.add_argument(f'--user-agent={user_agent}')
@@ -132,6 +137,14 @@ def get_chromedriver(use_proxy=False, user_agent=None):
         service=s,
         options=chrome_options
     )
+    ##Необходимо тестировать!!!
+    # driver.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {
+    #     'source': '''
+    #                 delete window.cdc_adoQpoasnfa76pfcZLmcfl_Array;
+    #                 delete window.cdc_adoQpoasnfa76pfcZLmcfl_Promise;
+    #                 delete window.cdc_adoQpoasnfa76pfcZLmcfl_Symbol;
+    #           '''
+    # })
 
     return driver
 
@@ -263,7 +276,7 @@ def parsing_product():
     with open(f"chandeliers-ceilings.json") as file:
         all_site = json.load(file)
     products_url = []
-    for item in all_site[:50]:
+    for item in all_site[3:6]:
 
         driver.get(item['url_name'])  # 'url_name' - это и есть ссылка
 
@@ -276,203 +289,229 @@ def parsing_product():
         desk_list_all = []
         # Все описание
         desk_product = driver.find_elements(By.XPATH, '//div[@class="short-description"]//ul//li')
-        # for i in desk_product:
-        #     desk_list_all.append(i.text)
-        # desk_list = " ; ".join(desk_list_all)
-        # print(desk_list)
-        # with open(f"C:\\scrap_tutorial-master\\e27.com.ua\\data_.csv", "a", errors='ignore') as file:
-        #     writer = csv.writer(file, delimiter=";", lineterminator="\r")
-        #     writer.writerow(
-        #         (desk_list
-        #          ))
-        # exit()
-        regex_ch_10 = 'Страна регистрац'
-        regex_ch_11 = 'Страна производ'
-        try:
-            if desk_product[1]:
-                ch_02 = desk_product[1].text.replace("Размеры: ", "Размеры / ").replace(" см.", "").split(" / ")
-            else:
-                print(f'ch_02_{sku_product}')
-        except:
-            ch_02 = ""
-        try:
-            ch_02_01 = ch_02[0]
-        except:
-            ch_02_01 = ""
-        try:
-            ch_02_02 = ch_02[1]
-        except:
-            ch_02_02 = ""
-        try:
-            ch_02_03 = ch_02[2]
-        except:
-            ch_02_03 = ""
-        try:
-            ch_02_04 = ch_02[3]
-        except:
-            ch_02_04 = ""
-        # Лампы: 3шт x 40Вт (E14)
-        try:
-            if desk_product[2]:
-                ch_03 = desk_product[2].text.replace("Лампы: ", "Лампы / ").replace(" x ", " / ").replace(" (",
-                                                                                                          " / (").split(
-                    " / ")
-            else:
-                print(f'ch_03_{sku_product}')
-        except:
-            ch_03 = ""
-        try:
-            ch_03_01 = ch_03[0]
-        except:
-            ch_03_01 = ""
-        try:
-            ch_03_02 = ch_03[1]
-        except:
-            ch_03_02 = ""
-        try:
-            ch_03_03 = ch_03[2]
-        except:
-            ch_03_03 = ""
-        try:
-            ch_03_04 = ch_03[3]
-        except:
-            ch_03_04 = ""
-        # Плафон: Стекло / Белый (white).
-        try:
-            if desk_product[3]:
-                ch_04 = desk_product[3].text.replace("Плафон: ", "Плафон /").split("/")
-            else:
-                print(f'ch_04_{sku_product}')
-        except:
-            ch_04 = ""
-        regex_ch_04_01 = 'Плафон'
-        try:
-            if regex_ch_04_01 in ch_04[0]:
-                ch_04_01 = ch_04[0]
-            else:
-                ch_04_01 = ""
-        except:
-            print(f'ch_04_01{sku_product}')
-        try:
-            ch_04_02 = ch_04[1]
-        except:
-            ch_04_02 = ""
-        try:
-            ch_04_03 = ch_04[2]
-        except:
-            ch_04_03 = ""
-        # Основание: Металл ; Стальной матовый.
-        try:
-            if desk_product[4]:
-                ch_05 = desk_product[4].text.replace("Основание: ", "Основание / ").split(" / ")
-            else:
-                print(f'ch_04_{sku_product}')
-        except:
-            ch_05 = ""
 
-        regex_ch_05_01 = 'Основани'
-        try:
-            if regex_ch_05_01 in ch_05[0]:
-                ch_05_01 = ch_05[0]
-            else:
-                ch_05_01 = ""
-        except:
-            ch_05_01 = ""
-        try:
-            ch_05_02 = ch_05[1]
-        except:
-            ch_05_02 = ""
-        try:
-            ch_05_03 = ch_05[2]
-        except:
-            ch_05_03 = ""
-
-        regex_ch_06 = 'Совместимос'
-        try:
-            if regex_ch_06 in desk_product[5].text:
-                ch_06 = desk_product[5].text
-            else:
-                ch_06 = ch_04[0]
-        except:
-            print(f'ch_06_{sku_product}')
-        regex_ch_07 = 'Уровень за'
-        try:
-            if regex_ch_07 in desk_product[6].text:
-                ch_07 = desk_product[6].text
-            else:
-                ch_07 = ch_05[0]
-        except:
-            print(f"ch_07 {sku_product}")
-
-        regex_ch_08 = 'Лампа'
-        try:
-            if regex_ch_08 in desk_product[7].text:
-                ch_08 = desk_product[7].text
-            else:
-                ch_08 = desk_product[5].text
-        except:
-            print(f"ch_08 {sku_product}")
-
-        regex_ch_09 = 'Питание'
-        try:
-            if regex_ch_09 in desk_product[8].text:
-                ch_09 = desk_product[8].text
-            else:
-                ch_09 = desk_product[8].text
-        except:
-            ch_09 = None
-
-        "regex_ch_10 = 'Страна регистрац'"
-        try:
-            ch_10 = desk_product[9].text
-            # if regex_ch_10 in desk_product[9].text:
-            #     ch_10 = desk_product[9].text
-            # elif regex_ch_11 in desk_product[9].text:
-            #     ch_10 = desk_product[8].text
-            # else:
-            #     ch_10 = desk_product[7].text
-        except:
-            ch_10 = None
-
-        "regex_ch_11 = 'Страна производ'"
-        try:
-            ch_11 = desk_product[10].text
-            # if regex_ch_11 in desk_product[10].text:
-            #     ch_11 = desk_product[10].text
-            # elif regex_ch_10 in desk_product[10].text:
-            #     ch_11 = desk_product[10].text
-            # else:
-            #     ch_11 = desk_product[8].text
-        except:
-            ch_11 = None
-        # print(sku_product, desk_product[8].text, desk_product[9].text)
-        #
-        # d1 = {'Название': [name_product_ru], 'Категория': [name_category], 'Артикул': [sku_product],
-        #       'ch_02_01': [ch_02_01], 'ch_02_02': [ch_02_02], 'ch_02_03': [ch_02_03], 'ch_02_04': [ch_02_04],
-        #       'ch_03_01': [ch_03_01], 'ch_03_02': [ch_03_02], 'ch_03_03': [ch_03_03], 'ch_03_04': [ch_03_04],
-        #       'ch_04_01': [ch_04_01], 'ch_04_02': [ch_04_02], 'ch_04_03': [ch_04_03], 'ch_05_01': [ch_05_01],
-        #       'ch_05_02': [ch_05_02], 'ch_05_03': [ch_05_03], 'ch_06': [ch_06], 'ch_07': [ch_07], 'ch_08': [ch_08],
-        #       'ch_09': [ch_09], 'ch_10': [ch_10]}
-        # df = pd.DataFrame(d1)
-        # with open(f"C:\\scrap_tutorial-master\\e27.com.ua\\data_.csv", "w") as csv_file:
-        #     df.to_csv(f"C:\\scrap_tutorial-master\\e27.com.ua\\data.csv",
-        #               encoding='cp1251',
-        #               mode='a',
-        #               header=False,
-        #               index=False,
-        #               sep=';'
-        #               )
-
-        with open(f"C:\\scrap_tutorial-master\\e27.com.ua\\data.csv", "a", errors='ignore') as file:
-            writer = csv.writer(file, delimiter=";", lineterminator="\r")
-            writer.writerow(
-                (
-                    name_product_ru, name_category, sku_product, ch_02_01, ch_02_02, ch_02_03, ch_02_04, ch_03_01,
-                    ch_03_02, ch_03_03, ch_03_04, ch_04_01, ch_04_02, ch_04_03, ch_05_01, ch_05_02, ch_05_03, ch_06,
-                    ch_07, ch_08, ch_09, ch_10, ch_11
-
-                )
-            )
+        for i in desk_product[1:]:
+            if i.text in "Плафо":
+                print(i.text)
+    exit()
+    # # for i in desk_product:
+    # #     desk_list_all.append(i.text)
+    # # desk_list = " ; ".join(desk_list_all)
+    # # print(desk_list)
+    # # with open(f"C:\\scrap_tutorial-master\\e27.com.ua\\data_.csv", "a", errors='ignore') as file:
+    # #     writer = csv.writer(file, delimiter=";", lineterminator="\r")
+    # #     writer.writerow(
+    # #         (desk_list
+    # #          ))
+    # # exit()
+    # regex_ch_10 = 'Страна регистрац'
+    # regex_ch_11 = 'Страна производ'
+    # try:
+    #     if desk_product[1]:
+    #         ch_02 = desk_product[1].text.replace("Размеры: ", "Размеры / ").replace(" см.", "").split(" / ")
+    #     else:
+    #         print(f'ch_02_{sku_product}')
+    # except:
+    #     ch_02 = ""
+    # try:
+    #     ch_02_01 = ch_02[0]
+    # except:
+    #     ch_02_01 = ""
+    # try:
+    #     ch_02_02 = ch_02[1]
+    # except:
+    #     ch_02_02 = ""
+    # try:
+    #     ch_02_03 = ch_02[2]
+    # except:
+    #     ch_02_03 = ""
+    # try:
+    #     ch_02_04 = ch_02[3]
+    # except:
+    #     ch_02_04 = ""
+    # # Лампы: 3шт x 40Вт (E14)
+    # try:
+    #     if desk_product[2]:
+    #         ch_03 = desk_product[2].text.replace("Лампы: ", "Лампы / ").replace(" x ", " / ").replace(" (",
+    #                                                                                                   " / (").split(
+    #             " / ")
+    #     else:
+    #         print(f'ch_03_{sku_product}')
+    # except:
+    #     ch_03 = ""
+    # try:
+    #     ch_03_01 = ch_03[0]
+    # except:
+    #     ch_03_01 = ""
+    # try:
+    #     ch_03_02 = ch_03[1]
+    # except:
+    #     ch_03_02 = ""
+    # try:
+    #     ch_03_03 = ch_03[2]
+    # except:
+    #     ch_03_03 = ""
+    # try:
+    #     ch_03_04 = ch_03[3]
+    # except:
+    #     ch_03_04 = ""
+    # # Плафон: Стекло / Белый (white).
+    # try:
+    #     if desk_product[3]:
+    #         ch_04 = desk_product[3].text.replace("Плафон: ", "Плафон /").split("/")
+    #     else:
+    #         print(f'ch_04_{sku_product}')
+    # except:
+    #     ch_04 = ""
+    # regex_ch_04_01 = 'Плафон'
+    # try:
+    #     if regex_ch_04_01 in ch_04[0]:
+    #         ch_04_01 = ch_04[0]
+    #     else:
+    #         ch_04_01 = ""
+    # except:
+    #     print(f'ch_04_01{sku_product}')
+    # try:
+    #     ch_04_02 = ch_04[1]
+    # except:
+    #     ch_04_02 = ""
+    # try:
+    #     ch_04_03 = ch_04[2]
+    # except:
+    #     ch_04_03 = ""
+    # # Основание: Металл ; Стальной матовый.
+    # try:
+    #     if desk_product[4]:
+    #         ch_05 = desk_product[4].text.replace("Основание: ", "Основание / ").split(" / ")
+    #     else:
+    #         print(f'ch_04_{sku_product}')
+    # except:
+    #     ch_05 = ""
+    #
+    # regex_ch_05_01 = 'Основани'
+    # try:
+    #     if regex_ch_05_01 in ch_05[0]:
+    #         ch_05_01 = ch_05[0]
+    #     else:
+    #         ch_05_01 = ""
+    # except:
+    #     ch_05_01 = ""
+    # try:
+    #     ch_05_02 = ch_05[1]
+    # except:
+    #     ch_05_02 = ""
+    # try:
+    #     ch_05_03 = ch_05[2]
+    # except:
+    #     ch_05_03 = ""
+    # regex_ch_08 = 'Лампа'
+    # regex_ch_06 = 'Совместимос'
+    # regex_ch_09 = 'Питание'
+    # try:
+    #     if regex_ch_06 in desk_product[5].text:
+    #         ch_06 = desk_product[5].text
+    #     elif regex_ch_08 in desk_product[5].text:
+    #         ch_08 = desk_product[5].text
+    #     else:
+    #         ch_06 = None
+    # except:
+    #     ch_06 = None
+    #
+    # regex_ch_07 = 'Уровень за'
+    # try:
+    #     if regex_ch_07 in desk_product[6].text:
+    #         ch_07 = desk_product[6].text
+    #     elif regex_ch_09 in desk_product[6].text:
+    #         ch_09 = desk_product[6].text
+    #     else:
+    #         ch_07 = desk_product[6].text
+    # except:
+    #     ch_07 = None
+    #
+    # try:
+    #     if regex_ch_08 in desk_product[7].text:
+    #         ch_08 = desk_product[7].text
+    #     elif regex_ch_10 in desk_product[7].text:
+    #         ch_10 = desk_product[7].text
+    #     else:
+    #         ch_08 = desk_product[7].text
+    #
+    # except:
+    #     ch_08 = None
+    #
+    # regex_ch_09 = 'Питание'
+    # try:
+    #     if regex_ch_09 in desk_product[8].text:
+    #         ch_09 = desk_product[8].text
+    #     else:
+    #         ch_09 = desk_product[8].text
+    # except:
+    #     ch_09 = None
+    #
+    # "regex_ch_10 = 'Страна регистрац'"
+    # try:
+    #     if regex_ch_10 in desk_product[9].text:
+    #         ch_10 = desk_product[9].text
+    #     elif desk_product[9].text == None:
+    #         ch_10 = desk_product[7].text
+    #
+    #     # if regex_ch_10 in desk_product[9].text:
+    #     #     ch_10 = desk_product[9].text
+    #     # elif regex_ch_11 in desk_product[9].text:
+    #     #     ch_10 = desk_product[8].text
+    #     # else:
+    #     #     ch_10 = desk_product[7].text
+    # except:
+    #     ch_10 = None
+    #
+    # "regex_ch_11 = 'Страна производ'"
+    # try:
+    #     ch_11 = desk_product[10].text
+    #     # if regex_ch_11 in desk_product[10].text:
+    #     #     ch_11 = desk_product[10].text
+    #     # elif regex_ch_10 in desk_product[10].text:
+    #     #     ch_11 = desk_product[10].text
+    #     # else:
+    #     #     ch_11 = desk_product[8].text
+    # except:
+    #     ch_11 = None
+    # print(sku_product)
+    # print(f'ch_06 - {ch_06}')
+    # print(f'ch_07 - {ch_07}')
+    # print(f'ch_08 - {ch_08}')
+    # print(f'ch_09 - {ch_09}')
+    # print(f'ch_10 - {ch_10}')
+    # print(f'ch_11 - {ch_11}')
+    #
+    # print("*" * 50)
+    # #
+    # # d1 = {'Название': [name_product_ru], 'Категория': [name_category], 'Артикул': [sku_product],
+    # #       'ch_02_01': [ch_02_01], 'ch_02_02': [ch_02_02], 'ch_02_03': [ch_02_03], 'ch_02_04': [ch_02_04],
+    # #       'ch_03_01': [ch_03_01], 'ch_03_02': [ch_03_02], 'ch_03_03': [ch_03_03], 'ch_03_04': [ch_03_04],
+    # #       'ch_04_01': [ch_04_01], 'ch_04_02': [ch_04_02], 'ch_04_03': [ch_04_03], 'ch_05_01': [ch_05_01],
+    # #       'ch_05_02': [ch_05_02], 'ch_05_03': [ch_05_03], 'ch_06': [ch_06], 'ch_07': [ch_07], 'ch_08': [ch_08],
+    # #       'ch_09': [ch_09], 'ch_10': [ch_10], 'ch_11': [ch_11]}
+    # # df = pd.DataFrame(d1)
+    # # # print(df)
+    # # with open(f"C:\\scrap_tutorial-master\\e27.com.ua\\data_.csv", "w") as csv_file:
+    # #     df.to_csv(f"C:\\scrap_tutorial-master\\e27.com.ua\\data.csv",
+    # #               encoding='cp1251',
+    # #               mode='a',
+    # #               header=True,
+    # #               index=False,
+    # #               sep=';'
+    # #               )
+    # #
+    # # with open(f"C:\\scrap_tutorial-master\\e27.com.ua\\data.csv", "a", errors='ignore') as file:
+    # #     writer = csv.writer(file, delimiter=";", lineterminator="\r")
+    # #     writer.writerow(
+    # #         (
+    # #             name_product_ru, name_category, sku_product, ch_02_01, ch_02_02, ch_02_03, ch_02_04, ch_03_01,
+    # #             ch_03_02, ch_03_03, ch_03_04, ch_04_01, ch_04_02, ch_04_03, ch_05_01, ch_05_02, ch_05_03, ch_06,
+    # #             ch_07, ch_08, ch_09, ch_10, ch_11
+    # #
+    # #         )
+    # #     )
 
     diff_time = datetime.datetime.now() - start_time
     print(diff_time)
