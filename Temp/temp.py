@@ -1,6 +1,9 @@
 import csv
+import random
 import time
 import re
+import os
+
 # Нажатие клавиш
 import requests
 from bs4 import BeautifulSoup
@@ -13,6 +16,14 @@ from selenium.webdriver.common.by import By
 import glob
 from datetime import datetime
 
+# l = "https://www.11880.com/suche/Alfa-Romeo/deutschland"
+# print(l.split("/")[-2])
+with open('info.txt', 'r') as f:
+    nums = f.read().splitlines()
+for i in nums:
+
+folder_url = "C://scrap_tutorial-master//archive//11800//url//"
+os.mkdir(f'{folder_url}')
 # str_ = 'Светильник потолочный MAYTONI 43265 (C032CL-L32MG3K) в стиле модерн ➤ Цвет: золото, белый ✈ БЕСПЛАТНАЯ ДОСТАВКА ✈ Киев и вся Украина: ✓ Одесса ✓ Харьков ✓ Днепр ✓ Львов'
 url = 'https://www.bcautoencheres.fr/Lot?id=19346880&ItemId=58bffd67-1f4a-4570-b473-2cee37bb131a&q=&bq=saleid_exact%3A15b740e5-49bc-4e22-9c39-7470049e6f22&sort=LotNumber&missingMileage=True&awaitingAppraisal=True&page=1&extraFiltersActive=true&saleHeader=true&returnTo=2-XGJ-79&promoAppliedSets=&R=15&SR=10&SourceSystem=PEEP'
 # # url = '=IMAGE("https://sortiment.lidl.ch/media/catalog/product/cache/38c728e59b3a47950872534eff8a1e63/2/3/2332_ApfelZimt_PSXX.jpg")'
@@ -29,21 +40,25 @@ url = 'https://www.bcautoencheres.fr/Lot?id=19346880&ItemId=58bffd67-1f4a-4570-b
 
 # import csv
 #
-# # Читаем csv по строно
+# Читаем csv по строно
+# proxy = [
+#
+# ]
 # with open('proxies.csv', newline='', encoding='utf-8') as files:
 #     csv_reader = list(csv.reader(files, delimiter=' ', quotechar='|'))
-#     for row in csv_reader[:1]:
-#         print(row[0])
+#     for row in csv_reader:
+#         proxy.append(row[0])
+# print(proxy)
 
-f = open(
-    'C:\\scrap_tutorial-master\\Temp\\view-source_https___www.webstaurantstore.com_bunn-27370-0000-solenoid_HP273700000.html',
-    'r')
-s = f.read()
-soup = BeautifulSoup(s, 'lxml')
-#
-js = re.findall(">\s*\{.*\}", html)
-# raw_json = soup.find_all(js)
-print(soup)
+# f = open(
+#     'C:\\scrap_tutorial-master\\Temp\\view-source_https___www.webstaurantstore.com_bunn-27370-0000-solenoid_HP273700000.html',
+#     'r')
+# s = f.read()
+# soup = BeautifulSoup(s, 'lxml')
+# #
+# js = re.findall(">\s*\{.*\}", html)
+# # raw_json = soup.find_all(js)
+# print(soup)
 
 # import requests
 #

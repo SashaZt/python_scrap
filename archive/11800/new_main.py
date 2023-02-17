@@ -2,7 +2,7 @@ import csv
 import glob
 import json
 import time
-
+import pandas
 import undetected_chromedriver
 from bs4 import BeautifulSoup
 from selenium import webdriver
@@ -87,6 +87,7 @@ def save_link_all_product(url):
     product_url = []
     driver = get_undetected_chromedriver()
     driver.get(url)
+    group = url.split("/")[-2]
     isNextDisable = False
     while not isNextDisable:
         try:
@@ -98,7 +99,7 @@ def save_link_all_product(url):
                                                     '//li[@class="result-list-entry result-list-entry--clickable result-list-entry--hoverable search-result-list-item search-result-entry-item"]//div[@class="result-list-entry-wrapper mb-3 mb-md-3"]//a')
             for item in card_product_url:
                 product_url.append(
-                    {'url_name': item.get_attribute("href")}
+                    item.get_attribute("href")
                 )
 
             next_button = driver.find_element(By.XPATH, '//button[@class="link icon-right"]')
@@ -111,46 +112,66 @@ def save_link_all_product(url):
                 isNextDisable = True
         except:
             isNextDisable = True
+    # Запись CSV по строчно
+    df = pandas.DataFrame(product_url)
+    df.to_csv(f"C:\\scrap_tutorial-master\\archive\\11800\\url\\{group}\\url.csv", sep=',', index=False)
+    # with open(f"C:\\scrap_tutorial-master\\archive\\11800\\url\\{group}\\url_firm.csv", "a", errors='ignore') as file:
+    #     writer = csv.writer(file, delimiter=";", lineterminator="\r")
+    #     writer.writerow((product_url))
 
-    with open(f"C:\\scrap_tutorial-master\\archive\\11800\\url\\Alfa-Romeo\\url_firm.json", 'w') as file:
-        json.dump(product_url, file, indent=4, ensure_ascii=False)
     driver.close()
     driver.quit()
 
 
 # Сохраняем товар в html файл
-def save_html():
+def save_html(url):
+    group = url.split("/")[-2]
     driver = get_undetected_chromedriver()
 
-    with open(f"C:\\scrap_tutorial-master\\archive\\11800\\url\\Alfa-Romeo\\url_firm.json") as file:
-        all_site = json.load(file)
+    # with open(f"C:\\scrap_tutorial-master\\archive\\11800\\url\\{group}\\url_firm.json") as file:
+    #     all_site = json.load(file)
 
-    # С json вытягиваем только 'url_name' - это и есть ссылка
-    count = 0
-    for item in all_site:
-        count += 1
-        driver.get(item['url_name'])  # 'url_name' - это и есть ссылка
+    with open(f'C:\\scrap_tutorial-master\\archive\\11800\\url\\{group}\\url.csv', newline='',
+              encoding='utf-8') as files:
+        csv_reader = list(csv.reader(files, delimiter=' ', quotechar='|'))
+    counter = 1
+    for row in csv_reader:
+        counter += 1
+        # driver.get(item['url_name'])  # 'url_name' - это и есть ссылка
+        driver.get(row[0])  # 'url_name' - это и есть ссылка
         try:
             next_button = WebDriverWait(driver, 100).until(
                 EC.element_to_be_clickable((By.XPATH, '//button[@class="btn btn-default-highlight btn-find"]')))
             driver.execute_script("window.scrollBy(0,document.body.scrollHeight)")
             time.sleep(1)
-            with open(f"C:\\scrap_tutorial-master\\archive\\11800\\data\\Alfa-Romeo\\data_{count}.html", "w",
+            with open(f"C:\\scrap_tutorial-master\\archive\\11800\\data\\{group}\\data_{counter}.html", "w",
                       encoding='utf-8') as fl:
                 fl.write(driver.page_source)
         except:
             continue
+
+    # С json вытягиваем только 'url_name' - это и есть ссылка
+
+    # for item in all_site:
 
     driver.close()
     driver.quit()
 
 
 # Парсим html файл
-def pasing_html():
+def pasing_html(url):
+    group = url.split("/")[-2]
     datas = []
-    targetPattern = r"C:\\scrap_tutorial-master\\archive\\11800\\data\\Alfa-Romeo\\*.html"
+    targetPattern = fr"C:\\scrap_tutorial-master\\archive\\11800\\data\\{group}\\*.html"
     files_html = glob.glob(targetPattern)
-
+    with open(f"C:\\scrap_tutorial-master\\archive\\11800\\csv\\{group}.csv", "w",
+              errors='ignore') as file:
+        writer = csv.writer(file, delimiter=";", lineterminator="\r")
+        writer.writerow(
+            (
+                'Brand', 'Firm', 'Address', 'Telephone', 'email', 'web', 'services'
+            )
+        )
     for item in files_html:
         data_csv = []
         with open(item, encoding="utf-8") as file:
@@ -160,12 +181,20 @@ def pasing_html():
             brand_firn = soup.find('span', attrs={'class': 'trades-list'}).text.strip()
         except:
             brand_firn = ""
+        # href_firma = soup.find('ol', attrs={'class': 'bread-crumb'}).get_attribute('itemid')
+        try:
+            href_firma = soup.find('ol', attrs={'class': 'bread-crumb'}).find_all('li')[2].find('span')['itemid']
+        except:
+            href_firma = ""
 
         script = soup.find_all('script', type="application/ld+json")[0]
         # script = soup.find_all('script', type="application/json")[1].text.strip()[4:-3]
         data_json = json.loads(script.string)
         name_firm = data_json['name']
-        telef_firm = data_json['telephone'][0]
+        try:
+            telef_firm = data_json['telephone'][0]
+        except:
+            telef_firm = ""
         try:
             email_firm = data_json['email']
         except:
@@ -212,18 +241,18 @@ def pasing_html():
             all_s2.append(s2.text)
         servises_firma_02 = ",".join(all_s2)
         servise = f'{servises_firma_01}, {servises_firma_02}'
-        with open(f"C:\\scrap_tutorial-master\\archive\\11800\\data\\Alfa-Romeo\\data.csv", "a",
+        with open(f"C:\\scrap_tutorial-master\\archive\\11800\\csv\\{group}.csv", "a",
                   errors='ignore') as file:
             writer = csv.writer(file, delimiter=";", lineterminator="\r")
             writer.writerow(
                 (
-                    brand_firn, name_firm, adress_firma, telef_firm, email_firm, url_firm, servise
+                    group, name_firm, adress_firma, telef_firm, email_firm, url_firm, servise
                 )
             )
 
 
 if __name__ == '__main__':
-    url = "https://www.11880.com/suche/Kfz-Reparaturen/deutschland?page=1110&query=cmxXakxKcWNvelMwbko5aFZ3YzdWemtjb0p5MFZ3YmtBRmp2b1RTbXFSOXZuekl3cVBWNnJsV3NuSkR2QnZWMlpUQXVMR1YwQXdxd1pKSXVaR3l5WlFOME1UWjVMbVJ2WVBXc3BUeXhWd2JrQlFFOXNGanZwMkl1cHpBYkczTzBuSjlocGxWNnIzMGZWYVd1b3pFaW9JQXlNSkR2Qno1MW9Uazk="
-    save_link_all_product(url)
-    # save_html()
-    # pasing_html()
+    url = "https://www.11880.com/suche/Autotuning/deutschland"
+    # save_link_all_product(url)
+    # ######################save_html(url)
+    pasing_html(url)
