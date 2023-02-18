@@ -1,26 +1,18 @@
-import zipfile
-from bs4 import BeautifulSoup
-import pandas as pd
-import os
-import json
 import csv
-import time
 import glob
-
-# Нажатие клавиш
-
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import Select
-
-from selenium import webdriver
+import json
+import zipfile
 
 from fake_useragent import UserAgent
-
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
 # Для работы webdriver____________________________________________________
 # Для работы с драйвером селениум по Хром необходимо эти две строчки
 from selenium.webdriver.support.wait import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
+
+# Нажатие клавиш
 
 useragent = UserAgent()
 
@@ -165,8 +157,6 @@ def save_link_all_product(url):
     driver.quit()
 
 
-
-
 def parsing_product():
     # Получаем список файлов с сылками на товары
     targetPattern = r"C:\scrap_tutorial-master\demex.com.ua\*.json"
@@ -175,7 +165,6 @@ def parsing_product():
         with open(f"{item}") as file:
             group = item.split("\\")[-1].replace(".json", "")
             all_site = json.load(file)
-
 
         # Переходим по каждой ссылке товара и получаем данные
         for href_card in all_site:
