@@ -229,6 +229,6 @@ def parsing_product():
 if __name__ == '__main__':
     # # Собираем все ссылки на категории товаров
     url = "https://demex.com.ua/"
-    # save_link_all_product(url)
+    save_link_all_product(url)
     #Парсим все товары из файлов с
     parsing_product()
