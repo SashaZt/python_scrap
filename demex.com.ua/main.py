@@ -127,8 +127,8 @@ def save_link_all_product(url):
         categoriy_product_urls.append(
             {'url_name': item_categoriy.get_attribute("href")}
         )
-
-    for item_prod in categoriy_product_urls[:1]:
+    # Тут категории все
+    for item_prod in categoriy_product_urls:
         driver.get(item_prod['url_name'])
         group = item_prod['url_name'].split("/")[-1]
 
@@ -177,19 +177,8 @@ def parsing_product():
             all_site = json.load(file)
 
 
-        # group = item.replace(".json", "").split("\\")[-1]
-        # with open(f"C:\\scrap_tutorial-master\\dok.ua\\data\\{group}.csv", "w", errors='ignore') as file:
-        #     writer = csv.writer(file, delimiter=";", lineterminator="\r")
-        #     writer.writerow(
-        #         (
-        #             'name_product', 'bread', 'price_new', 'n_01', 'n_02', 'n_03', 'n_04', 'n_05', 'n_06', 'n_07',
-        #             'n_08', 'n_09',
-        #             'n_10', 'n_11', 'links_img'
-        #
-        #         )
-        #     )
         # Переходим по каждой ссылке товара и получаем данные
-        for href_card in all_site[:5]:
+        for href_card in all_site:
             driver = get_chromedriver(use_proxy=False,
                                       user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36')
 
@@ -197,9 +186,8 @@ def parsing_product():
             driver.get(href_card['url_name'])  # 'url_name' - это и есть ссылка
 
             driver.maximize_window()
-            # time.sleep(10)
-            # button_find = WebDriverWait(driver, 200).until(
-            #     EC.element_to_be_clickable((By.XPATH, '//i[@class="iconcar-search"]')))
+            button_find = WebDriverWait(driver, 200).until(
+                EC.element_to_be_clickable((By.XPATH, '//i[@class="iconcar-search"]')))
 
             try:
                 name_product = driver.find_element(By.XPATH,'//h1[@class="title-item"]').text
@@ -240,7 +228,7 @@ def parsing_product():
                 writer = csv.writer(file, delimiter=";", lineterminator="\r")
                 writer.writerow(
                     (
-                        name_product, bread, price_new, link_img, desk_product, original_nomer
+                        href_card['url_name'], name_product, bread, price_new, link_img, desk_product, original_nomer
 
                     )
                 )
