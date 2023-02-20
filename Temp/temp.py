@@ -18,12 +18,11 @@ from datetime import datetime
 
 # l = "https://www.11880.com/suche/Alfa-Romeo/deutschland"
 # print(l.split("/")[-2])
-with open('info.txt', 'r') as f:
-    nums = f.read().splitlines()
-for i in nums:
+# with open('info.txt', 'r') as f:
+#     nums = f.read().splitlines()
+# for i in nums:
 
-folder_url = "C://scrap_tutorial-master//archive//11800//url//"
-os.mkdir(f'{folder_url}')
+
 # str_ = 'Светильник потолочный MAYTONI 43265 (C032CL-L32MG3K) в стиле модерн ➤ Цвет: золото, белый ✈ БЕСПЛАТНАЯ ДОСТАВКА ✈ Киев и вся Украина: ✓ Одесса ✓ Харьков ✓ Днепр ✓ Львов'
 url = 'https://www.bcautoencheres.fr/Lot?id=19346880&ItemId=58bffd67-1f4a-4570-b473-2cee37bb131a&q=&bq=saleid_exact%3A15b740e5-49bc-4e22-9c39-7470049e6f22&sort=LotNumber&missingMileage=True&awaitingAppraisal=True&page=1&extraFiltersActive=true&saleHeader=true&returnTo=2-XGJ-79&promoAppliedSets=&R=15&SR=10&SourceSystem=PEEP'
 # # url = '=IMAGE("https://sortiment.lidl.ch/media/catalog/product/cache/38c728e59b3a47950872534eff8a1e63/2/3/2332_ApfelZimt_PSXX.jpg")'

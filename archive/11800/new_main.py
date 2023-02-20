@@ -162,10 +162,10 @@ def save_html(url):
 def pasing_html(url):
     group = url.split("/")[-2]
     datas = []
-    targetPattern = fr"C:\\scrap_tutorial-master\\archive\\11800\\data\\{group}\\*.html"
+    targetPattern = fr"c:\\Temp\\data\\{group}\\*.html"
     files_html = glob.glob(targetPattern)
-    with open(f"C:\\scrap_tutorial-master\\archive\\11800\\csv\\{group}.csv", "w",
-              errors='ignore') as file:
+    with open(f"c:\\Temp\\csv\\{group}.csv", "w",
+              errors='ignore', encoding="utf-8") as file:
         writer = csv.writer(file, delimiter=";", lineterminator="\r")
         writer.writerow(
             (
@@ -241,8 +241,8 @@ def pasing_html(url):
             all_s2.append(s2.text)
         servises_firma_02 = ",".join(all_s2)
         servise = f'{servises_firma_01}, {servises_firma_02}'
-        with open(f"C:\\scrap_tutorial-master\\archive\\11800\\csv\\{group}.csv", "a",
-                  errors='ignore') as file:
+        with open(f"c:\\Temp\\csv\\{group}.csv", "a",
+                  errors='ignore', encoding="utf-8") as file:
             writer = csv.writer(file, delimiter=";", lineterminator="\r")
             writer.writerow(
                 (
@@ -252,7 +252,7 @@ def pasing_html(url):
 
 
 if __name__ == '__main__':
-    url = "https://www.11880.com/suche/Autotuning/deutschland"
+    url = "https://www.11880.com/suche/Volvo/deutschland"
     # save_link_all_product(url)
     # ######################save_html(url)
     pasing_html(url)

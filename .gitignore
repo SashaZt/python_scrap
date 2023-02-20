@@ -1,10 +1,13 @@
 # Default ignored files
-*/*.csv
-*/*.json
-*/*.xlsx
-*/*.html
-*/*.zip
-*/*.jpg
-*/*7z
-*/*.txt
-*/*cookies
+**/*.csv
+**/*.json
+**/*.xlsx
+**/*.html
+**/*.zip
+**/*.jpg
+**/*.7z
+**/*.txt
+**/*cookies
+**/*.cfg
+**/*.iml
+**/*.jl
