@@ -9,14 +9,13 @@ import csv
 import time
 import glob
 
-
+"""
+Рабочий скрип для сбора уже с готовый HTML страниц с сайта webstaurantstore
+"""
 def parsing_product():
-    datas = []
-    # targetPattern = r"C:\scrap_tutorial-master\webstaurantstore\data\*.html"
-    targetPattern = r"E:\*.html"
+    targetPattern = r"c:\DATA_webstaurantstore\*.html"
     files_html = glob.glob(targetPattern)
     datas = []
-    bad_url = []
     count = 0
     with open(f"test.csv", "w", errors='ignore') as file:
         writer = csv.writer(file, delimiter=";", lineterminator="\r")
@@ -38,7 +37,7 @@ def parsing_product():
         try:
             script = soup.find_all('script', type="application/json")[1].text.strip()[4:-3]
         except:
-            bad_url.append(item)
+
             continue
         data_json = json.loads(script)
         try:
@@ -84,23 +83,21 @@ def parsing_product():
                     [product_url, product_name, product_sky, price_adn_tara, price_adn_tara_min, av]
                 )
             else:
-                bad_url.append(item)
+                print(count)
                 continue
         except:
-            bad_url.append(item)
+            print(count)
             continue
+
     with open(f"test.csv", "a", errors='ignore') as file:
         writer = csv.writer(file, delimiter=";", lineterminator="\r")
         writer.writerows(
             datas
         )
-    with open(f"bad_url.csv", "a", newline='', errors='ignore') as file:
-        writer = csv.writer(file)
-        writer.writerow(
-            bad_url
-        )
-    # write_csv(datas)
+
+
 
 
 if __name__ == '__main__':
+
     parsing_product()
