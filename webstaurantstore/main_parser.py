@@ -9,26 +9,15 @@ import csv
 import time
 import glob
 
-"""
-Рабочий скрип для сбора уже с готовый HTML страниц с сайта webstaurantstore
-"""
+
 def parsing_product():
-    targetPattern = r"c:\DATA_webstaurantstore\*.html"
+    datas = []
+    # targetPattern = r"E:\DATA_webstaurantstore\*.html"
+    targetPattern = r"E:\DATA_webstaurantstore\*.html"
     files_html = glob.glob(targetPattern)
     datas = []
     count = 0
-    with open(f"test.csv", "w", errors='ignore') as file:
-        writer = csv.writer(file, delimiter=";", lineterminator="\r")
-        writer.writerow(
-            (
-                'product_url',
-                'product_name',
-                'product_sky',
-                'product_price',
-                'price_adn_tara_min',
-                'availability'
-            )
-        )
+
     for item in files_html:
         count += 1
         with open(item, encoding="utf-8") as file:
@@ -37,9 +26,12 @@ def parsing_product():
         try:
             script = soup.find_all('script', type="application/json")[1].text.strip()[4:-3]
         except:
-
+            print(item)
             continue
-        data_json = json.loads(script)
+        try:
+            data_json = json.loads(script)
+        except:
+            continue
         try:
             if data_json['productTemplates']:
                 availability = data_json['productTemplates'][0]['isInStock']
@@ -82,11 +74,10 @@ def parsing_product():
                 datas.append(
                     [product_url, product_name, product_sky, price_adn_tara, price_adn_tara_min, av]
                 )
-            else:
                 print(count)
+            else:
                 continue
         except:
-            print(count)
             continue
 
     with open(f"test.csv", "a", errors='ignore') as file:
@@ -94,10 +85,8 @@ def parsing_product():
         writer.writerows(
             datas
         )
-
-
+    # write_csv(datas)
 
 
 if __name__ == '__main__':
-
     parsing_product()
