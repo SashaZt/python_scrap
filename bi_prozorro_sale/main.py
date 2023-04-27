@@ -118,7 +118,7 @@ def get_chromedriver():
 def save_link_all_product():
     with open('member.csv', 'r') as f:
         nums = f.read().splitlines()
-    for i in nums[1098:]:
+    for i in nums:
         print(i)
         url = "https://bi.prozorro.sale/#/participantsCard"
         driver = get_chromedriver()
@@ -169,7 +169,7 @@ def save_link_all_product():
 
 
 def parsing_product():
-    targetPattern = r"data/*.html"
+    targetPattern = r"E:\data_bi_prozorro_sale\*.html"
     files_html = glob.glob(targetPattern)
     # data = []
 
@@ -185,26 +185,75 @@ def parsing_product():
         )
     for item in files_html:
         codes = []
-        print(item)
+
         with open(item, encoding="utf-8") as file:
             src = file.read()
             soup = BeautifulSoup(src, 'lxml')
             spans = soup.find_all('span', {'ng-switch-when': 'text'})
-            lot = spans[29].text
-            name = spans[1].text.replace("\t\n", "")
-            edrpou = spans[4].text
-            tel = spans[10].text
-            email = spans[13].text
-            add_19 = spans[19].text
-            add_22 = spans[22].text
-            fio = spans[7].text
-            datas = spans[27].text
-            organiz = spans[28].text
-            aukchion = spans[30].text
-            status = spans[31].text
-            pobiditel = spans[32].text
-            final_summa =spans[35].text
+            try:
+                lot = spans[29].text
+            except:
+                lot = None
+            try:
+                name = spans[1].text.replace("\n", "").replace("\t", "")
+            except:
+                name = None
+            try:
+                edrpou = spans[4].text.replace("\n", "").replace("\t", "")
+            except:
+                edrpou = None
 
+            try:
+                tel = spans[10].text.replace("\n", "").replace("\t", "")
+            except:
+                tel = None
+
+            try:
+                email = spans[13].text.replace("\n", "").replace("\t", "")
+            except:
+                email = None
+
+            try:
+                add_19 = spans[19].text.replace("\n", "").replace("\t", "")
+            except:
+                add_19 = None
+
+            try:
+                add_22 = spans[22].text.replace("\n", "").replace("\t", "")
+            except:
+                add_22 = None
+            try:
+                fio = spans[7].text.replace("\n", "").replace("\t", "")
+            except:
+                fio = None
+
+            try:
+                datas = spans[27].text.replace("\n", "").replace("\t", "")
+            except:
+                datas = None
+            try:
+                organiz = spans[28].text.replace("\n", "").replace("\t", "")
+            except:
+                organiz = None
+
+            try:
+                aukchion = spans[30].text.replace("\n", "").replace("\t", "")
+            except:
+                aukchion = None
+
+            try:
+                status = spans[31].text.replace("\n", "").replace("\t", "")
+            except:
+                status = None
+
+            try:
+                pobiditel = spans[32].text.replace("\n", "").replace("\t", "")
+            except:
+                pobiditel = None
+            try:
+                final_summa =spans[35].text.replace("\n", "").replace("\t", "")
+            except:
+                final_summa = None
             codes.append(name)
             codes.append(edrpou)
             codes.append(add_19)
@@ -223,9 +272,10 @@ def parsing_product():
                       errors='ignore', encoding="utf-8") as file:
                 writer = csv.writer(file, delimiter=";", lineterminator="\r")
                 writer.writerow((codes))
+            # print(f'{item} - {codes}')
 
 
 
 if __name__ == '__main__':
-    save_link_all_product()
-    # parsing_product()
+    # save_link_all_product()
+    parsing_product()
