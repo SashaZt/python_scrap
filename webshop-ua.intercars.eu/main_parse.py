@@ -1,8 +1,8 @@
 import glob
+import traceback
 import re
-from random import randint
 import time
-import psutil
+import os
 import requests
 import undetected_chromedriver
 from bs4 import BeautifulSoup
@@ -17,108 +17,21 @@ from selenium.webdriver.support.wait import WebDriverWait
 
 import csv
 
-# Нажатие клавиш
 
-useragent = UserAgent()
-
-# Данные для прокси
-PROXY_HOST = 'IP'
-PROXY_PORT = 'PORT'  # Без кавычек
-PROXY_USER = 'LOGIN'
-PROXY_PASS = 'PASS'
-
-# Настройка для requests чтобы использовать прокси
-proxies = {'http': f'http://{PROXY_USER}:{PROXY_PASS}@{PROXY_HOST}:{PROXY_PORT}/'}
-
-manifest_json = """
-{
-    "version": "1.0.0",
-    "manifest_version": 2,
-    "name": "Chrome Proxy",
-    "permissions": [
-        "proxy",
-        "tabs",
-        "unlimitedStorage",
-        "storage",
-        "<all_urls>",
-        "webRequest",
-        "webRequestBlocking"
-    ],
-    "background": {
-        "scripts": ["background.js"]
-    },
-    "minimum_chrome_version":"76.0.0"
-}
-"""
-
-background_js = """
-let config = {
-        mode: "fixed_servers",
-        rules: {
-        singleProxy: {
-            scheme: "http",
-            host: "%s",
-            port: parseInt(%s)
-        },
-        bypassList: ["localhost"]
-        }
-    };
-chrome.proxy.settings.set({value: config, scope: "regular"}, function() {});
-function callbackFn(details) {
-    return {
-        authCredentials: {
-            username: "%s",
-            password: "%s"
-        }
-    };
-}
-chrome.webRequest.onAuthRequired.addListener(
-            callbackFn,
-            {urls: ["<all_urls>"]},
-            ['blocking']
-);
-""" % (PROXY_HOST, PROXY_PORT, PROXY_USER, PROXY_PASS)
-
-
-# def get_chromedriver(use_proxy=True, user_agent=None):
-#     chrome_options = webdriver.ChromeOptions()
-#
-#     if use_proxy:
-#         plugin_file = 'proxy_auth_plugin.zip'
-#
-#         with zipfile.ZipFile(plugin_file, 'w') as zp:
-#             zp.writestr('manifest.json', manifest_json)
-#             zp.writestr('background.js', background_js)
-#
-#         chrome_options.add_extension(plugin_file)
-#
-#     if user_agent:
-#         chrome_options.add_argument(f'--user-agent={user_agent}')
-#
-#     s = Service(
-#         executable_path="C:\\scrap_tutorial-master\\chromedriver.exe"
-#     )
-#     driver = webdriver.Chrome(
-#         service=s,
-#         options=chrome_options
-#     )
-#
-#     return driver
 def get_undetected_chromedriver(use_proxy=False, user_agent=None):
     chrome_options = webdriver.ChromeOptions()
     chrome_options.add_argument(
-        '--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36')
+        '--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36')
     chrome_options.add_argument('--disable-blink-features=AutomationControlled')
 
-    driver = undetected_chromedriver.Chrome()
-    # s = Service(
-    #     executable_path="C:\\scrap_tutorial-master\\chromedriver.exe"
-    # )
-    # driver = webdriver.Chrome(
-    #     service=s,
-    #     options=chrome_options
-    # )
+    chrome_options.add_argument("--disable-gpu")
+    chrome_options.add_argument("--start-maximized")
+    # chrome_options.add_argument('--headless')
+    """Проба"""
+    chrome_options.add_argument("--disable-dev-shm-usage")
+    chrome_options.add_argument("--disable-setuid-sandbox")
 
+    driver = undetected_chromedriver.Chrome()
     return driver
 
 
@@ -128,9 +41,10 @@ def save_link_all_product(url):
         csv_reader = list(csv.reader(files, delimiter=' ', quotechar='|'))
         count_url = 0
         bad_product = []
-        counter = 0
-        for row in csv_reader[1:2]:
+        counter = 274870
+        for row in csv_reader[274870:]:
             counter += 1
+            print(counter)
             name_product = (','.join(row))
             name_product_find = name_product.replace(",", " ")
             name_file = name_product.replace(",", "_")
@@ -143,10 +57,10 @@ def save_link_all_product(url):
                 find_product = driver.find_element(By.XPATH, '//input[@class="ui-autocomplete-input"]')
                 find_product.send_keys(name_product_find)
                 find_product.send_keys(Keys.RETURN)
+
                 time.sleep(1)
                 try:
-                    dont_find_wait = WebDriverWait(driver, 10).until(
-                        EC.element_to_be_clickable((By.XPATH, '//div[contains(text(), "Немає результатів")]')))
+                    driver.find_element(By.XPATH, '//div[contains(text(), "Немає результатів")]')
                     driver.close()
                     driver.quit()
                 except:
@@ -158,72 +72,112 @@ def save_link_all_product(url):
                     with open(f"c:\\intercars_html\\{name_file}.html", "w",
                               encoding='utf-8') as file:
                         file.write(driver.page_source)
+                    time.sleep(5)
                     driver.close()
                     driver.quit()
-            except:
+            except Exception as e:
                 bad_product.append(name_product_find)
                 with open(f'C:\\scrap_tutorial-master\\webshop-ua.intercars.eu\\csv\\bad_product.csv', 'a', newline='',
                           encoding='utf-8') as csvfile:
                     writer = csv.writer(csvfile, delimiter='\n', quotechar='|')
                     writer.writerow(bad_product)
+                traceback.print_exc()
                 driver.close()
                 driver.quit()
-            print(counter)
-
 
 
 def parsing_product():
     targetPattern = r"c:\intercars_html\*.html"
     files_html = glob.glob(targetPattern)
     # data = []
-    for item in files_html[:5]:
+    # with open("output.csv", "w", newline="", encoding='utf-8') as csvfile:
+    #     writer = csv.writer(csvfile)
+    for item in files_html:
+        # print(item)
+        filename_csv = os.path.basename(item)  # Получаем только имя файла из пути
+        filename_csv = os.path.splitext(filename_csv)[0].replace("_", " ")  # Удаляем расширение файла
+        # writer.writerow([filename_csv])
         with open(f"{item}", encoding="utf-8") as file:
             src = file.read()
-        driver = get_undetected_chromedriver()
-        driver.get(item)
-        driver.maximize_window()
         soup = BeautifulSoup(src, 'lxml')
-        sku = driver.find_element(By.XPATH, '//span[@id="index_30"]').text
-        name_product = soup.find('p', attrs={'id': 'description_30'}).text.strip()
+
         try:
-            if driver.find_element(By.XPATH, '//div[contains(text(), "Штрих-код")]'):
-                bray = driver.find_element(By.XPATH, '//div[contains(text(), "Штрих-код")]')
-                br = bray.find_element(By.XPATH, './..')
-            else:
-                continue
+            name_product = soup.find('span', attrs={'class': 'active_filters_span'}).text.strip()
         except:
-            continue
-        with open(f"C:\\scrap_tutorial-master\\webshop-ua.intercars.eu\\data.csv", "a", errors='ignore') as file:
-            writer = csv.writer(file, delimiter=";", lineterminator="\r")
-            writer.writerow(
-                (
-                    sku, name_product, br.text.replace("\n", "").replace("Штрих-код:", "")
+            name_product = filename_csv
+        try:
+            script_div = soup.find('a', attrs={'data-gc-onclick': 'dyn-gallery'})['data-dyngalposstring']
+        except:
+            script_div = 'Пусто'
+        pattern = re.compile(r"'src': '(.+?)',")
+        result = pattern.findall(script_div)
+        counter = 1
+        filenames = []
+        for img in result:
 
-                )
-            )
+            """Выкачка фото"""
+            img_dir = "c:\\intercars_img"
+            if len(result) < 4:
+                while counter <= len(result):
+                    filename = f"{name_product}_0{counter}.jpg"
+                    file_path = os.path.join(img_dir, filename)
 
+                    if os.path.exists(file_path):
+                        # Файл уже существует, пропускаем его
+                        # print(f"Файл {filename} уже существует, пропускаем его")
+                        counter += 1
+                        continue
 
+                    img_data = requests.get(img)
+                    with open(file_path, 'wb') as file_img:
+                        file_img.write(img_data.content)
 
+                    counter += 1
+                filenames.append(filename)
+            elif len(result) > 4:
+                while counter <= 4:
+                    filename = f"{name_product}_0{counter}.jpg"
+                    file_path = os.path.join(img_dir, filename)
 
-        #
-        #
-        # name_product = soup.find('span', attrs={'class': 'active_filters_span'}).text.strip()
-        # try:
-        #     script_div = soup.find('a', attrs={'data-gc-onclick': 'dyn-gallery'})['data-dyngalposstring']
-        # except:
-        #     script_div = 'Пусто'
-        # pattern = re.compile(r"'src': '(.+?)',")
-        # result = pattern.findall(script_div)
-        # counter = 0
-        # for img in result:
-        #     counter += 1
-        #     img_data = requests.get(img)
-        #     with open(f"c:\\intercars_img\\{name_product}_0{counter}.jpg", 'wb') as file_img:
-        #         file_img.write(img_data.content)
-        #     if counter == 4:
-        #         break
+                    if os.path.exists(file_path):
+                        # Файл уже существует, пропускаем его
+                        # print(f"Файл {filename} уже существует, пропускаем его")
+                        counter += 1
+                        continue
 
+                    img_data = requests.get(img)
+                    with open(file_path, 'wb') as file_img:
+                        file_img.write(img_data.content)
 
+                    counter += 1
+                filenames.append(filename)
+            # print(filenames)
+            """Получение данных"""
+            try:
+                full_name = soup.find('div', class_="col-xs-12 p-l-2 p-r-2 f-12 text-center").text
+            except:
+                full_name = ""
+            details_card_div = soup.find("div", {"id": "details_card"})
+            try:
+                divs = details_card_div.find_all("div", class_="clearfix flexcard p-l-2 p-r-2")
+            except:
+                continue
+            pattern = re.compile(r"Штрих-ко.*?(\d{13})")
+            barcode = ''
+            for div in divs:
+                match = pattern.search(div.text)
+                if match:
+                    barcode = match.group(1)
+                    barcode = re.sub(r"\D", "", barcode)  # Удаляем все символы, кроме цифр
+                    break
+            # print(details_card_div)
+            manufacture = soup.find('span', attrs = {'id': 'manufacture_30'}).text
+            manufacture_code = soup.find('a', class_="article_index_link").text
+            manufacture_name = soup.find('span', attrs = {'id': 'name_30'}).text
+            with open("data.csv", "a", newline="", encoding="utf-8") as csvfile:
+                writer = csv.writer(csvfile, delimiter=';')
+                writer.writerow([full_name, manufacture, manufacture_code, manufacture_name, barcode] + filenames)
+            # print(f"{full_name} | {manufacture} | {manufacture_code} | {manufacture_name} | {barcode}")
 if __name__ == '__main__':
     # # Собираем все ссылки на категории товаров
     # url = "https://webshop-ua.intercars.eu/zapchasti/"

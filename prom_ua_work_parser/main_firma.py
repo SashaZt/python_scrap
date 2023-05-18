@@ -128,7 +128,7 @@ def save_html():
     coun = 1
     driver = get_chromedriver(use_proxy=True,
                               user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36")
-    for i in range(1,160):
+    for i in range(80,346):
 
         if i == 1:
             driver.get(url=url)
@@ -155,22 +155,19 @@ def save_html():
     driver.close()
     driver.quit()
 
-
-
-
-
 def parsing_urls_is_html():
-    targetPattern = r"C:\scrap_tutorial-master\prom_ua_work_parser\*.html"
+    targetPattern = r"c:\prom_firma_url\*.html"
     files_html = glob.glob(targetPattern)
     urls = []
     for item in files_html:
         with open(f"{item}", encoding="utf-8") as file:
             src = file.read()
         soup = BeautifulSoup(src, 'lxml')
-        urls_firmas = soup.find_all('div', attrs={'data-qaid': 'company_link'})
-        for url in urls_firmas:
-            urls.append(url.find('a').get("href"))
-    with open(f'C:\\scrap_tutorial-master\\prom_ua_work_parser\\url_firma.csv', 'a', newline='', encoding='utf-8') as csvfile:
+        urls_firmas = soup.find_all('div', attrs={'class': 'M3v0L BXDW- qzGRQ aO9Co'})
+        for j in urls_firmas:
+            i = j.find('a').get('href')
+            urls.append(i)
+    with open(f'C:\\scrap_tutorial-master\\prom_ua_work_parser\\url_firma.csv', 'w', newline='', encoding='utf-8') as csvfile:
         writer = csv.writer(csvfile, delimiter='\n', quotechar='|')
         writer.writerow(urls)
 
@@ -184,8 +181,8 @@ def save_html_firma():
             urls.append(row[0])
     driver = get_chromedriver(use_proxy=True,
                               user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36")
-    coun = 443
-    for item in urls[443:]:
+    coun = 418
+    for item in urls[418:]:
         coun += 1
         driver.get(item)  # 'url_name' - это и есть ссылка
         driver.maximize_window()
@@ -238,9 +235,6 @@ def parsin_contact():
 
                 )
             )
-
-
-
 
 
 if __name__ == '__main__':
