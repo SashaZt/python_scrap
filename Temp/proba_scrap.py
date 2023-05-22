@@ -5,28 +5,32 @@ from bs4 import BeautifulSoup
 def main():
     import cloudscraper
     from bs4 import BeautifulSoup
-    # # Данные для прокси
-    # PROXY_HOST = '193.124.190.63'
-    # PROXY_PORT = 9317
-    # PROXY_USER = 'rdZvZY'
-    # PROXY_PASS = '4hB2v9'
+
+    scraper = cloudscraper.create_scraper(browser={
+        'browser': 'firefox',
+        'platform': 'windows',
+        'mobile': False
+    })
+    # Данные для прокси
+    PROXY_HOST = '37.233.3.100'
+    PROXY_PORT = 9999
+    PROXY_USER = 'proxy_alex'
+    PROXY_PASS = 'DbrnjhbZ88'
+    # proxies = {
+    #     'http': f'http://{PROXY_USER}:{PROXY_PASS}@{PROXY_HOST}:{PROXY_PORT}',
+    #     'https': f'http://{PROXY_USER}:{PROXY_PASS}@{PROXY_HOST}:{PROXY_PORT}'
+    # }
+    proxies = {"http": f"http://{PROXY_HOST}:{PROXY_PORT}", f"https": f"http://{PROXY_HOST}:{PROXY_PORT}"}
+    html = scraper.get("https://2ip.ua/ru/", proxies=proxies).content
+    with open("c:\\salomon_pl\\html_product\\результат.html", "w", encoding="utf-8") as file:
+        file.write(html.decode('utf-8'))
+
     #
     # # Настройка для requests чтобы использовать прокси
     # proxies = {
     #     'http': f'http://{PROXY_USER}:{PROXY_PASS}@{PROXY_HOST}:{PROXY_PORT}',
     #     'https': f'http://{PROXY_USER}:{PROXY_PASS}@{PROXY_HOST}:{PROXY_PORT}'
     # }
-    scraper = cloudscraper.create_scraper(browser={
-        'browser': 'firefox',
-        'platform': 'windows',
-        'mobile': False
-    })
-    html = scraper.get("https://combomed.ru/antigrippin-ruzam").content
-    # # print(scraper.get("https://combomed.ru/antigrippin-ruzam", proxies=proxies).text)
-    soup = BeautifulSoup(html, 'html.parser')
-
-    print(soup)
-
     # import requests
     # import urllib.parse
     # from bs4 import BeautifulSoup
