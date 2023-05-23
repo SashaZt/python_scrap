@@ -3,6 +3,7 @@ from bs4 import BeautifulSoup
 
 
 def main():
+    """Рабочий парсер для обхода Cloudflare через requests"""
     import cloudscraper
     from bs4 import BeautifulSoup
 
