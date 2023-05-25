@@ -1,5 +1,4 @@
-import os
-import pickle
+
 import time
 import pandas as pd
 import glob
@@ -7,19 +6,18 @@ import re
 from bs4 import BeautifulSoup
 from selenium.webdriver.common.keys import Keys
 import undetected_chromedriver
-from selenium.common.exceptions import TimeoutException
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
-from concurrent.futures import ThreadPoolExecutor
 import csv
 
-def get_undetected_chromedriver(use_proxy=False, user_agent=None):
+
+def get_undetected_chromedriver():
     # Обход защиты
     chrome_options = webdriver.ChromeOptions()
     chrome_options.add_argument(
-        '--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36')
+        '--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36')
 
     chrome_options.add_argument('--disable-blink-features=AutomationControlled')
     chrome_options.add_argument("--disable-gpu")
@@ -28,7 +26,6 @@ def get_undetected_chromedriver(use_proxy=False, user_agent=None):
     """Проба"""
     chrome_options.add_argument("--disable-dev-shm-usage")
     chrome_options.add_argument("--disable-setuid-sandbox")
-
 
     driver = undetected_chromedriver.Chrome()
 
@@ -64,6 +61,7 @@ def main_category():
     driver.close()
     driver.quit()
 
+
 def get_url_category():
     category_product = []
     with open("category.html", encoding="utf-8") as file:
@@ -82,12 +80,13 @@ def get_url_category():
         for href in href_list:
             writer.writerow([href])
 
+
 def get_url_product():
     driver = get_undetected_chromedriver()
 
     with open(f'category_product.csv', newline='', encoding='utf-8') as files:
         urls = list(csv.reader(files, delimiter=' ', quotechar='|'))
-        for url in urls[:1]:
+        for url in urls:
             categoty = url[0].split("/")[-2]
 
             driver.maximize_window()
@@ -117,6 +116,8 @@ def get_url_product():
                 file.write(driver.page_source)
         driver.close()
         driver.quit()
+
+
 def get_to_category():
     url_start = "https://www.larsson.pl/"
     driver = get_undetected_chromedriver()
@@ -159,8 +160,6 @@ def get_to_category():
                     if number > max_number:
                         max_number = number
 
-
-
             # with open(driver.page_source, encoding="utf-8") as file:
             #     src_ru = file.read()
             # soup = BeautifulSoup(src_ru, 'lxml')
@@ -186,43 +185,6 @@ def get_to_category():
         driver.close()
         driver.quit()
 
-def parsing_url_product():
-    folders = [r"c:\data_larsoon\html_product\*.html"]
-    for folder in folders:
-        files_html = glob.glob(folder)
-        for item in files_html[:1]:
-            with open(item, encoding="utf-8") as file:
-                src = file.read()
-            soup = BeautifulSoup(src, 'lxml')
-            table_chart = soup.find('div', {'class': 'mm_details'})
-            mm_right_values = [div.text.strip().replace('\xa0', ' ') for div in
-                               table_chart.find_all('div', {'class': 'mm_right'})]
-            # print(mm_right_values)
-            div_img = soup.find('div', {'class': 'mm_images_box'})
-            a_img = div_img.find('a')
-            href = 'https:' + a_img['href']
-            # print(href)
-            div_opis_towaru = soup.find('div', {'class': 'goog_trans_cont'})
-            opis_towaru_text = div_opis_towaru.get_text(strip=True)
-            # print(opis_towaru_text)
-            div = soup.find('div', {'id': 'related_articles_werkzeug'})
-            table = div.find('table')
-            tbody = table.find('tbody')
-            tr = tbody.find('tr', {'class': 'tdb'})
-            show_history_tips_td = tr.find('td', {'class': 'show_history_tips'})
-            value = show_history_tips_td.find("b").get_text()
-            print(value)
-            mysize_td = tr.find('td', {'class': 'mysize'})
-            align_right_tds = tr.find_all('td', {'align': 'right'})
-            # print(show_history_tips_td)
-            # show_history_tips = show_history_tips_td.text
-
-            mysize = mysize_td.get_text(strip=True)
-            align_right_texts = [td.get_text(strip=True).replace('\xa0', ' ') for td in align_right_tds]
-
-            # print(show_history_tips)
-            # print( mysize)
-            # print(align_right_texts)
 
 def get_url_from_html():
     folders = [r"c:\data_larsoon\*.html"]
@@ -239,7 +201,8 @@ def get_url_from_html():
                 all_urls = []
                 try:
                     galery = soup.find('div', attrs={'class': 'gallery'})
-                    for div_yellow in galery.find_all('div', {'class': 'availability part_available show_history_tips'}):
+                    for div_yellow in galery.find_all('div',
+                                                      {'class': 'availability part_available show_history_tips'}):
                         link_yellow = div_yellow.find_next('a')['href']
                         all_urls.append(link_yellow)
                     for div_green in galery.find_all('div', {'class': 'availability available show_history_tips'}):
@@ -276,6 +239,8 @@ def get_url_from_html():
     #             # Записываем URL-адреса в файл по одному на каждой строке
     #             for url in all_urls:
     #                 writer.writerow([url])
+
+
 def drop_duplicates():
     csv_files = 'url_product.csv'
     df = pd.read_csv(csv_files)
@@ -286,6 +251,7 @@ def drop_duplicates():
     # сохранить уникальные строки в CSV-файл
     df_unique.to_csv(f'{csv_files}', index=False)
     print("Дубликты удалили, переходим к обработке main_asio")
+
 
 def save_html_product():
     """Один поток"""
@@ -335,18 +301,156 @@ def save_html_product():
             #         continue
 
 
+def parsing_url_product():
+    folders = [r"c:\data_larsoon\html_product\*.html"]
 
+    for folder in folders:
+        files_html = glob.glob(folder)
+        heandlers = ['nr_kat', 'nazwa_towaru', 'numer_producenta', 'cena_detaliczna', '', 'rabat', 'twoja_cena_brutto',
+                     'nr_kat_narzedzia', 'opis_towaru']
 
+        with open('output.csv', 'w', newline='', encoding='utf-8') as file:
+            writer = csv.writer(file, delimiter=";")
+            # writer.writerow(heandlers)  # Записываем заголовки только один раз
 
+            for item in files_html:
+                with open(item, encoding="utf-8") as file:
+                    src = file.read()
+                soup = BeautifulSoup(src, 'lxml')
+                table_chart = soup.find('div', {'class': 'mm_details'})
+                mm_right_values = [div.text.strip().replace('\xa0', ' ') for div in
+                                   table_chart.find_all('div', {'class': 'mm_right'})]
+                mm_left_values = [div.text.strip().replace('\xa0', ' ') for div in
+                                  table_chart.find_all('div', {'class': 'mm_left'})]
 
+                """Ссылка на изображение"""
+                div_img = soup.find('div', {'class': 'mm_images_box'})
+                a_img = div_img.find('a')
+                href = 'https:' + a_img['href']
+
+                """Табличная часть продукта"""
+                name_product = soup.find('h3', {'class': 'mm_header'})
+                name_product.contents[1].replace_with(' ')
+                names_prodict = str(name_product.text)
+                """Получение характеристик"""
+                left = table_chart.find_all('div', {'class': 'mm_left'})
+                right = table_chart.find_all('div', {'class': 'mm_right'})
+                data = list(zip(left, right))
+                column_1 = ""
+                column_2 = ""
+                column_3 = ""
+                column_4 = ""
+                column_5 = ""
+                column_6 = ""
+                column_7 = ""
+                column_8 = ""
+                column_9 = ""
+
+                # Iterate over the data list
+                for item in data:
+                    # Extract the left and right values
+                    left_value = item[0].text.strip()
+                    right_value = item[1].text.strip()
+                    # print(left_value, right_value)
+                    if left_value == 'Nr kat.:':
+                        column_1 = right_value
+                    elif left_value == 'Nazwa towaru:':
+                        column_2 = names_prodict
+                    elif left_value == 'Numer producenta:':
+                        column_3 = right_value
+                    elif left_value == 'Jednostka sprzedaży:':
+                        column_4 = right_value
+                    elif left_value == 'Minimalna ilość zamówienia:':
+                        column_5 = right_value
+                    elif left_value == 'Cena detaliczna:':
+                        column_6 = right_value
+                    elif left_value == '':
+                        column_7 = right_value
+                    elif left_value == 'Rabat:':
+                        column_8 = right_value
+                    elif left_value == 'Twoja cena brutto:':
+                        column_9 = right_value
+
+                    # # Use regular expressions to find specific patterns in the left value
+                    # left_match = re.search(r'<div class="mm_left">(.*?)</div>', str(item[0]))
+                    # if left_match:
+                    #     left_value = left_match.group(1).strip()
+                    #
+                    # # Use regular expressions to find specific patterns in the right value
+                    # right_match = re.search(r'<div class="mm_right">(.*?)</div>', str(item[1]))
+                    # if right_match:
+                    #     right_value = right_match.group(1).strip()
+                    #
+                    # # Print the extracted values
+
+                #
+                # nr_kat_hendler = left[0].text
+                # nr_kat_value = right[0].text.replace(".", "")
+                # nazwa_towaru_hendler = left[1].text
+                # nazwa_towaru_value = names_prodict
+                # numer_producenta_hendler = left[2].text
+                # numer_producenta_value = right[2].text
+                # # if numer_producenta_hendler == 'Numer producenta:':
+                # #     numer_producenta_value = right[2].text
+                # # else:
+                # #     numer_producenta_value = None
+                #
+                # cena_detaliczna_hendler = left[5].text
+                # cena_detaliczna_value_0 = right[5].text
+                # cena_detaliczna_value_1 = right[6].text
+                # rabat_hendler = left[7].text
+                # print(left[6].text)
+                #
+                # rabat_value = right[7].text
+                # try:
+                #     twoja_cena_brutto_hendler = left[8].text
+                # except:
+                #     twoja_cena_brutto_hendler = None
+                # try:
+                #     twoja_cena_brutto_value = right[8].text
+                # except:
+                #     twoja_cena_brutto_value = None
+
+                # print(nr_kat_value, nazwa_towaru_value, numer_producenta_value, cena_detaliczna_value_0,
+                #           cena_detaliczna_value_1, rabat_value)
+                """Описание товара"""
+                div_opis_towaru = soup.find('div', {'class': 'goog_trans_cont'})
+                opis_towaru_text = div_opis_towaru.get_text(strip=True)
+                opis_towaru_hendler = "Opis towaru"
+
+                """Таблица Narzędzia"""
+                try:
+                    div = soup.find('div', {'id': 'related_articles_werkzeug'})
+                    table = div.find('table')
+                    tbody = table.find('tbody')
+                    tr = tbody.find('tr', {'class': 'tdb'})
+                    show_history_tips_td = tr.find('td', {'class': 'show_history_tips'})
+                    nr_kat_narzedzia_value = show_history_tips_td.find("b").get_text().replace(".", "")
+                    nr_kat_narzedzia_hendler = "Narzędzia Nr kat."
+                except:
+                    div = None
+                #
+                values = [column_1, column_2, column_3, column_6, column_7, column_8, column_9, nr_kat_narzedzia_value,
+                          opis_towaru_text]
+                writer.writerow(values)  # Дописываем значения из values
+
+            # """Пока закрыть"""
+            # mysize_td = tr.find('td', {'class': 'mysize'})
+            # align_right_tds = tr.find_all('td', {'align': 'right'})
+            # # print(show_history_tips_td)
+            # show_history_tips = show_history_tips_td.text
+            # mysize = mysize_td.get_text(strip=True)
+            # align_right_texts = [td.get_text(strip=True).replace('\xa0', ' ') for td in align_right_tds]
 
 
 if __name__ == '__main__':
-    # main_category()
-    # get_url_category()
-    # get_url_product()
-    # get_to_category()
-    # get_url_from_html()
-    # drop_duplicates()
-    # save_html_product()
+    print('Получаем категории')
+    main_category()
+    print("Извлекаем url")
+    get_url_category()
+    get_url_product()
+    get_to_category()
+    get_url_from_html()
+    drop_duplicates()
+    save_html_product()
     parsing_url_product()
