@@ -1040,7 +1040,7 @@ async def process_link(link):
             cursor.execute(insert_query, values)
             conn.commit()
         folder_name = number
-        folder_path = os.path.join(f"c:\\scrap_tutorial-master\\ucars.pro\\{auction}", folder_name)
+        folder_path = os.path.join(f"/var/www/www-root/data/www/vinhistory.bid/uploads/images/{auction}", folder_name)
         if not os.path.exists(folder_path):
             os.makedirs(folder_path)
         for url in image_urls:
