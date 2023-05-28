@@ -17,7 +17,6 @@ previous_low_prices = {}
 previous_high_prices = {}
 previous_quote_volume = {}
 
-
 async def fetch_data():
     async def read_csv():
         with open(f'id.csv', newline='', encoding='utf-8') as file:
