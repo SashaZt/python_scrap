@@ -21,7 +21,6 @@ async def fetch_data():
             reader = csv.reader(file, delimiter=' ', quotechar='|')
             urls = list(reader)
         return urls
-
     urls = await read_csv()
 
     async with aiohttp.ClientSession(connector=aiohttp.connector.TCPConnector(ssl=False, limit=None, force_close=True)) as session:
