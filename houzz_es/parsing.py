@@ -5,6 +5,7 @@ import glob
 import requests
 import time
 import json
+
 """Рабочи скрипт"""
 PROXY_HOST = '37.233.3.100'
 PROXY_PORT = 9999
@@ -51,77 +52,82 @@ headers = {
     'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36',
 }
 
+
 def parsing():
     urls = ['https://www.houzz.es/professionals/arquitectos/probr0-bo~t_17749',
-        'https://www.houzz.es/professionals/arquitectos-tecnicos-y-aparejadores/probr0-bo~t_23817',
-        'https://www.houzz.es/professionals/contratistas/probr0-bo~t_17804',
-        'https://www.houzz.es/professionals/albaniles/probr0-bo~t_17805',
-        'https://www.houzz.es/professionals/empresas-de-reformas/probr0-bo~t_17794',
-        'https://www.houzz.es/professionals/interioristas-y-decoradores/probr0-bo~t_17750',
-        'https://www.houzz.es/professionals/instalacion-y-reformas-de-cocinas-y-banos/probr0-bo~t_17760',
-        'https://www.houzz.es/professionals/paisajistas-y-diseno-de-jardines/probr0-bo~t_17757',
-        'https://www.houzz.es/professionals/accesos-y-pavimentacion/probr0-bo~t_17796',
-        'https://www.houzz.es/professionals/azulejos-y-encimeras/probr0-bo~t_17774',
-        'https://www.houzz.es/professionals/chimeneas/probr0-bo~t_17800',
-        'https://www.houzz.es/professionals/cocina-y-bano/probr0-bo~t_17776',
-        'https://www.houzz.es/professionals/cortinas-persianas-y-estores/probr0-bo~t_17772',
-        'https://www.houzz.es/professionals/electrodomesticos/probr0-bo~t_17784',
-        'https://www.houzz.es/professionals/escaleras-y-barandillas/probr0-bo~t_17752',
-        'https://www.houzz.es/professionals/iluminacion/probr0-bo~t_17766',
-        'https://www.houzz.es/professionals/iluminacion-exterior-y-sistemas-audiovisuales/probr0-bo~t_17781',
-        'https://www.houzz.es/professionals/materiales-de-construccion/probr0-bo~t_17788',
-        'https://www.houzz.es/professionals/mobiliario-y-decoracion/probr0-bo~t_17801',
-        'https://www.houzz.es/professionals/mobiliario-y-decoracion-infantiles/probr0-bo~t_17780',
-        'https://www.houzz.es/professionals/patios-cubiertas-y-cercados/probr0-bo~t_17793',
-        'https://www.houzz.es/professionals/pavimentos-y-muros/probr0-bo~t_17771',
-        'https://www.houzz.es/professionals/piscinas-y-spas/probr0-bo~t_17768',
-        'https://www.houzz.es/professionals/puertas/probr0-bo~t_17795',
-        'https://www.houzz.es/professionals/ropa-de-cama-y-bano/probr0-bo~t_17787',
-        'https://www.houzz.es/professionals/suelos-y-moquetas/probr0-bo~t_17791',
-        'https://www.houzz.es/professionals/suministros-de-jardineria/probr0-bo~t_17803',
-        'https://www.houzz.es/professionals/tapiceria/probr0-bo~t_17754',
-        'https://www.houzz.es/professionals/tejados-y-canalones/probr0-bo~t_17763',
-        'https://www.houzz.es/professionals/ventanas/probr0-bo~t_17770',
-        'https://www.houzz.es/professionals/disenadores-y-fabricantes-de-bodegas/probr0-bo~t_17756',
-        'https://www.houzz.es/professionals/artistas-y-artesanos/probr0-bo~t_17785',
-        'https://www.houzz.es/professionals/carpinteros/probr0-bo~t_17790',
-        'https://www.houzz.es/professionals/domotica-e-instalaciones-multimedia/probr0-bo~t_17806',
-        'https://www.houzz.es/professionals/electricistas-y-antenistas/probr0-bo~t_17797',
-        'https://www.houzz.es/professionals/servicios-de-limpieza/probr0-bo~t_27217',
-        'https://www.houzz.es/professionals/fontaneros/probr0-bo~t_17761',
-        'https://www.houzz.es/professionals/forjadores/probr0-bo~t_17777',
-        'https://www.houzz.es/professionals/impermeabilizacion-y-restauracion-de-danos/probr0-bo~t_17798',
-        'https://www.houzz.es/professionals/instaladores-de-energia-solar/probr0-bo~t_17758',
-        'https://www.houzz.es/professionals/jardineros/probr0-bo~t_17751',
-        'https://www.houzz.es/professionals/manitas/probr0-bo~t_27214',
-        'https://www.houzz.es/professionals/pintores-y-empresas-de-decoracion-de-paredes/probr0-bo~t_17778',
-        'https://www.houzz.es/professionals/poda-de-arboles/probr0-bo~t_17767',
-        'https://www.houzz.es/professionals/rehabilitacion-de-edificios/probr0-bo~t_28484',
-        'https://www.houzz.es/professionals/restauradores-de-muebles/probr0-bo~t_24619',
-        'https://www.houzz.es/professionals/servicios-de-climatizacion/probr0-bo~t_17753',
-        'https://www.houzz.es/professionals/servicios-de-revestimientos-y-reformas-de-exteriores/probr0-bo~t_17775',
-        'https://www.houzz.es/professionals/soluciones-de-almacenamiento-y-organizadores-profesionales/probr0-bo~t_17792',
-        'https://www.houzz.es/professionals/otros-servicios-especializados/probr0-bo~t_17782',
-        'https://www.houzz.es/professionals/agentes-inmobiliarios/probr0-bo~t_17769',
-        'https://www.houzz.es/professionals/delineantes-y-expertos-en-cad/probr0-bo~t_24581',
-        'https://www.houzz.es/professionals/disenadores-industriales/probr0-bo~t_24456',
-        'https://www.houzz.es/professionals/fotografos/probr0-bo~t_17764',
-        'https://www.houzz.es/professionals/home-stagers/probr0-bo~t_17807',
-        'https://www.houzz.es/professionals/ingenieros-de-estructuras/probr0-bo~t_28485',
-        'https://www.houzz.es/professionals/escuelas-y-organizaciones/probr0-bo~t_17759',
-        'https://www.houzz.es/professionals/ferias-medios-prensa-y-bloggers/probr0-bo~t_17762']
+            'https://www.houzz.es/professionals/arquitectos-tecnicos-y-aparejadores/probr0-bo~t_23817',
+            'https://www.houzz.es/professionals/contratistas/probr0-bo~t_17804',
+            'https://www.houzz.es/professionals/albaniles/probr0-bo~t_17805',
+            'https://www.houzz.es/professionals/empresas-de-reformas/probr0-bo~t_17794',
+            'https://www.houzz.es/professionals/interioristas-y-decoradores/probr0-bo~t_17750',
+            'https://www.houzz.es/professionals/instalacion-y-reformas-de-cocinas-y-banos/probr0-bo~t_17760',
+            'https://www.houzz.es/professionals/paisajistas-y-diseno-de-jardines/probr0-bo~t_17757',
+            'https://www.houzz.es/professionals/accesos-y-pavimentacion/probr0-bo~t_17796',
+            'https://www.houzz.es/professionals/azulejos-y-encimeras/probr0-bo~t_17774',
+            'https://www.houzz.es/professionals/chimeneas/probr0-bo~t_17800',
+            'https://www.houzz.es/professionals/cocina-y-bano/probr0-bo~t_17776',
+            'https://www.houzz.es/professionals/cortinas-persianas-y-estores/probr0-bo~t_17772',
+            'https://www.houzz.es/professionals/electrodomesticos/probr0-bo~t_17784',
+            'https://www.houzz.es/professionals/escaleras-y-barandillas/probr0-bo~t_17752',
+            'https://www.houzz.es/professionals/iluminacion/probr0-bo~t_17766',
+            'https://www.houzz.es/professionals/iluminacion-exterior-y-sistemas-audiovisuales/probr0-bo~t_17781',
+            'https://www.houzz.es/professionals/materiales-de-construccion/probr0-bo~t_17788',
+            'https://www.houzz.es/professionals/mobiliario-y-decoracion/probr0-bo~t_17801',
+            'https://www.houzz.es/professionals/mobiliario-y-decoracion-infantiles/probr0-bo~t_17780',
+            'https://www.houzz.es/professionals/patios-cubiertas-y-cercados/probr0-bo~t_17793',
+            'https://www.houzz.es/professionals/pavimentos-y-muros/probr0-bo~t_17771',
+            'https://www.houzz.es/professionals/piscinas-y-spas/probr0-bo~t_17768',
+            'https://www.houzz.es/professionals/puertas/probr0-bo~t_17795',
+            'https://www.houzz.es/professionals/ropa-de-cama-y-bano/probr0-bo~t_17787',
+            'https://www.houzz.es/professionals/suelos-y-moquetas/probr0-bo~t_17791',
+            'https://www.houzz.es/professionals/suministros-de-jardineria/probr0-bo~t_17803',
+            'https://www.houzz.es/professionals/tapiceria/probr0-bo~t_17754',
+            'https://www.houzz.es/professionals/tejados-y-canalones/probr0-bo~t_17763',
+            'https://www.houzz.es/professionals/ventanas/probr0-bo~t_17770',
+            'https://www.houzz.es/professionals/disenadores-y-fabricantes-de-bodegas/probr0-bo~t_17756',
+            'https://www.houzz.es/professionals/artistas-y-artesanos/probr0-bo~t_17785',
+            'https://www.houzz.es/professionals/carpinteros/probr0-bo~t_17790',
+            'https://www.houzz.es/professionals/domotica-e-instalaciones-multimedia/probr0-bo~t_17806',
+            'https://www.houzz.es/professionals/electricistas-y-antenistas/probr0-bo~t_17797',
+            'https://www.houzz.es/professionals/servicios-de-limpieza/probr0-bo~t_27217',
+            'https://www.houzz.es/professionals/fontaneros/probr0-bo~t_17761',
+            'https://www.houzz.es/professionals/forjadores/probr0-bo~t_17777',
+            'https://www.houzz.es/professionals/impermeabilizacion-y-restauracion-de-danos/probr0-bo~t_17798',
+            'https://www.houzz.es/professionals/instaladores-de-energia-solar/probr0-bo~t_17758',
+            'https://www.houzz.es/professionals/jardineros/probr0-bo~t_17751',
+            'https://www.houzz.es/professionals/manitas/probr0-bo~t_27214',
+            'https://www.houzz.es/professionals/pintores-y-empresas-de-decoracion-de-paredes/probr0-bo~t_17778',
+            'https://www.houzz.es/professionals/poda-de-arboles/probr0-bo~t_17767',
+            'https://www.houzz.es/professionals/rehabilitacion-de-edificios/probr0-bo~t_28484',
+            'https://www.houzz.es/professionals/restauradores-de-muebles/probr0-bo~t_24619',
+            'https://www.houzz.es/professionals/servicios-de-climatizacion/probr0-bo~t_17753',
+            'https://www.houzz.es/professionals/servicios-de-revestimientos-y-reformas-de-exteriores/probr0-bo~t_17775',
+            'https://www.houzz.es/professionals/soluciones-de-almacenamiento-y-organizadores-profesionales/probr0-bo~t_17792',
+            'https://www.houzz.es/professionals/otros-servicios-especializados/probr0-bo~t_17782',
+            'https://www.houzz.es/professionals/agentes-inmobiliarios/probr0-bo~t_17769',
+            'https://www.houzz.es/professionals/delineantes-y-expertos-en-cad/probr0-bo~t_24581',
+            'https://www.houzz.es/professionals/disenadores-industriales/probr0-bo~t_24456',
+            'https://www.houzz.es/professionals/fotografos/probr0-bo~t_17764',
+            'https://www.houzz.es/professionals/home-stagers/probr0-bo~t_17807',
+            'https://www.houzz.es/professionals/ingenieros-de-estructuras/probr0-bo~t_28485',
+            'https://www.houzz.es/professionals/escuelas-y-organizaciones/probr0-bo~t_17759',
+            'https://www.houzz.es/professionals/ferias-medios-prensa-y-bloggers/probr0-bo~t_17762']
     with open('data.csv', "w", errors='ignore', encoding="utf-8") as file:
         writer = csv.writer(file, delimiter=";", lineterminator="\r")
-        writer.writerow(("Название компании", "Телефон компании", "Сайт компании", "Оборот компании", "Адресс компании",
-                         "Facebook", "Twitter", "LinkedIn", "Blog", "Услуги", "Категория"))
+        writer.writerow(
+            ('name_company', 'telephone_company', 'www_company', 'costEstimate_company', 'address', 'street_address',
+             'addressLocality', 'addressRegion', 'postalCode', 'addressCountry',
+             'facebook_company', 'twitter_company', 'linkedin_company', 'blog_company', 'service_company',
+             'category_company', 'catalog', 'ratingValue', 'reviewCount', 'proyectos_company'))
         for url in urls:
             group = url.split('/')[-2]
             folders_html = [fr"c:\data_houzz_es\product\{group}\*.html"]
             for file_html in folders_html:
                 files_html = glob.glob(file_html)
-                for item in files_html:
+                for i in files_html:
+                    catalog = i.split('\\')[-2]
                     datas = []
-                    with open(item, encoding="utf-8") as html_file:
+                    with open(i, encoding="utf-8") as html_file:
                         src = html_file.read()
                     facebook_company = ""
                     twitter_company = ""
@@ -132,40 +138,43 @@ def parsing():
                     try:
                         json_data = json.loads(script_tag.string)
                     except:
-                        # print(item)
-                        continue
 
+                        continue
                     try:
-                        name_company = json_data['data']['stores']['data']['ProProfileStore']['data']['user']['displayName'].replace('- ', '').replace('* ', '').replace('· ', '')
+                        name_company = json_data['data']['stores']['data']['ProProfileStore']['data']['user'][
+                            'displayName'].replace('- ', '').replace('* ', '').replace('· ', '')
                     except:
                         name_company = None
                     try:
                         telephone_company = \
-                        json_data['data']['stores']['data']['ProProfileStore']['data']['user']['professional'][
-                            'formattedPhone']
+                            json_data['data']['stores']['data']['ProProfileStore']['data']['user']['professional'][
+                                'formattedPhone']
                     except:
                         telephone_company = None
                     try:
                         www_company = \
-                        json_data['data']['stores']['data']['ProProfileStore']['data']['user']['professional']['rawDomain']
+                            json_data['data']['stores']['data']['ProProfileStore']['data']['user']['professional'][
+                                'rawDomain']
                     except:
                         www_company = None
                     try:
                         costEstimate_company = \
-                        json_data['data']['stores']['data']['ProProfileStore']['data']['user']['professional'][
-                            'costEstimate']
+                            json_data['data']['stores']['data']['ProProfileStore']['data']['user']['professional'][
+                                'costEstimate']
                     except:
                         costEstimate_company = None
 
                     try:
                         address_company = \
                             json_data['data']['stores']['data']['ProProfileStore']['data']['user']['professional'][
-                            'formattedAddress']
+                                'formattedAddress']
                     except:
                         continue
                     address = ''
                     try:
-                        category_companys = json_data['data']['stores']['data']['ProProfileStore']['data']['user']['professional']['seoProType']
+                        category_companys = \
+                        json_data['data']['stores']['data']['ProProfileStore']['data']['user']['professional'][
+                            'seoProType']
                         soup_category = BeautifulSoup(category_companys, 'html.parser')
                         category_company = soup_category.find('span').text.strip()
 
@@ -181,7 +190,9 @@ def parsing():
                         pass
 
                     try:
-                        service_company = json_data['data']['stores']['data']['ProProfileStore']['data']['user']['professional']['servicesProvided'].replace('-', '').replace('* ', '').replace('· ', '').replace('\n', '')
+                        service_company = \
+                        json_data['data']['stores']['data']['ProProfileStore']['data']['user']['professional'][
+                            'servicesProvided'].replace('-', '').replace('* ', '').replace('· ', '').replace('\n', '')
                     except:
                         service_company = None
                     try:
@@ -199,32 +210,70 @@ def parsing():
                         pass
 
                     try:
-                        country_element = soup_add.find('span', itemprop='addressCountry')
-                        if country_element:
-                            address += country_element.text.strip()
-                    except:
-                        pass
-
-
-                    try:
                         socialLinks_company = json_data['data']['stores']['data']['ProProfileStore']['data']['user'][
                             'socialLinks']
 
-                        for item in socialLinks_company:
-                            if item['type'] == 'LINK_TYPE_FB':
-                                facebook_company = item['trackedUrl']
-                            elif item['type'] == 'LINK_TYPE_TWITTER':
-                                twitter_company = item['trackedUrl']
-                            elif item['type'] == 'LINK_TYPE_LINKEDIN':
-                                linkedin_company = item['trackedUrl']
-                            elif item['type'] == 'LINK_TYPE_BLOG':
-                                blog_company = item['trackedUrl']
+                        for item_s in socialLinks_company:
+                            if item_s['type'] == 'LINK_TYPE_FB':
+                                facebook_company = item_s['trackedUrl']
+                            elif item_s['type'] == 'LINK_TYPE_TWITTER':
+                                twitter_company = item_s['trackedUrl']
+                            elif item_s['type'] == 'LINK_TYPE_LINKEDIN':
+                                linkedin_company = item_s['trackedUrl']
+                            elif item_s['type'] == 'LINK_TYPE_BLOG':
+                                blog_company = item_s['trackedUrl']
                     except:
                         continue
-                    # print(name_company, telephone_company, www_company, costEstimate_company, address,
-                    #               facebook_company, twitter_company, linkedin_company, blog_company, service_company, category_company)
-                    datas.append([name_company, telephone_company, www_company, costEstimate_company, address,
-                                  facebook_company, twitter_company, linkedin_company, blog_company, service_company, category_company])
+
+                    street_address = ""
+                    addressLocality = ""
+                    addressRegion = ""
+                    postalCode = ""
+                    addressCountry = ""
+                    ratingValue = ''
+                    reviewCount = ''
+                    try:
+                        street_add = json_data['data']['stores']['data']['PageStore']['data']['pageDescriptionFooter']
+                        soup_s = BeautifulSoup(street_add, 'html.parser')
+                        script_tag = soup_s.find('runnable', type='application/ld+json')
+                        if script_tag:
+                            json_data_script = script_tag.string.strip()
+                            data = json.loads(json_data_script)
+                            for item_add in data:
+                                if 'address' in item_add:
+                                    street_address = item_add['address'].get('streetAddress')
+                                    addressLocality = item_add['address'].get('addressLocality')
+                                    addressRegion = item_add['address'].get('addressRegion')
+                                    postalCode = item_add['address'].get('postalCode')
+                                    addressCountry = item_add['address'].get('addressCountry')
+                                if 'aggregateRating' in item_add:
+                                    ratingValue = item_add['aggregateRating'].get('ratingValue')
+                                    reviewCount = item_add['aggregateRating'].get('reviewCount')
+
+                    except:
+                        continue
+                    try:
+                        proyectos_company = soup.find('h2', attrs={'id': 'projects-label'}).text.strip().replace(
+                            ' Proyectos', "").replace(' Proyecto', '')
+                    except:
+                        proyectos_company = None
+                    if not postalCode:
+                        postalCode = \
+                            json_data['data']['stores']['data']['ProProfileStore']['data']['user']['professional'][
+                                'zip']
+                    if not addressLocality:
+                        addressLocality = \
+                        json_data['data']['stores']['data']['ProProfileStore']['data']['user']['professional']['city']
+
+                    if not addressCountry:
+                        addressCountry = \
+                        json_data['data']['stores']['data']['FooterStore']['data']['footerInfo']['currentCcTld'][
+                            'countryNativeName']
+                    datas.append(
+                        [name_company, telephone_company, www_company, costEstimate_company, address, street_address,
+                         addressLocality, addressRegion, postalCode, addressCountry,
+                         facebook_company, twitter_company, linkedin_company, blog_company, service_company,
+                         category_company, catalog, ratingValue, reviewCount, proyectos_company])
                     writer.writerows(datas)
 
 
