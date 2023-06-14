@@ -3,22 +3,11 @@ import requests
 from bs4 import BeautifulSoup
 import asyncio
 import csv
-
-proxies_list = [
-        ('185.112.12.122', 2831, '36675', 'g6Qply4q'),
-        ('185.112.14.126', 2831, '36675', 'g6Qply4q'),
-        ('185.112.15.239', 2831, '36675', 'g6Qply4q'),
-        ('195.123.189.137', 2831, '36675', 'g6Qply4q'),
-        ('195.123.190.104', 2831, '36675', 'g6Qply4q'),
-        ('195.123.193.81', 2831, '36675', 'g6Qply4q'),
-        ('195.123.194.134', 2831, '36675', 'g6Qply4q'),
-        ('195.123.197.233', 2831, '36675', 'g6Qply4q'),
-        ('195.123.252.157', 2831, '36675', 'g6Qply4q'),
-        ('212.86.111.68', 2831, '36675', 'g6Qply4q')
-    ]
+from proxi import proxies
+from requests.exceptions import RequestException
 
 def get_random_proxy():
-    proxy = random.choice(proxies_list)
+    proxy = random.choice(proxies)
     proxy_host = proxy[0]
     proxy_port = proxy[1]
     proxy_user = proxy[2]
@@ -29,19 +18,26 @@ def get_random_proxy():
     }
 
 def get_with_proxies(url, headers):
-    proxies = get_random_proxy()
-    response = requests.get(url, headers=headers, proxies=proxies)
-    return response
+    try:
+        proxies = get_random_proxy()
+        response = requests.get(url, headers=headers, proxies=proxies)
+        return response
+    except RequestException:
+        print(f"Проблема с прокси {proxies}. Пропускаем.")
+        return None  # или возвращайте какое-либо значение по умолчанию
 
 async def fetch_url(url, header):
     response = await asyncio.get_event_loop().run_in_executor(None, get_with_proxies, url, header)
-    soup = BeautifulSoup(response.text, 'html.parser')
-    img_links = []
-    for img in soup.find_all('img', alt=lambda x: x and '9' in x):
-        a = img.find_previous('a')
-        if a and 'href' in a.attrs:
-            img_links.append('https://shop.olekmotocykle.com/' + a['href'])
-    return img_links
+    if response is not None:
+        soup = BeautifulSoup(response.text, 'html.parser')
+        img_links = []
+        for img in soup.find_all('img', alt=lambda x: x and '9' in x):
+            a = img.find_previous('a')
+            if a and 'href' in a.attrs:
+                img_links.append('https://shop.olekmotocykle.com/' + a['href'])
+        return img_links
+    else:
+        return []
 
 async def process_category(url, header, writer):
     response = await asyncio.get_event_loop().run_in_executor(None, get_with_proxies, url, header)
