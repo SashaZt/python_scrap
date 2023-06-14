@@ -4,13 +4,7 @@ import aiohttp
 import asyncio
 import json
 import os
-
-proxies = [
-    ('185.112.12.122', 2831, '36675', 'g6Qply4q'),
-    ('185.112.14.126', 2831, '36675', 'g6Qply4q'),
-    ('185.112.15.239', 2831, '36675', 'g6Qply4q'),
-    # Продолжайте добавлять свои прокси здесь
-]
+from proxi import proxies
 
 async def download_image(url, filename, headers, proxy_dict):
     async with aiohttp.ClientSession(headers=headers) as session:
