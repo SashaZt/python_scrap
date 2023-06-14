@@ -1,6 +1,8 @@
+import random
 from typing import Optional
 import csv
 import time
+import os
 import asyncio
 import aiofiles
 import aiohttp
@@ -81,6 +83,18 @@ def parsing_url_category_in_html():
 
 
 def parsing_product():
+    proxies = [
+        ('185.112.12.122', 2831, '36675', 'g6Qply4q'),
+        ('185.112.14.126', 2831, '36675', 'g6Qply4q'),
+        ('185.112.15.239', 2831, '36675', 'g6Qply4q'),
+        ('195.123.189.137', 2831, '36675', 'g6Qply4q'),
+        ('195.123.190.104', 2831, '36675', 'g6Qply4q'),
+        ('195.123.193.81', 2831, '36675', 'g6Qply4q'),
+        ('195.123.194.134', 2831, '36675', 'g6Qply4q'),
+        ('195.123.197.233', 2831, '36675', 'g6Qply4q'),
+        ('195.123.252.157', 2831, '36675', 'g6Qply4q'),
+        ('212.86.111.68', 2831, '36675', 'g6Qply4q')
+    ]
     targetPattern = f"c:\\Data_olekmotocykle\\*.html"
     files_html = glob.glob(targetPattern)
     data = []
@@ -107,20 +121,41 @@ def parsing_product():
                 continue
             div = soup.find_all("div", {"class": "lazyslider-container-lq"})[0]
             imgs = div.find_all("img", {"class": "open-gallery-lq"})
+
             urls_photo = []
             for img in imgs:
                 urls_photo.append('https://' + img["data-src"].replace("//", ""))
+
             coun = 0
+            file_path_1 = f'c:\\Data_olekmotocykle\\img\\{id_product.replace("/", "_")}.jpg'
+            file_path_2 = f'c:\\Data_olekmotocykle\\img\\{id_product.replace("/", "_")}_{coun}.jpg'
             for u in urls_photo:
+                """Настройка прокси серверов случайных"""
+                proxy = random.choice(proxies)
+                proxy_host = proxy[0]
+                proxy_port = proxy[1]
+                proxy_user = proxy[2]
+                proxy_pass = proxy[3]
+
+                proxi = {
+                    'http': f'http://{proxy_user}:{proxy_pass}@{proxy_host}:{proxy_port}',
+                    'https': f'http://{proxy_user}:{proxy_pass}@{proxy_host}:{proxy_port}'
+                }
                 coun += 1
                 if len(urls_photo) == 1:
-                    img_data = requests.get(u, headers=header)
-                    with open(f'c:\\Data_olekmotocykle\\img\\{id_product.replace("/", "_")}.jpg.', 'wb') as file_img:
-                        file_img.write(img_data.content)
+                    if not os.path.exists(file_path_1):
+                        try:
+                            img_data = requests.get(u, headers=header, proxies=proxi)
+                            with open(file_path_1, 'wb') as file_img:
+                                file_img.write(img_data.content)
+                        except:
+                            print(f"Ошибка при выполнении запроса для URL: {u}")
+                            continue
                 elif len(urls_photo) > 1:
-                    img_data = requests.get(u, headers=header)
-                    with open(f'c:\\Data_olekmotocykle\\img\\{id_product.replace("/", "_")}_{coun}.jpg', 'wb') as file_img:
-                        file_img.write(img_data.content)
+                    if not os.path.exists(file_path_2):
+                        img_data = requests.get(u, headers=header, proxies=proxi)
+                        with open(file_path_2, 'wb') as file_img:
+                            file_img.write(img_data.content)
 
 def urls_photo():
     targetPattern = f"c:\\Data_olekmotocykle\\*.html"
@@ -158,76 +193,17 @@ def main_asio_html():
     import main_asio
     asyncio.run(main_asio.main_asio())
 
-# def download_photo():
-#     # загружаем данные из файла JSON
-#     with open("result.json", "r") as json_file:
-#         result_dict = json.load(json_file)
-#
-#     header = {
-#         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36"
-#     }
-#
-#     # проходимся по каждому элементу словаря
-#     for item, item_dict in result_dict.items():
-#         # получаем количество URL-адресов
-#         url_count = sum(key.startswith("url_") for key in item_dict.keys())
-#
-#         # если есть только один URL-адрес
-#         if url_count == 1:
-#             url = item_dict["url_1"]
-#             id_product = item_dict["id_1"].replace("/", "-")
-#             img_data = requests.get(url, headers=header)
-#             with open(f'c:\\Data_olekmotocykle\\img\\{id_product}.jpg', 'wb') as file_img:
-#                 file_img.write(img_data.content)
-#         else:
-#             # если есть несколько URL-адресов
-#             for i in range(1, url_count + 1):
-#                 url = item_dict[f"url_{i}"]
-#                 id_product = item_dict[f"id_{i}"]
-#                 img_data = requests.get(url, headers=header)
-#                 with open(f'c:\\Data_olekmotocykle\\img\\{id_product}_{i}.jpg', 'wb') as file_img:
-#                     file_img.write(img_data.content)
 
-
-# def run_function(num: Optional[int] = None) -> Optional[int]:
-#     functions = {
-#         1: parsing_url_category_in_html,
-#         2: lambda: asyncio.run(main_url_asio()),
-#         3: parsing_product,
-#         4: urls_photo,
-#         5: lambda: asyncio.run(main_asio_photo())
-#     }
-#     if num is None:
-#         print("Введите номер функции для запуска (1-5) или 6 для выхода")
-#     else:
-#         print(f"Запуск функции {num}")
-#         try:
-#             functions[num]()
-#         except KeyError:
-#             print("Неверный номер функции")
-#             return num
-#     while True:
-#         try:
-#             num = int(input("> "))
-#             if num == 6:
-#                 return None
-#             return run_function(num)
-#         except ValueError:
-#             print("Неверный ввод")
-#
-# if __name__ == '__main__':
-#     print("Введите номер функции для запуска (1-5) или 6 для выхода")
-#     run_function()
 if __name__ == '__main__':
-    # print("Собираем категории товаров")
-    # parsing_url_category_in_html()
-    # print("Скачиваем все ссылки")
-    # main_download_url()
-    # print("Скачиваем все HTML страницы")
-    # main_asio_html()
-    # print("Получаем все url на фото")
-    # urls_photo()
-    # print("Скачиваем все фото")
+    print("Собираем категории товаров")
+    parsing_url_category_in_html()
+    print("Скачиваем все ссылки")
+    main_download_url()
+    print("Скачиваем все HTML страницы")
+    main_asio_html()
+    print("Получаем все url на фото")
+    urls_photo()
+    print("Скачиваем все фото")
     run_main_asio_photo()
     print("Получаем все данные")
     parsing_product()
