@@ -3,6 +3,7 @@ from typing import Optional
 import csv
 import time
 import os
+from proxi import proxies
 import asyncio
 import aiofiles
 import aiohttp
@@ -44,57 +45,8 @@ def parsing_url_category_in_html():
         print("No content received")
 
 
-# def get_url_in_category():
-#     # Открытие файла CSV и чтение строк
-#     with open(f'category_product.csv', newline='', encoding='utf-8') as files:
-#         urls = list(csv.reader(files, delimiter=' ', quotechar='|'))
-#
-#     for row in urls[4:]:
-#         url = row[0]
-#         group = url.split('produkty/')[1].split(',')[0]
-#         print(f'Текущая категория {group}')
-#         response = requests.get(url, headers=header)
-#         soup = BeautifulSoup(response.text, 'html.parser')
-#         span_tag = soup.find('span', {'class': 'page-amount-ui'})
-#         data_max_int = int(span_tag.text.split()[1])
-#         with open('url_product.csv', 'a', newline='', encoding='utf-8') as f:
-#             writer = csv.writer(f)
-#             for i in range(1, data_max_int + 1):
-#                 print('Ждем 10сек')
-#                 time.sleep(10)
-#                 print(f'В категории {group} {i} из {data_max_int}')
-#                 if i == 1:
-#                     response = requests.get(url, headers=header)
-#                     soup = BeautifulSoup(response.text, 'html.parser')
-#                     for img in soup.find_all('img', alt=lambda x: x and '9' in x):
-#                         a = img.find_previous('a')
-#                         if a and 'href' in a.attrs:
-#                             writer.writerow(['https://shop.olekmotocykle.com/' + a['href']])
-#                 elif i > 1:
-#                     response = requests.get(f'{url}?pageId={i}', headers=header)
-#                     soup = BeautifulSoup(response.text, 'html.parser')
-#                     for img in soup.find_all('img', alt=lambda x: x and '9' in x):
-#                         a = img.find_previous('a')
-#                         if a and 'href' in a.attrs:
-#                             writer.writerow(['https://shop.olekmotocykle.com/' + a['href']])
-#         print(f'Пауза между категориями 30сек')
-#         time.sleep(30)
-
-
-
 def parsing_product():
-    proxies = [
-        ('185.112.12.122', 2831, '36675', 'g6Qply4q'),
-        ('185.112.14.126', 2831, '36675', 'g6Qply4q'),
-        ('185.112.15.239', 2831, '36675', 'g6Qply4q'),
-        ('195.123.189.137', 2831, '36675', 'g6Qply4q'),
-        ('195.123.190.104', 2831, '36675', 'g6Qply4q'),
-        ('195.123.193.81', 2831, '36675', 'g6Qply4q'),
-        ('195.123.194.134', 2831, '36675', 'g6Qply4q'),
-        ('195.123.197.233', 2831, '36675', 'g6Qply4q'),
-        ('195.123.252.157', 2831, '36675', 'g6Qply4q'),
-        ('212.86.111.68', 2831, '36675', 'g6Qply4q')
-    ]
+
     targetPattern = f"c:\\Data_olekmotocykle\\*.html"
     files_html = glob.glob(targetPattern)
     data = []
