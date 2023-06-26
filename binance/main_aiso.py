@@ -1,4 +1,6 @@
 import asyncio
+import aiogram
+from aiogram.utils.exceptions import RetryAfter
 import aiohttp
 from aiohttp import ClientProxyConnectionError
 from bs4 import BeautifulSoup
@@ -7,7 +9,7 @@ import csv
 import time
 from aiogram import Bot, Dispatcher
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
-from config import bot_token, chat_id, PROXY_HOST, PROXY_PORT, PROXY_USER, PROXY_PASS, filter_quoteVolume, time_restart
+from config import bot_token, chat_id, PROXY_HOST, PROXY_PORT, PROXY_USER, PROXY_PASS, filter_quoteVolume, time_restart, value_track_type, check_time, inclusion_quote_volume_filter
 
 bot = Bot(token=bot_token)
 storage = MemoryStorage()
@@ -46,36 +48,54 @@ async def fetch_data():
             high_price = float(data['highPrice'])
             low_price = float(data['lowPrice'])
             quote_volume = float(data['quoteVolume'])
-            # Проверка и отправка фьючерсов с quote_volume больше 1000
-            if quote_volume > filter_quoteVolume:
-                """Для теста что работает скрипт"""
-                # message_quote_volume = f'{symbol} объём: {quote_volume}'
-                # await send_message_to_group(message_quote_volume)
-                # Сравнение значений с предыдущими значениями
-                if futures in previous_low_prices and low_price < previous_low_prices[futures]:
-                    message_low_price = f'{symbol} минимальная: {low_price}'
-                    await send_message_to_group(message_low_price)
+            # Проверка quote_volume
+            if inclusion_quote_volume_filter:
+                if quote_volume > filter_quoteVolume:
+                    if track_type == "max" or track_type == "both":
+                        if futures in previous_high_prices and high_price > previous_high_prices[futures]:
+                            message_high_price = f'{symbol} ++++: {high_price}'
+                            await send_message_to_group(message_high_price)
+                            print(message_high_price)
+                        previous_high_prices[futures] = high_price
 
-                if futures in previous_high_prices and high_price > previous_high_prices[futures]:
-                    message_high_price = f'{symbol} максимальная: {high_price}'
-                    await send_message_to_group(message_high_price)
+                    if track_type == "min" or track_type == "both":
+                        if futures in previous_low_prices and low_price < previous_low_prices[futures]:
+                            message_low_price = f'{symbol} ----: {low_price}'
+                            await send_message_to_group(message_low_price)
+                            print(message_low_price)
+                        previous_low_prices[futures] = low_price
+            else:
+                if track_type == "max" or track_type == "both":
+                    if futures in previous_high_prices and high_price > previous_high_prices[futures]:
+                        message_high_price = f'{symbol} ++++: {high_price}'
+                        await send_message_to_group(message_high_price)
+                        print(message_high_price)
+                    previous_high_prices[futures] = high_price
 
-                # Обновление предыдущих значений
-                previous_low_prices[futures] = low_price
-                previous_high_prices[futures] = high_price
-
+                if track_type == "min" or track_type == "both":
+                    if futures in previous_low_prices and low_price < previous_low_prices[futures]:
+                        message_low_price = f'{symbol} ----: {low_price}'
+                        await send_message_to_group(message_low_price)
+                        print(message_low_price)
+                    previous_low_prices[futures] = low_price
     # Закрытие сессии и коннектора
     await session.close()
 
 
 async def send_message_to_group(message):
-    await bot.send_message(chat_id=chat_id, text=message)
+    try:
+        await bot.send_message(chat_id=chat_id, text=message)
+    except aiogram.utils.exceptions.RetryAfter as e:
+        delay = e.timeout
+        print(f"Flood control exceeded. Retry in {delay} seconds.")
+        await asyncio.sleep(delay)
+        await send_message_to_group(message)
 
 
 async def main():
     while True:
         await fetch_data()
-        await asyncio.sleep(3)
+        await asyncio.sleep(check_time)
 
 
 async def schedule_script():
@@ -88,4 +108,5 @@ async def schedule_script():
 
 
 if __name__ == '__main__':
+    track_type = value_track_type  # Установите "max", "min" или "both" в зависимости от ваших требований
     asyncio.run(schedule_script())
