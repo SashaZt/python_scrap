@@ -1,39 +1,47 @@
 from bs4 import BeautifulSoup
 import csv
+import random
 import pandas as pd
 import os
 import glob
 import requests
 import time
 import json
-
+from proxi import proxies
 """Рабочи скрипт"""
 cookies = {
-    'v': '1685342053_398c990a-5e3a-4fc6-9a54-2e1738a2b82c_1fcb553b0f2c8f94c21109cd9040f041',
-    '_csrf': 'tQX_Zde7kKPolFIfWRE8pxIL',
-    'jdv': 't7WOzUb2vHLZtWVVHSk%2BXJMaN7ua9zR%2FUkXpY9RZDRS20RNAnLz7eLbg7JysQQXvVbYtdZ6jEQ%2FwTRwkfzK7it%2BquIxC',
+    'v': '1687507051_be3c3709-b6c0-4ae1-a506-2a2beba5b098_4a30af50d9ae1ab5ff4d9ecb20c62cfa',
+    'vct': 'en-US-CR9rUJVk8B9rUJVkSBxrUJVk4R1rUJVk4h1rUJVk',
+    '_csrf': 'foSkkM6_E6wKQNZtIt3yNl3F',
     'prf': 'prodirDistFil%7C%7D',
-    'cced': '1',
-    'xauth': '1685342062',
-    'v2': '1685342062_e996f727-364e-4c7d-be7a-10a74a80ac59_cb26317f415693fb03b109d615ea09e4',
-    'g_state': '{"i_p":1685349277940,"i_l":1}',
-    'ppclk': 'organicUId%3D30338175%2Cpage%3D2',
-    'vct': 'es-ES-Bh4oS3RkOR8oS3RkTBwoS3Rk6R0oS3Rk6h0oS3Rk',
-    'documentWidth': '1122',
-    'kcan': '0',
-    'hzd': '17ce7623-0051-4b44-aa1b-b6ca149842b5%3A%3A%3A%3A%3AArquitectosPonteencontactoconp',
+    'hzd': '02c2e91f-3cb0-436f-ad33-068d827b641c%3A6540628%3Adisplay_name_pro_dir%3Ao%3A3%3A3%3Ad%3Abrowse_pro%3A2%3AVerifiedLicense',
+    '_gid': 'GA1.2.1561165104.1687507055',
+    '_gat': '1',
+    '_gcl_au': '1.1.938942522.1687507055',
+    '_ga_PB0RC2CT7B': 'GS1.1.1687507054.1.0.1687507054.60.0.0',
+    '_ga': 'GA1.1.340411067.1687507055',
+    '_uetsid': '9d1a5b80119b11eeb3959513fec91032',
+    '_uetvid': '9d1a7d40119b11ee8cdfe3191853765a',
+    '_sp_ses.c905': '*',
+    '_sp_id.c905': '9379c154-a074-45ad-ae3e-732e1d4473ee.1687507055.1.1687507055.1687507055.7e74ed6b-239f-4ae5-9f65-be99aa2edfa4',
+    'IR_gbd': 'houzz.com',
+    'IR_5455': '1687507055140%7C0%7C1687507055140%7C%7C',
+    'ln_or': 'eyIzODE1NzE2IjoiZCJ9',
+    '_pin_unauth': 'dWlkPU1ESm1NalV6WkRFdE1qZzBNQzAwTXpReUxUazFOREl0T0daaU16QXhOR05rTVRVMA',
+    'crossdevicetracking': '6b53ecca-c36c-4f80-8b9d-3d765803bc51',
+    'documentWidth': '940',
+    'jdv': 't7WOzUb2vHLZtWVVHSk9XJMdN7ua9zR%2FUkXoZtQMDxPlgkBDnOmreue175uoTwe7WLcuJcvxFwz9ShkgfTvhjY%2F6sIoS',
 }
 
 headers = {
-    'authority': 'www.houzz.es',
+    'authority': 'www.houzz.com',
     'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
-    'accept-language': 'ru,en-US;q=0.9,en;q=0.8,uk;q=0.7,de;q=0.6',
+    'accept-language': 'ru',
     'cache-control': 'no-cache',
-    # 'cookie': 'v=1685342053_398c990a-5e3a-4fc6-9a54-2e1738a2b82c_1fcb553b0f2c8f94c21109cd9040f041; _csrf=tQX_Zde7kKPolFIfWRE8pxIL; jdv=t7WOzUb2vHLZtWVVHSk%2BXJMaN7ua9zR%2FUkXpY9RZDRS20RNAnLz7eLbg7JysQQXvVbYtdZ6jEQ%2FwTRwkfzK7it%2BquIxC; prf=prodirDistFil%7C%7D; cced=1; xauth=1685342062; v2=1685342062_e996f727-364e-4c7d-be7a-10a74a80ac59_cb26317f415693fb03b109d615ea09e4; g_state={"i_p":1685349277940,"i_l":1}; ppclk=organicUId%3D30338175%2Cpage%3D2; vct=es-ES-Bh4oS3RkOR8oS3RkTBwoS3Rk6R0oS3Rk6h0oS3Rk; documentWidth=1122; kcan=0; hzd=17ce7623-0051-4b44-aa1b-b6ca149842b5%3A%3A%3A%3A%3AArquitectosPonteencontactoconp',
+    # 'cookie': 'v=1687507051_be3c3709-b6c0-4ae1-a506-2a2beba5b098_4a30af50d9ae1ab5ff4d9ecb20c62cfa; vct=en-US-CR9rUJVk8B9rUJVkSBxrUJVk4R1rUJVk4h1rUJVk; _csrf=foSkkM6_E6wKQNZtIt3yNl3F; prf=prodirDistFil%7C%7D; hzd=02c2e91f-3cb0-436f-ad33-068d827b641c%3A6540628%3Adisplay_name_pro_dir%3Ao%3A3%3A3%3Ad%3Abrowse_pro%3A2%3AVerifiedLicense; _gid=GA1.2.1561165104.1687507055; _gat=1; _gcl_au=1.1.938942522.1687507055; _ga_PB0RC2CT7B=GS1.1.1687507054.1.0.1687507054.60.0.0; _ga=GA1.1.340411067.1687507055; _uetsid=9d1a5b80119b11eeb3959513fec91032; _uetvid=9d1a7d40119b11ee8cdfe3191853765a; _sp_ses.c905=*; _sp_id.c905=9379c154-a074-45ad-ae3e-732e1d4473ee.1687507055.1.1687507055.1687507055.7e74ed6b-239f-4ae5-9f65-be99aa2edfa4; IR_gbd=houzz.com; IR_5455=1687507055140%7C0%7C1687507055140%7C%7C; ln_or=eyIzODE1NzE2IjoiZCJ9; _pin_unauth=dWlkPU1ESm1NalV6WkRFdE1qZzBNQzAwTXpReUxUazFOREl0T0daaU16QXhOR05rTVRVMA; crossdevicetracking=6b53ecca-c36c-4f80-8b9d-3d765803bc51; documentWidth=940; jdv=t7WOzUb2vHLZtWVVHSk9XJMdN7ua9zR%2FUkXoZtQMDxPlgkBDnOmreue175uoTwe7WLcuJcvxFwz9ShkgfTvhjY%2F6sIoS',
     'dnt': '1',
     'pragma': 'no-cache',
-    'referer': 'https://www.houzz.es/professionals/arquitectos/probr0-bo~t_17749',
-    'sec-ch-ua': '"Google Chrome";v="113", "Chromium";v="113", "Not-A.Brand";v="24"',
+    'sec-ch-ua': '"Not.A/Brand";v="8", "Chromium";v="114", "Google Chrome";v="114"',
     'sec-ch-ua-mobile': '?0',
     'sec-ch-ua-platform': '"Windows"',
     'sec-fetch-dest': 'document',
@@ -41,18 +49,17 @@ headers = {
     'sec-fetch-site': 'same-origin',
     'sec-fetch-user': '?1',
     'upgrade-insecure-requests': '1',
-    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36',
+    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36',
 }
-proxies = {'http': 'http://37.233.3.100:9999', 'https': 'http://37.233.3.100:9999'}
 def get_category():
-    response = requests.get('https://www.houzz.es/professionals/manitas/probr0-bo~t_27214', cookies=cookies, headers=headers)  # Используйте индекс 0, чтобы получить URL из списка
+    response = requests.get('https://www.houzz.com/professionals/architect/probr0-bo~t_11784', cookies=cookies,
+                            headers=headers)  # Используйте индекс 0, чтобы получить URL из списка
     src = response.text
     soup = BeautifulSoup(src, 'lxml')
     script_json = soup.find('script', type="application/json")
     data_json = json.loads(script_json.string)
     urls_all = data_json['data']['stores']['data']['NavigationStore']['data']['filters'][2]['options']
     urls = []
-
     for item in urls_all:
         options = item['options']
         for option in options:
@@ -61,50 +68,83 @@ def get_category():
 
     print(urls)
 
+
 def get_requests(url):
     data_url = []
 
     group = url.split('/')[-2]
     print(f'Собираем категорию {group}')
-    response = requests.get(url, cookies=cookies, headers=headers, proxies=proxies)
+    response = requests.get(url, cookies=cookies, headers=headers)
     src = response.text
     soup = BeautifulSoup(src, 'lxml')
     script_json = soup.find('script', type="application/json")
     data_json = json.loads(script_json.string)
-    pagination_total = int(
-        data_json['data']['stores']['data']['ViewProfessionalsStore']['data']['paginationSummary']['total'].replace('.',
-                                                                                                                    ''))
+    try:
+        pagination_total = int(
+            data_json['data']['stores']['data']['ViewProfessionalsStore']['data']['paginationSummary']['total'].replace(
+                ',',
+                ''))
+    except:
+        print(f'Нет данных вкатегории {group}')
+        return
+
     amount_page = pagination_total // 15
     print(f"Всего {pagination_total} а файлов будет {amount_page + 2}")
     coun = 0
     for i in range(1, amount_page + 2):
+        proxy = random.choice(proxies)
+        proxy_host = proxy[0]
+        proxy_port = proxy[1]
+        proxy_user = proxy[2]
+        proxy_pass = proxy[3]
+
+        proxi = {
+            'http': f'http://{proxy_user}:{proxy_pass}@{proxy_host}:{proxy_port}',
+            'https': f'http://{proxy_user}:{proxy_pass}@{proxy_host}:{proxy_port}'
+        }
+        # pause_time = random.randint(1, 10) #Случайное число
+
+        # Пауза в секундах
         if i == 1:
-            filename = f"c:\\data_houzz_es\\list\\{group}\\data_{coun}.html"
+            filename = f"c:\\DATA\\houzz_com\\list\\{group}\\data_{coun}.html"
             if not os.path.exists(filename):
-                url_first = 'https://www.houzz.es/professionals/arquitectos/probr0-bo~t_17749'
-                response = requests.get(url_first, cookies=cookies, headers=headers)
+                url_first = url
+                try:
+                    response = requests.get(url_first, cookies=cookies, headers=headers, proxies=proxi)
+                except:
+                    continue
                 with open(filename, "w", encoding='utf-8') as file:
                     file.write(response.text)
+                # time.sleep(pause_time)
+                with open('log.txt', 'a') as f:
+                    print(url_first, file=f)
             else:
                 continue
         elif i > 1:
             coun += 15
-            filename = f"c:\\data_houzz_es\\list\\{group}\\data_{coun}.html"
+            filename = f"c:\\DATA\\houzz_com\\list\\{group}\\data_{coun}.html"
             if not os.path.exists(filename):
                 urls = f'{url}?fi={coun}'
-                response = requests.get(urls, cookies=cookies, headers=headers)
+                # urls = f'{url}?fi={coun}' #Если Испания
+                try:
+                    response = requests.get(urls, cookies=cookies, headers=headers, proxies=proxi)
+                except:
+                    continue
                 with open(filename, "w", encoding='utf-8') as file:
                     file.write(response.text)
+                with open('log.txt', 'a') as f:
+                    print(urls, file=f)
+                # time.sleep(pause_time)
             else:
                 continue
-        print(f'Сейчас {coun} из {pagination_total}')
-        time.sleep(5)
+        print(f'Сейчас {coun} из {pagination_total} ')
+
     print('Собрали все html')
 
 
 def parsing(group):
     data_url = []
-    folders_html = [fr"c:\data_houzz_es\list\{group}\*.html"]
+    folders_html = [fr"c:\DATA\houzz_com\list\{group}\*.html"]
     for file in folders_html:
         files_json = glob.glob(file)
         for item in files_json:
@@ -132,84 +172,172 @@ def drop_duplicates(group):
         f'url/{group}.csv'
     ]
     for f in all_csv:
-        df = pd.read_csv(f)
+        try:
+            df = pd.read_csv(f)
+        except:
+            continue
 
         # удалить дубликаты строк и сохранить уникальные строки в новом DataFrame
         df_unique = df.drop_duplicates()
 
         # сохранить уникальные строки в CSV-файл
         df_unique.to_csv(f'url/{group}.csv', index=False)
-    print("Дубликты удалили, переходим к обработке main_asio")
+    print("Дубликты удалили")
 
 
 if __name__ == '__main__':
     # get_category()
-    urls = ['https://www.houzz.es/professionals/arquitectos/probr0-bo~t_17749',
-            'https://www.houzz.es/professionals/arquitectos-tecnicos-y-aparejadores/probr0-bo~t_23817',
-            'https://www.houzz.es/professionals/contratistas/probr0-bo~t_17804',
-            'https://www.houzz.es/professionals/albaniles/probr0-bo~t_17805',
-            'https://www.houzz.es/professionals/empresas-de-reformas/probr0-bo~t_17794',
-            'https://www.houzz.es/professionals/interioristas-y-decoradores/probr0-bo~t_17750',
-            'https://www.houzz.es/professionals/instalacion-y-reformas-de-cocinas-y-banos/probr0-bo~t_17760',
-            'https://www.houzz.es/professionals/paisajistas-y-diseno-de-jardines/probr0-bo~t_17757',
-            'https://www.houzz.es/professionals/accesos-y-pavimentacion/probr0-bo~t_17796',
-            'https://www.houzz.es/professionals/azulejos-y-encimeras/probr0-bo~t_17774',
-            'https://www.houzz.es/professionals/chimeneas/probr0-bo~t_17800',
-            'https://www.houzz.es/professionals/cocina-y-bano/probr0-bo~t_17776',
-            'https://www.houzz.es/professionals/cortinas-persianas-y-estores/probr0-bo~t_17772',
-            'https://www.houzz.es/professionals/electrodomesticos/probr0-bo~t_17784',
-            'https://www.houzz.es/professionals/escaleras-y-barandillas/probr0-bo~t_17752',
-            'https://www.houzz.es/professionals/iluminacion/probr0-bo~t_17766',
-            'https://www.houzz.es/professionals/iluminacion-exterior-y-sistemas-audiovisuales/probr0-bo~t_17781',
-            'https://www.houzz.es/professionals/materiales-de-construccion/probr0-bo~t_17788',
-            'https://www.houzz.es/professionals/mobiliario-y-decoracion/probr0-bo~t_17801',
-            'https://www.houzz.es/professionals/mobiliario-y-decoracion-infantiles/probr0-bo~t_17780',
-            'https://www.houzz.es/professionals/patios-cubiertas-y-cercados/probr0-bo~t_17793',
-            'https://www.houzz.es/professionals/pavimentos-y-muros/probr0-bo~t_17771',
-            'https://www.houzz.es/professionals/piscinas-y-spas/probr0-bo~t_17768',
-            'https://www.houzz.es/professionals/puertas/probr0-bo~t_17795',
-            'https://www.houzz.es/professionals/ropa-de-cama-y-bano/probr0-bo~t_17787',
-            'https://www.houzz.es/professionals/suelos-y-moquetas/probr0-bo~t_17791',
-            'https://www.houzz.es/professionals/suministros-de-jardineria/probr0-bo~t_17803',
-            'https://www.houzz.es/professionals/tapiceria/probr0-bo~t_17754',
-            'https://www.houzz.es/professionals/tejados-y-canalones/probr0-bo~t_17763',
-            'https://www.houzz.es/professionals/ventanas/probr0-bo~t_17770',
-            'https://www.houzz.es/professionals/disenadores-y-fabricantes-de-bodegas/probr0-bo~t_17756',
-            'https://www.houzz.es/professionals/artistas-y-artesanos/probr0-bo~t_17785',
-            'https://www.houzz.es/professionals/carpinteros/probr0-bo~t_17790',
-            'https://www.houzz.es/professionals/domotica-e-instalaciones-multimedia/probr0-bo~t_17806',
-            'https://www.houzz.es/professionals/electricistas-y-antenistas/probr0-bo~t_17797',
-            'https://www.houzz.es/professionals/servicios-de-limpieza/probr0-bo~t_27217',
-            'https://www.houzz.es/professionals/fontaneros/probr0-bo~t_17761',
-            'https://www.houzz.es/professionals/forjadores/probr0-bo~t_17777',
-            'https://www.houzz.es/professionals/impermeabilizacion-y-restauracion-de-danos/probr0-bo~t_17798',
-            'https://www.houzz.es/professionals/instaladores-de-energia-solar/probr0-bo~t_17758',
-            'https://www.houzz.es/professionals/jardineros/probr0-bo~t_17751',
-            'https://www.houzz.es/professionals/manitas/probr0-bo~t_27214',
-            'https://www.houzz.es/professionals/pintores-y-empresas-de-decoracion-de-paredes/probr0-bo~t_17778',
-            'https://www.houzz.es/professionals/poda-de-arboles/probr0-bo~t_17767',
-            'https://www.houzz.es/professionals/rehabilitacion-de-edificios/probr0-bo~t_28484',
-            'https://www.houzz.es/professionals/restauradores-de-muebles/probr0-bo~t_24619',
-            'https://www.houzz.es/professionals/servicios-de-climatizacion/probr0-bo~t_17753',
-            'https://www.houzz.es/professionals/servicios-de-revestimientos-y-reformas-de-exteriores/probr0-bo~t_17775',
-            'https://www.houzz.es/professionals/soluciones-de-almacenamiento-y-organizadores-profesionales/probr0-bo~t_17792',
-            'https://www.houzz.es/professionals/otros-servicios-especializados/probr0-bo~t_17782',
-            'https://www.houzz.es/professionals/agentes-inmobiliarios/probr0-bo~t_17769',
-            'https://www.houzz.es/professionals/delineantes-y-expertos-en-cad/probr0-bo~t_24581',
-            'https://www.houzz.es/professionals/disenadores-industriales/probr0-bo~t_24456',
-            'https://www.houzz.es/professionals/fotografos/probr0-bo~t_17764',
-            'https://www.houzz.es/professionals/home-stagers/probr0-bo~t_17807',
-            'https://www.houzz.es/professionals/ingenieros-de-estructuras/probr0-bo~t_28485',
-            'https://www.houzz.es/professionals/escuelas-y-organizaciones/probr0-bo~t_17759',
-            'https://www.houzz.es/professionals/ferias-medios-prensa-y-bloggers/probr0-bo~t_17762']
-    for url in urls[:1]:
+    urls = [
+
+            # 'https://www.houzz.com/professionals/home-remodeling/probr0-bo~t_34257',
+            # 'https://www.houzz.com/professionals/home-additions-and-extensions/probr0-bo~t_34259',
+            #
+
+            # 'https://www.houzz.com/professionals/specialty-contractors/probr0-bo~t_11811',
+            # 'https://www.houzz.com/professionals/staircases/probr0-bo~t_11839',
+            # 'https://www.houzz.com/professionals/wine-cellars/probr0-bo~t_11841',
+            # 'https://www.houzz.com/professionals/custom-countertops/probr0-bo~t_33909',
+            # 'https://www.houzz.com/professionals/tile-and-stone-contractors/probr0-bo~t_33910',
+            # 'https://www.houzz.com/professionals/basement-remodelers/probr0-bo~t_34261',
+            # 'https://www.houzz.com/professionals/bedding-and-bath/probr0-bo~t_11806',
+            # 'https://www.houzz.com/professionals/cabinets/probr0-bo~t_11829',
+            # 'https://www.houzz.com/professionals/carpenter/probr0-bo~t_11831',
+            # 'https://www.houzz.com/professionals/carpet-and-flooring/probr0-bo~t_11799',
+            # 'https://www.houzz.com/professionals/doors/probr0-bo~t_11827',
+            # 'https://www.houzz.com/professionals/environmental-services-and-restoration/probr0-bo~t_11813',
+            # 'https://www.houzz.com/professionals/hardwood-flooring-dealers/probr0-bo~t_28349',
+            # 'https://www.houzz.com/professionals/furniture-and-accessories/probr0-bo~t_11802',
+            # 'https://www.houzz.com/professionals/furniture-refinishing-and-upholstery/probr0-bo~t_11840',
+            # 'https://www.houzz.com/professionals/glass-and-shower-door-dealers/probr0-bo~t_27203',
+            # 'https://www.houzz.com/professionals/ironwork/probr0-bo~t_11834',
+            # 'https://www.houzz.com/professionals/kitchen-and-bath-fixtures/probr0-bo~t_11804',
+            # 'https://www.houzz.com/professionals/lighting/probr0-bo~t_11794',
+            # 'https://www.houzz.com/professionals/windows/probr0-bo~t_11797',
+            # 'https://www.houzz.com/professionals/universal-design/probr0-bo~t_34260',
+            # 'https://www.houzz.com/professionals/backyard-courts/probr0-bo~t_11838',
+            # 'https://www.houzz.com/professionals/decks-and-patios/probr0-bo~t_11830',
+            # 'https://www.houzz.com/professionals/driveways-and-paving/probr0-bo~t_11832',
+            # 'https://www.houzz.com/professionals/fencing-and-gates/probr0-bo~t_11833',
+            # 'https://www.houzz.com/professionals/garden-and-landscape-supplies/probr0-bo~t_11809',
+            # 'https://www.houzz.com/professionals/lawn-and-sprinklers/probr0-bo~t_11835',
+            # 'https://www.houzz.com/professionals/hot-tub-and-spa-dealers/probr0-bo~t_28350',
+            # 'https://www.houzz.com/professionals/outdoor-lighting-and-audio-visual-systems/probr0-bo~t_11836',
+            # 'https://www.houzz.com/professionals/outdoor-play/probr0-bo~t_11837',
+            # 'https://www.houzz.com/professionals/spa-and-pool-maintenance/probr0-bo~t_28351',
+            # 'https://www.houzz.com/professionals/pools-and-spas/probr0-bo~t_11795',
+            # 'https://www.houzz.com/professionals/tree-service/probr0-bo~t_11821',
+            # 'https://www.houzz.com/professionals/custom-closet-designers/probr0-bo~t_33907',
+            # 'https://www.houzz.com/professionals/professional-organizers/probr0-bo~t_33908',
+            # 'https://www.houzz.com/professionals/artist-and-artisan/probr0-bo~t_11801',
+            # 'https://www.houzz.com/professionals/handyman/probr0-bo~t_27204',
+            # 'https://www.houzz.com/professionals/home-staging/probr0-bo~t_11789',
+            # 'https://www.houzz.com/professionals/movers/probr0-bo~t_27206',
+            # 'https://www.houzz.com/professionals/paint-and-wall-coverings/probr0-bo~t_11807',
+            # 'https://www.houzz.com/professionals/painters/probr0-bo~t_27105',
+            # 'https://www.houzz.com/professionals/photographer/probr0-bo~t_11792',
+            # 'https://www.houzz.com/professionals/agents-and-brokers/probr0-bo~t_11822',
+            # 'https://www.houzz.com/professionals/roofing-and-gutter/probr0-bo~t_11819',
+            # 'https://www.houzz.com/professionals/window-coverings/probr0-bo~t_11798',
+            # 'https://www.houzz.com/professionals/appliances/probr0-bo~t_11810',
+            # 'https://www.houzz.com/professionals/electrical-contractors/probr0-bo~t_11818',
+            # 'https://www.houzz.com/professionals/home-media/probr0-bo~t_11787',
+            # 'https://www.houzz.com/professionals/hvac-contractors/probr0-bo~t_11814',
+            # 'https://www.houzz.com/professionals/plumbing-contractors/probr0-bo~t_11817',
+            # 'https://www.houzz.com/professionals/septic-tanks-and-systems/probr0-bo~t_11815',
+            # 'https://www.houzz.com/professionals/solar-energy-contractors/probr0-bo~t_11816',
+            # 'https://www.houzz.com/professionals/carpet-cleaners/probr0-bo~t_27201',
+            # 'https://www.houzz.com/professionals/chimney-cleaners/probr0-bo~t_27200',
+            # 'https://www.houzz.com/professionals/exterior-cleaners/probr0-bo~t_27202',
+            # 'https://www.houzz.com/professionals/house-cleaners/probr0-bo~t_27205',
+            # 'https://www.houzz.com/professionals/rubbish-removal/probr0-bo~t_11820',
+            # 'https://www.houzz.com/professionals/pest-control/probr0-bo~t_27207',
+            # 'https://www.houzz.com/professionals/window-cleaners/probr0-bo~t_27209'
+    ]
+    #         urls = ['https://www.houzz.com/professionals/architect/probr0-bo~t_11784',
+    #         'https://www.houzz.com/professionals/design-build/probr0-bo~t_11793',
+    #         'https://www.houzz.com/professionals/general-contractor/probr0-bo~t_11786',
+    #         'https://www.houzz.com/professionals/home-builders/probr0-bo~t_11823',
+    #         'https://www.houzz.com/professionals/interior-designer/probr0-bo~t_11785',
+    #         'https://www.houzz.com/professionals/kitchen-and-bath/probr0-bo~t_11790',
+    #         'https://www.houzz.com/professionals/kitchen-and-bath-remodelers/probr0-bo~t_11825',
+    #         'https://www.houzz.com/professionals/landscape-architect/probr0-bo~t_11788',
+    #         'https://www.houzz.com/professionals/landscape-contractors/probr0-bo~t_11812',
+    #         'https://www.houzz.com/professionals/adu-contractors/probr0-bo~t_34256',
+    #         'https://www.houzz.com/professionals/home-remodeling/probr0-bo~t_34257',
+    #         'https://www.houzz.com/professionals/home-additions-and-extensions/probr0-bo~t_34259',
+    #         'https://www.houzz.com/professionals/siding-and-exterior/probr0-bo~t_11826',
+    #         'https://www.houzz.com/professionals/fireplace/probr0-bo~t_11800',
+    #         'https://www.houzz.com/professionals/garage-doors/probr0-bo~t_11828',
+    #         'https://www.houzz.com/professionals/building-supplies/probr0-bo~t_11805',
+    #         'https://www.houzz.com/professionals/stone-pavers-and-concrete/probr0-bo~t_11824',
+    #         'https://www.houzz.com/professionals/specialty-contractors/probr0-bo~t_11811',
+    #         'https://www.houzz.com/professionals/staircases/probr0-bo~t_11839',
+    #         'https://www.houzz.com/professionals/wine-cellars/probr0-bo~t_11841',
+    #         'https://www.houzz.com/professionals/custom-countertops/probr0-bo~t_33909',
+    #         'https://www.houzz.com/professionals/tile-and-stone-contractors/probr0-bo~t_33910',
+    #         'https://www.houzz.com/professionals/basement-remodelers/probr0-bo~t_34261',
+    #         'https://www.houzz.com/professionals/bedding-and-bath/probr0-bo~t_11806',
+    #         'https://www.houzz.com/professionals/cabinets/probr0-bo~t_11829',
+    #         'https://www.houzz.com/professionals/carpenter/probr0-bo~t_11831',
+    #         'https://www.houzz.com/professionals/carpet-and-flooring/probr0-bo~t_11799',
+    #         'https://www.houzz.com/professionals/doors/probr0-bo~t_11827',
+    #         'https://www.houzz.com/professionals/environmental-services-and-restoration/probr0-bo~t_11813',
+    #         'https://www.houzz.com/professionals/hardwood-flooring-dealers/probr0-bo~t_28349',
+    #         'https://www.houzz.com/professionals/furniture-and-accessories/probr0-bo~t_11802',
+    #         'https://www.houzz.com/professionals/furniture-refinishing-and-upholstery/probr0-bo~t_11840',
+    #         'https://www.houzz.com/professionals/glass-and-shower-door-dealers/probr0-bo~t_27203',
+    #         'https://www.houzz.com/professionals/ironwork/probr0-bo~t_11834',
+    #         'https://www.houzz.com/professionals/kitchen-and-bath-fixtures/probr0-bo~t_11804',
+    #         'https://www.houzz.com/professionals/lighting/probr0-bo~t_11794',
+    #         'https://www.houzz.com/professionals/windows/probr0-bo~t_11797',
+    #         'https://www.houzz.com/professionals/universal-design/probr0-bo~t_34260',
+    #         'https://www.houzz.com/professionals/backyard-courts/probr0-bo~t_11838',
+    #         'https://www.houzz.com/professionals/decks-and-patios/probr0-bo~t_11830',
+    #         'https://www.houzz.com/professionals/driveways-and-paving/probr0-bo~t_11832',
+    #         'https://www.houzz.com/professionals/fencing-and-gates/probr0-bo~t_11833',
+    #         'https://www.houzz.com/professionals/garden-and-landscape-supplies/probr0-bo~t_11809',
+    #         'https://www.houzz.com/professionals/lawn-and-sprinklers/probr0-bo~t_11835',
+    #         'https://www.houzz.com/professionals/hot-tub-and-spa-dealers/probr0-bo~t_28350',
+    #         'https://www.houzz.com/professionals/outdoor-lighting-and-audio-visual-systems/probr0-bo~t_11836',
+    #         'https://www.houzz.com/professionals/outdoor-play/probr0-bo~t_11837',
+    #         'https://www.houzz.com/professionals/spa-and-pool-maintenance/probr0-bo~t_28351',
+    #         'https://www.houzz.com/professionals/pools-and-spas/probr0-bo~t_11795',
+    #         'https://www.houzz.com/professionals/tree-service/probr0-bo~t_11821',
+    #         'https://www.houzz.com/professionals/custom-closet-designers/probr0-bo~t_33907',
+    #         'https://www.houzz.com/professionals/professional-organizers/probr0-bo~t_33908',
+    #         'https://www.houzz.com/professionals/artist-and-artisan/probr0-bo~t_11801',
+    #         'https://www.houzz.com/professionals/handyman/probr0-bo~t_27204',
+    #         'https://www.houzz.com/professionals/home-staging/probr0-bo~t_11789',
+    #         'https://www.houzz.com/professionals/movers/probr0-bo~t_27206',
+    #         'https://www.houzz.com/professionals/paint-and-wall-coverings/probr0-bo~t_11807',
+    #         'https://www.houzz.com/professionals/painters/probr0-bo~t_27105',
+    #         'https://www.houzz.com/professionals/photographer/probr0-bo~t_11792',
+    #         'https://www.houzz.com/professionals/agents-and-brokers/probr0-bo~t_11822',
+    #         'https://www.houzz.com/professionals/roofing-and-gutter/probr0-bo~t_11819',
+    #         'https://www.houzz.com/professionals/window-coverings/probr0-bo~t_11798',
+    #         'https://www.houzz.com/professionals/appliances/probr0-bo~t_11810',
+    #         'https://www.houzz.com/professionals/electrical-contractors/probr0-bo~t_11818',
+    #         'https://www.houzz.com/professionals/home-media/probr0-bo~t_11787',
+    #         'https://www.houzz.com/professionals/hvac-contractors/probr0-bo~t_11814',
+    #         'https://www.houzz.com/professionals/plumbing-contractors/probr0-bo~t_11817',
+    #         'https://www.houzz.com/professionals/septic-tanks-and-systems/probr0-bo~t_11815',
+    #         'https://www.houzz.com/professionals/solar-energy-contractors/probr0-bo~t_11816',
+    #         'https://www.houzz.com/professionals/carpet-cleaners/probr0-bo~t_27201',
+    #         'https://www.houzz.com/professionals/chimney-cleaners/probr0-bo~t_27200',
+    #         'https://www.houzz.com/professionals/exterior-cleaners/probr0-bo~t_27202',
+    #         'https://www.houzz.com/professionals/house-cleaners/probr0-bo~t_27205',
+    #         'https://www.houzz.com/professionals/rubbish-removal/probr0-bo~t_11820',
+    #         'https://www.houzz.com/professionals/pest-control/probr0-bo~t_27207',
+    #         'https://www.houzz.com/professionals/window-cleaners/probr0-bo~t_27209']
+
+    for url in urls:
         group = url.split('/')[-2]
-        # folder_path = f"c:\\data_houzz_es\\list\\{group}"
+        # folder_path = f"c:\\DATA\\houzz_com\\product\\{group}"
         # if os.path.exists(folder_path):
         #     continue  # Пропустить итерацию, если папка уже существует
         # os.mkdir(folder_path)
-        get_requests(url)
-        # parsing(group)
+        # get_requests(url)
+        parsing(group)
         # drop_duplicates(group)
-        # print(f'Категория {group} готова')
-        # time.sleep(10)
+        print(f'Категория {group} готова')
+    # # time.sleep(10)
