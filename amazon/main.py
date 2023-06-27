@@ -18,7 +18,7 @@ import csv
 def get_requests():
     with open(f'C:\\scrap_tutorial-master\\amazon\\category.csv', newline='', encoding='utf-8') as files:
         urls = list(csv.reader(files, delimiter=' ', quotechar='|'))
-        for url in urls:
+        for url in urls[:1]:
             proxy = random.choice(proxies)
             proxy_host = proxy[0]
             proxy_port = proxy[1]
@@ -34,21 +34,45 @@ def get_requests():
             soup = BeautifulSoup(src, 'lxml')
             last_page = int(soup.find('span', attrs={'class': 's-pagination-item s-pagination-disabled'}).text)
             next_page = 'https://www.amazon.com' + soup.find('a', attrs={'aria-label': 'Go to page 2'}).get('href')
+            with open('url_products.csv', 'w', newline='', encoding='utf-8') as csvfile:
+                writer = csv.writer(csvfile)
 
-            for i in range(1, last_page + 1):
-                if i == 1:
-                    response = requests.get(next_page, cookies=cookies, headers=headers, proxies=proxi)
-                    urls = soup.find_all('a', attrs={
-                    'class': 'a-link-normal s-underline-text s-underline-link-text s-link-style a-text-normal'})
+                for i in range(1, last_page + 1):
+                    if i == 1:
+                        response = requests.get(
+                            url[0],
+                            cookies=cookies,
+                            headers=headers,
+                        )
+                        soup = BeautifulSoup(response.text, 'lxml')
+                        url_products = soup.find_all('a', attrs={'class': 'a-link-normal s-no-outline'})
+                        for k in url_products:
+                            url_product = 'https://www.amazon.com' + k.get("href")
+                            writer.writerow([url_product])
+                        if i > 1:
+                            response = requests.get(
+                                next_page,
+                                cookies=cookies,
+                                headers=headers,
+                            )
+                        soup = BeautifulSoup(response.text, 'lxml')
+                        next_page_element = soup.find('a', attrs={'aria-label': f'Go to page {i + 1}'})
+                        url_products = soup.find_all('a', attrs={'class': 'a-link-normal s-no-outline'})
+                        for k in url_products:
+                            url_product = 'https://www.amazon.com' + k.get("href")
+                            writer.writerow([url_product])
 
-                soup = BeautifulSoup(response.text, 'lxml')
-                next_page_element = soup.find('a', attrs={'aria-label': f'Go to page {i + 1}'})
+                        # Проверяем, есть ли ссылка на следующую страницу
+                        if next_page_element is not None:
+                            next_page = 'https://www.amazon.com' + next_page_element.get('href')
+                        else:
+                            break  # выходим из цикла, если нет ссылки на следующую страницу
 
-                # Проверяем, есть ли ссылка на следующую страницу
-                if next_page_element is not None:
-                    next_page = 'https://www.amazon.com' + next_page_element.get('href')
-                else:
-                    break
+                    # Ваши дополнительные действия, если есть
+
+                    time.sleep(1)
+                    writer.writerow([url_product])
+
 
 
 def parsing():
