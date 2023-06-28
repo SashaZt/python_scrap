@@ -37,7 +37,8 @@ def get_requests():
             last_page = int(soup.find('span', attrs={'class': 's-pagination-item s-pagination-disabled'}).text)
             print(last_page)
             next_page = 'https://www.amazon.com' + soup.find('a', attrs={'aria-label': 'Go to page 2'}).get('href')
-            with open(f'{category}.csv', 'w', newline='', encoding='utf-8') as csvfile:
+            with open(f'C:\\scrap_tutorial-master\\amazon\\url\\{category}.csv', 'w', newline='',
+                      encoding='utf-8') as csvfile:
                 writer = csv.writer(csvfile)
 
                 for i in range(1, last_page + 1):
@@ -75,13 +76,45 @@ def get_requests():
                 # writer.writerow([url_product])
 
 
-
 def parsing():
-    file = f"amazon.html"
-    with open(file, encoding="utf-8") as file:
-        src = file.read()
-    soup = BeautifulSoup(src, 'lxml')
-    print(soup)
+    folder = r'C:\scrap_tutorial-master\amazon\url\*.csv'
+    files_html = glob.glob(folder)
+    for item in files_html:
+        with open(item, newline='', encoding='utf-8') as files:
+            urls = list(csv.reader(files, delimiter=' ', quotechar='|'))
+            count = 0
+            for url in urls[:1]:
+                """Настройка прокси серверов случайных"""
+                proxy = random.choice(proxies)
+                proxy_host = proxy[0]
+                proxy_port = proxy[1]
+                proxy_user = proxy[2]
+                proxy_pass = proxy[3]
+
+                proxi = {
+                    'http': f'http://{proxy_user}:{proxy_pass}@{proxy_host}:{proxy_port}',
+                    'https': f'http://{proxy_user}:{proxy_pass}@{proxy_host}:{proxy_port}'
+                }
+                count += 1
+                response = requests.get(url[0],
+                                        headers=headers, cookies=cookies, proxies=proxi)
+
+                src = response.text
+                soup = BeautifulSoup(src, 'lxml')
+                productTitle = soup.find('span', attrs={'id': 'productTitle'}).text
+                img_canvas = soup.find('div', attrs={'id': 'img-canvas'}).find('a').get('src')
+                regex_app_prices = re.compile('swatchElemen.*')
+                app_prices = soup.find('div', attrs={'id': 'tmmSwatches'}).find_all('li', attrs={'class': regex_app_prices})
+                prices = []
+                for p in app_prices:
+                    regex_price = re.compile('a-size-base.*')
+                    price = p.find('span', attrs={'class': regex_price}).text
+                    prices.append(price)
+                print(productTitle, img_canvas, prices)
+                # filename = f"amazon.html"
+                # with open(filename, "w", encoding='utf-8') as file:
+                #     file.write(src)
+
 
 
 if __name__ == '__main__':
