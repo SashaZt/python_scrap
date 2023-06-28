@@ -101,19 +101,31 @@ def parsing():
 
                 src = response.text
                 soup = BeautifulSoup(src, 'lxml')
-                productTitle = soup.find('span', attrs={'id': 'productTitle'}).text
-                img_canvas = soup.find('div', attrs={'id': 'img-canvas'}).find('a').get('src')
-                regex_app_prices = re.compile('swatchElemen.*')
-                app_prices = soup.find('div', attrs={'id': 'tmmSwatches'}).find_all('li', attrs={'class': regex_app_prices})
+                productTitle = soup.find('span', attrs={'id': 'productTitle'}).text.strip()
+                img_canvas = soup.find('div', attrs={'id': 'imageBlockOuter'})
+                regex_all_image = re.compile('a-column a-span3 a-spacing-micro imageThu.*')
+                images = img_canvas.find_all('img')
+                image_urls = []
+                for i in images:
+                    url_jpg = i.get('src')
+                    new_url = re.sub(r'\._AC_.*\.jpg|_SX.*\.jpg', '.jpg', url_jpg)
+                    image_urls.append(new_url)
+
+                app_prices = soup.find('div', attrs={'id': 'tmmSwatches'})
                 prices = []
-                for p in app_prices:
-                    regex_price = re.compile('a-size-base.*')
-                    price = p.find('span', attrs={'class': regex_price}).text
+                for span in app_prices.find_all('span', class_=["a-color-base",
+                                                                "a-color-secondary"]):  # Поиск нескольких класов
+                    price_text = span.get_text(strip=True)
+                    price = price_text.replace('$', '').replace("from ", "").strip()
                     prices.append(price)
-                print(productTitle, img_canvas, prices)
-                # filename = f"amazon.html"
-                # with open(filename, "w", encoding='utf-8') as file:
-                #     file.write(src)
+
+                prices_dict = {price: 1 for price in prices}
+                # преобразуем словарь обратно в список
+                prices = list(prices_dict.keys())
+
+                print(productTitle)
+                print(prices)
+                print(image_urls)
 
 
 
