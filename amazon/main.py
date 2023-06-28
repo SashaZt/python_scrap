@@ -32,9 +32,12 @@ def get_requests():
             response = requests.get(url[0], cookies=cookies, headers=headers, proxies=proxi)
             src = response.text
             soup = BeautifulSoup(src, 'lxml')
+            category = soup.find('span', attrs={'class': 'a-size-base a-color-base a-text-bold'}).text
+
             last_page = int(soup.find('span', attrs={'class': 's-pagination-item s-pagination-disabled'}).text)
+            print(last_page)
             next_page = 'https://www.amazon.com' + soup.find('a', attrs={'aria-label': 'Go to page 2'}).get('href')
-            with open('url_products.csv', 'w', newline='', encoding='utf-8') as csvfile:
+            with open(f'{category}.csv', 'w', newline='', encoding='utf-8') as csvfile:
                 writer = csv.writer(csvfile)
 
                 for i in range(1, last_page + 1):
@@ -49,12 +52,12 @@ def get_requests():
                         for k in url_products:
                             url_product = 'https://www.amazon.com' + k.get("href")
                             writer.writerow([url_product])
-                        if i > 1:
-                            response = requests.get(
-                                next_page,
-                                cookies=cookies,
-                                headers=headers,
-                            )
+                    if i > 1:
+                        response = requests.get(
+                            next_page,
+                            cookies=cookies,
+                            headers=headers,
+                        )
                         soup = BeautifulSoup(response.text, 'lxml')
                         next_page_element = soup.find('a', attrs={'aria-label': f'Go to page {i + 1}'})
                         url_products = soup.find_all('a', attrs={'class': 'a-link-normal s-no-outline'})
@@ -67,11 +70,9 @@ def get_requests():
                             next_page = 'https://www.amazon.com' + next_page_element.get('href')
                         else:
                             break  # выходим из цикла, если нет ссылки на следующую страницу
-
-                    # Ваши дополнительные действия, если есть
-
-                    time.sleep(1)
-                    writer.writerow([url_product])
+                    print(next_page)
+                # time.sleep(1)
+                # writer.writerow([url_product])
 
 
 
