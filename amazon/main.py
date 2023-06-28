@@ -18,7 +18,7 @@ import csv
 def get_requests():
     with open(f'C:\\scrap_tutorial-master\\amazon\\category.csv', newline='', encoding='utf-8') as files:
         urls = list(csv.reader(files, delimiter=' ', quotechar='|'))
-        for url in urls[:1]:
+        for url in urls:
             proxy = random.choice(proxies)
             proxy_host = proxy[0]
             proxy_port = proxy[1]
@@ -85,6 +85,5 @@ def parsing():
 
 
 if __name__ == '__main__':
-    get_requests()
-    # get_cloudscraper()
-    # parsing()
+    # get_requests()
+    parsing()
