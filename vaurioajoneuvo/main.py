@@ -90,10 +90,27 @@ def parsing():
 
     table_row = soup.find('div', attrs={'class': 'cars-list'})
     regex_containr = re.compile('.*(?=item-lift-container)')
-    item_lift_container = table_row.find_all('div', attrs={'class':regex_containr})
-    for i in item_lift_container[:1]:
-        print(i)
+    item_lift_container = table_row.find_all('div', attrs={'class': regex_containr})
+    for i in item_lift_container[:3]:
 
+        id_avto = i.find('div', {'class': 'item-lift'}).get('data-auction-id')
+        link = 'https://www.vaurioajoneuvo.fi' + i.find('a').get('href')
+        # Извлечь текст из блока с названием
+        title = i.find('strong').text
+        # Извлечь текст из блока с информацией о цене
+        regex_price = re.compile('item-lift-price-now auction-price-now.*')
+        try:
+            price = i.find('strong', {'class': regex_price}).text
+        except:
+            price = None
+
+        # Извлечь информацию из блока с деталями
+        details = [span.text for span in i.find_all('span')]
+        print(f"id: {id_avto}")
+        print(f"Title: {title}")
+        print(f"Link: {link}")
+        print(f"Price: {price}")
+        print(f"Details: {details[:3]}")
 
 
 def get_cloudscraper():
@@ -133,8 +150,6 @@ def get_cloudscraper():
     filename = f"amazon.html"
     with open(filename, "w", encoding='utf-8') as f:
         f.write(html.decode('utf-8'))
-
-
 
 
 if __name__ == '__main__':
