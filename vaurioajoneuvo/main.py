@@ -12,19 +12,36 @@ from config import bot_token, chat_id, PROXY_HOST, PROXY_PORT, PROXY_USER, PROXY
 import csv
 
 def get_cloudscraper():
+    urls = [
+    "https://www.vaurioajoneuvo.fi/?model_year_min=1999",
+    "https://www.vaurioajoneuvo.fi/?model_year_min=1993&condition=no_demo",
+    "https://www.vaurioajoneuvo.fi/?model_year_min=1998",
+    "https://www.vaurioajoneuvo.fi/?model_year_min=1981&condition=no_demo",
+    "https://www.vaurioajoneuvo.fi/?model_year_min=1976",
+    "https://www.vaurioajoneuvo.fi/?model_year_min=1972&condition=no_demo",
+    "https://www.vaurioajoneuvo.fi/?model_year_min=1971",
+    "https://www.vaurioajoneuvo.fi/?model_year_min=2001&condition=no_demo",
+    "https://www.vaurioajoneuvo.fi/?model_year_min=1964",
+    "https://www.vaurioajoneuvo.fi/?model_year_min=1984&condition=no_demo",
+    "https://www.vaurioajoneuvo.fi/?model_year_min=1962",
+    "https://www.vaurioajoneuvo.fi/?model_year_min=1991&condition=no_demo",
+    "https://www.vaurioajoneuvo.fi/?model_year_min=1985",
+    "https://www.vaurioajoneuvo.fi/?model_year_min=1975&condition=no_demo",
+    "https://www.vaurioajoneuvo.fi/?model_year_min=2003"
+    ]
+    for url in urls[:1]:
+        scraper = cloudscraper.create_scraper(browser={
+            'browser': 'firefox',
+            'platform': 'windows',
+            'mobile': False
 
-    scraper = cloudscraper.create_scraper(browser={
-        'browser': 'firefox',
-        'platform': 'windows',
-        'mobile': False
-
-    })
-    r = scraper.get(
-        'https://www.vaurioajoneuvo.fi/', cookies=cookies, headers=headers)  # , proxies=proxies
-    html = r.content
-    filename = f"amazon.html"
-    with open(filename, "w", encoding='utf-8') as f:
-        f.write(html.decode('utf-8'))
+        })
+        r = scraper.get(
+            url, cookies=cookies, headers=headers)  # , proxies=proxies
+        html = r.content
+        filename = f"amazon.html"
+        with open(filename, "w", encoding='utf-8') as f:
+            f.write(html.decode('utf-8'))
 
 
 def get_id_ad():
