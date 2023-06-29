@@ -122,10 +122,24 @@ def parsing():
                 prices_dict = {price: 1 for price in prices}
                 # преобразуем словарь обратно в список
                 prices = list(prices_dict.keys())
-
-                print(productTitle)
-                print(prices)
-                print(image_urls)
+                product_details = []
+                detail_list = soup.find('ul', class_='detail-bullet-list')
+                for li in detail_list.find_all('li'):
+                    item = li.text.replace('&rlm;', '').replace('&lrm;', '')
+                    item = re.sub(' +', ' ', item)  # remove multiple spaces
+                    item = item.replace('\n', '')  # remove newlines
+                    item = item.replace('\u200f', '').replace(' \u200e ', ' ')
+                    item = item.strip()
+                    product_details.append(item)
+                best_sellers_rank = soup.find('ul', class_='zg_hrsr')
+                for li in best_sellers_rank.find_all('li'):
+                    item = li.span.text.replace('\u200f', '').strip()
+                    product_details.append(item)
+                print(product_details)
+                #
+                # print(productTitle)
+                # print(prices)
+                # print(image_urls)
 
 
 
