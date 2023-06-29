@@ -136,12 +136,15 @@ def parsing():
                 for li in best_sellers_rank.find_all('li'):
                     item = li.span.text.replace('\u200f', '').strip()
                     product_details.append(item)
+                book_description = soup.find('div', attrs={'id': 'editorialReviews_feature_div'}).text.replace("\n", "")
+
 
                
                 print(productTitle)
                 print(prices)
                 print(image_urls)
                 print(product_details)
+                print(book_description)
 
 
 
