@@ -96,6 +96,7 @@ def parsing():
                     'https': f'http://{proxy_user}:{proxy_pass}@{proxy_host}:{proxy_port}'
                 }
                 count += 1
+                print(url[0])
                 response = requests.get(url[0],
                                         headers=headers, cookies=cookies, proxies=proxi)
 
@@ -135,11 +136,12 @@ def parsing():
                 for li in best_sellers_rank.find_all('li'):
                     item = li.span.text.replace('\u200f', '').strip()
                     product_details.append(item)
+
+               
+                print(productTitle)
+                print(prices)
+                print(image_urls)
                 print(product_details)
-                #
-                # print(productTitle)
-                # print(prices)
-                # print(image_urls)
 
 
 
