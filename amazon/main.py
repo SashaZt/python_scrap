@@ -96,7 +96,9 @@ def parsing():
                     'https': f'http://{proxy_user}:{proxy_pass}@{proxy_host}:{proxy_port}'
                 }
                 count += 1
-                print(url[0])
+
+                new_url = new_url = re.sub(r'(https://www.amazon.com).*(/dp/\d+).*', r'\1\2', url[0])
+                print(new_url)
                 response = requests.get(url[0],
                                         headers=headers, cookies=cookies, proxies=proxi)
 
@@ -109,8 +111,8 @@ def parsing():
                 image_urls = []
                 for i in images:
                     url_jpg = i.get('src')
-                    new_url = re.sub(r'\._AC_.*\.jpg|_SX.*\.jpg', '.jpg', url_jpg)
-                    image_urls.append(new_url)
+                    new_url_jpg = re.sub(r'\._AC_.*\.jpg|_SX.*\.jpg', '.jpg', url_jpg)
+                    image_urls.append(new_url_jpg)
 
                 app_prices = soup.find('div', attrs={'id': 'tmmSwatches'})
                 prices = []
