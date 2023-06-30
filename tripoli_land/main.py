@@ -64,12 +64,12 @@ def get_selenium():
     passwords.send_keys('Stepan9472')
     passwords.send_keys(Keys.RETURN)
     time.sleep(1)
-    coun = 1360
-    for i in range(35, 43):
+    coun = 480
+    for i in range(13, 22):
 
         pause_time = random.randint(1, 5)
         driver.get(
-            f'https://tripoli.land/farmers/proizvoditeli-zerna/lvovskaya?page={i}&q%5Bcategories_id_eq%5D=2&q%5Bdistrict_region_id_eq%5D=14')
+            f'https://tripoli.land/farmers/proizvoditeli-zerna/ivano-frankovskaya?page={i}&q%5Bcategories_id_eq%5D=2&q%5Bdistrict_region_id_eq%5D=9')
         wait_company = wait.until(
             EC.presence_of_element_located((By.XPATH, '//span[@class="call-popup"]')))
         company = driver.find_element(By.XPATH, '//span[@class="call-popup"]')
