@@ -223,10 +223,14 @@ def get_selenium():
 def get_coocies():
     """Получение куки из любого сайта и отправка их в reqest"""
     url = 'https://www.vaurioajoneuvo.fi/?model_year_min=1999'
-        # not use cf_clearance, cf challenge is fail
-        # proxies = {
-        #     "all": "socks5://localhost:7890"
-        # }
+    from playwright.sync_api import sync_playwright
+    from cf_clearance import sync_cf_retry, sync_stealth
+    import requests
+
+    # not use cf_clearance, cf challenge is fail
+    proxies = {
+        "all": "socks5://localhost:7890"
+    }
     res = requests.get(url)
     if '<title>Just a moment...</title>' in res.text:
         print("cf challenge fail")
@@ -242,16 +246,22 @@ def get_coocies():
             for cookie in cookies:
                 if cookie.get('name') == 'cf_clearance':
                     cf_clearance_value = cookie.get('value')
-                    # print(cf_clearance_value)
+                    print(cf_clearance_value)
             ua = page.evaluate('() => {return navigator.userAgent}')
-            # print(ua)
-            # get_cloudscraper(ua, cf_clearance_value)
-
+            print(ua)
         else:
             print("cf challenge fail")
-
         browser.close()
-        # return ua, cf_clearance_value  # Возвращаем значения
+    # use cf_clearance, must be same IP and UA
+    headers = {"user-agent": ua}
+    cookies = {"cf_clearance": cf_clearance_value}
+    res = requests.get(url, headers=headers, cookies=cookies)
+    html = res.content
+    with open("avto_.html", "w", encoding='utf-8') as f:
+        f.write(html.decode('utf-8'))
+    if '<title>Just a moment...</title>' not in res.text:
+        print("cf challenge success")
+
 
 if __name__ == '__main__':
     # get_requests()
