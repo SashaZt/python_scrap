@@ -30,38 +30,37 @@ async def send_message(bot_token, chat_id, text):
         await session.post(url, data=data)
 
 def process_urls_and_send_messages(bot_token, chat_id, list_urls):
-    url = 'https://www.vaurioajoneuvo.fi/?model_year_min=1999'
-    # not use cf_clearance, cf challenge is fail
-    # proxies = {
-    #     "all": "socks5://localhost:7890"
-    # }
-    res = requests.get(url)
-    if '<title>Just a moment...</title>' in res.text:
-        print("cf challenge fail")
-    # get cf_clearance
-    with sync_playwright() as p:
-        browser = p.chromium.launch(headless=False)
-        page = browser.new_page()
-        sync_stealth(page, pure=True)
-        page.goto(url)
-        res = sync_cf_retry(page)
-        if res:
-            cookies = page.context.cookies()
-            for cookie in cookies:
-                if cookie.get('name') == 'cf_clearance':
-                    cf_clearance_value = cookie.get('value')
-                    # print(cf_clearance_value)
-            ua = page.evaluate('() => {return navigator.userAgent}')
-            # print(ua)
-            # get_cloudscraper(ua, cf_clearance_value)
-
-        else:
-            print("cf challenge fail")
-
-        browser.close()
-        # return ua, cf_clearance_value  # Возвращаем значения
     while True:
+        url = 'https://www.vaurioajoneuvo.fi/?model_year_min=1999'
+        # not use cf_clearance, cf challenge is fail
+        # proxies = {
+        #     "all": "socks5://localhost:7890"
+        # }
+        res = requests.get(url)
+        if '<title>Just a moment...</title>' in res.text:
+            print("cf challenge fail")
+        # get cf_clearance
+        with sync_playwright() as p:
+            browser = p.chromium.launch(headless=False)
+            page = browser.new_page()
+            sync_stealth(page, pure=True)
+            page.goto(url)
+            res = sync_cf_retry(page)
+            if res:
+                cookies = page.context.cookies()
+                for cookie in cookies:
+                    if cookie.get('name') == 'cf_clearance':
+                        cf_clearance_value = cookie.get('value')
+                        # print(cf_clearance_value)
+                ua = page.evaluate('() => {return navigator.userAgent}')
+                # print(ua)
+                # get_cloudscraper(ua, cf_clearance_value)
 
+            else:
+                print("cf challenge fail")
+
+            browser.close()
+            # return ua, cf_clearance_value  # Возвращаем значения
         for url in list_urls:  # Убрать срез тут список url
             headers = {"user-agent": ua}
             cookies = {"cf_clearance": cf_clearance_value}
@@ -86,7 +85,7 @@ def process_urls_and_send_messages(bot_token, chat_id, list_urls):
                     reader = csv.reader(csvfile)
                     id_list = [row[0] for row in reader]
             except:
-                with open(file_name, 'w', encoding='utf-8') as csvfile:
+                with open(file_name, 'a', encoding='utf-8') as csvfile:
                     reader = csv.reader(csvfile)
 
             table_row = soup.find('div', attrs={'class': 'cars-list'})
@@ -112,12 +111,12 @@ def process_urls_and_send_messages(bot_token, chat_id, list_urls):
                 except:
                     price = None
                 details_all = [span.text for span in i.find_all('span')]
-                details = details_all[0] + details_all[1] + details_all[2]
+                details = f"{details_all[0]} {details_all[1]} {details_all[2]}"
                 message = f"Title: {title}\nLink: {link}\nPrice: {price}\nDetails: {details}"
-                print(message)  # print to console
+                # print(message)  # print to console
 
                 # send the same message to telegram
-                # asyncio.run(send_message(bot_token, chat_id, message))
+                asyncio.run(send_message(bot_token, chat_id, message))
         time.sleep(30)
         print('Паузка 30сек')
 process_urls_and_send_messages(bot_token, chat_id, list_urls)
