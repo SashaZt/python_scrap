@@ -1,3 +1,4 @@
+import glob
 import re
 import os
 import shutil
@@ -95,6 +96,7 @@ def get_chromedriver():
     # chrome_options.add_experimental_option("excludeSwitches", ['enable-automation'])
     # chrome_options.add_argument('--disable-infobars')
     chrome_options.add_argument("--start-maximized")
+    # chrome_options.add_argument('--headless')
     chrome_options.add_argument('--ignore-certificate-errors')
     chrome_options.add_argument('--ignore-ssl-errors')
     # chrome_options.add_argument('--disable-extensions') # Отключает использование расширений
@@ -115,7 +117,18 @@ def get_chromedriver():
       '''
     })
     return driver
+def get_chromedriver_parsing():
+    chrome_options = webdriver.ChromeOptions()
 
+    chrome_options.add_argument("--disable-gpu")
+    chrome_options.add_argument('--headless')
+    chrome_options.add_argument('--disable-extensions') # Отключает использование расширений
+    chrome_options.add_argument('--disable-dev-shm-usage')
+    chrome_options.add_argument('--no-sandbox')
+    chrome_options.add_argument('--disable-setuid-sandbox')
+    s = Service(executable_path="C:\\scrap_tutorial-master\\chromedriver.exe")
+    driver = webdriver.Chrome(service=s, options=chrome_options)
+    return driver
 
 def get_category():
     cookies = {
@@ -284,28 +297,38 @@ def get_product():
 
 
 def parsing():
-    driver = get_chromedriver()
-    driver.get('C:\\scrap_tutorial-master\\intercars_eu\\motorcycles.html')
-    category = driver.find_element(By.XPATH, '//a[@data-test="parentCategoryName"]').get_attribute("title").replace("/",
-                                                                                                                    "_")
-    table_product = driver.find_element(By.XPATH, '//table[@class="listingcollapsed__wrapper"]')
-    products = table_product.find_elements(By.XPATH, "//tbody[contains(@class, 'listingcollapsed__item')]")
+    driver = get_chromedriver_parsing()
+    folders_html = fr"c:\DATA\intercars_eu\*.html"
+    files_html = glob.glob(folders_html)
+    coun = 0
     with open(f"data.csv", 'w', newline='', encoding='utf-8') as csvfile:
         writer = csv.writer(csvfile, delimiter=";")
-        for i in products:
-            name_product = i.find_element(By.XPATH,
-                                          ".//a[@data-test='activenumber,search-result-row-title']").get_attribute(
-                "data-id")
-            date_product = i.find_element(By.XPATH, './/div[@class="productdelivery__date"]').text
-            price_product = i.find_element(By.XPATH,
-                                           './/div[@class="quantity quantity--pricesmall productpricetoggle__gross  productpricetoggle__wholesale  js-product-wholesale-toggle"]//div[@class="quantity__amount"]').text
-            datas = [name_product, date_product, price_product]
-            writer.writerow(datas)
-            datas = [category, name_product, date_product, price_product]
-            writer.writerow(datas)
+        for i in files_html:
+            driver.get(i)
+            coun +=1
+            category = driver.find_element(By.XPATH, '//a[@data-test="parentCategoryName"]').get_attribute("title").replace("/",
+                                                                                                                            "_")
+            table_product = driver.find_element(By.XPATH, '//table[@class="listingcollapsed__wrapper"]')
+            products = table_product.find_elements(By.XPATH, "//tbody[contains(@class, 'listingcollapsed__item')]")
+            for i in products:
+                name_product = i.find_element(By.XPATH,
+                                              ".//a[@data-test='activenumber,search-result-row-title']").get_attribute(
+                    "data-id")
+                try:
+                    date_product = i.find_element(By.XPATH, './/div[@class="productdelivery__date"]').text
+                except:
+                    date_product = None
+                try:
+                    price_product = i.find_element(By.XPATH,
+                                                   './/div[@class="quantity quantity--pricesmall productpricetoggle__gross  productpricetoggle__wholesale  js-product-wholesale-toggle"]//div[@class="quantity__amount"]').text
+                except:
+                    price_product = None
+                datas = [name_product, date_product, price_product]
+                writer.writerow(datas)
+            print(f"Осталось {len(files_html) - coun}")
 
 
 if __name__ == '__main__':
     # get_category()
-    get_product()
-    # parsing()
+    # get_product()
+    parsing()
