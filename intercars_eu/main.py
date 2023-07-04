@@ -1,3 +1,4 @@
+import re
 import os
 import shutil
 import tempfile
@@ -147,13 +148,13 @@ def get_category():
         time.sleep(10)
         driver.get('https://ua.e-cat.intercars.eu/ru/motorcycles')
         time.sleep(10)
-        urls = driver.find_elements(By.XPATH, '//div[@class="yCmsContentSlot"]//div[@class="yCmsComponent categorytiles__item"]//a')
+        urls = driver.find_elements(By.XPATH,
+                                    '//div[@class="yCmsContentSlot"]//div[@class="yCmsComponent categorytiles__item"]//a')
         with open('url_category.csv', 'w', newline='', encoding='utf-8') as csvfile:
             writer = csv.writer(csvfile)
             for u in urls:
                 category = u.get_attribute("href")
                 writer.writerow([category])
-
 
         # file_name = f"motorcycles.html"
         # with open(file_name, "w", encoding='utf-8') as fl:
@@ -164,8 +165,9 @@ def get_category():
         driver.close()
         driver.quit()
 
+
 def get_product():
-    urls =[
+    urls = [
         "https://ua.e-cat.intercars.eu/ru/Full-offer/Drive/Motorcycle-drive/Chain-Belt/c/tecdoc-6500000-5010888-6515040?q=%3Adefault%3AbranchAvailability%3AALL%3Amarket%3AMOT",
         "https://ua.e-cat.intercars.eu/ru/Full-offer/Batteries-and-cranking-system/c/tecdoc-5090003?q=%3Adefault%3Aicgoods_35545%3Aall_markets%3AbranchAvailability%3AALL%3Amarket%3AMOT",
         "https://ua.e-cat.intercars.eu/ru/Full-offer/Brake-system/Disc-brakes/Brake-pad/c/tecdoc-6600000-6611000-6611010?q=:default:market:MOT",
@@ -198,16 +200,6 @@ def get_product():
     driver = get_chromedriver()
     driver.get(url)
     driver.maximize_window()
-    # for cookie_name, cookie_value in cookies.items():
-    #     cookie_dict = {'name': cookie_name, 'value': cookie_value}
-    #     driver.add_cookie(cookie_dict)
-    # time.sleep(1)
-    # driver.refresh()
-    # # for cookie_name, cookie_value in cookies.items():
-    # #     cookie_dict = {'name': cookie_name, 'value': cookie_value}
-    # #     driver.add_cookie(cookie_dict)
-    # time.sleep(10)
-
     try:
         wait = WebDriverWait(driver, 60)
         wait_email = wait.until(
@@ -217,12 +209,73 @@ def get_product():
         passwords = driver.find_element(By.XPATH, '//input[@id="loginForm:password"]')
         passwords.send_keys('GEkz54x!')
         passwords.send_keys(Keys.RETURN)
-        time.sleep(10)
-        for i in urls:
-            driver.get(i)
+        time.sleep(5)
 
+        for i in urls[1:]:
+            coun = 0
+            next_page = i
+            while next_page:
+                coun += 1
+                driver.get(next_page)
+                time.sleep(1)
 
+                category = driver.find_element(By.XPATH, '//a[@data-test="parentCategoryName"]').get_attribute(
+                    "title").replace("/", "_")
+                file_name = f"c:\\DATA\\intercars_eu\\{category}_{coun}.html"
+                if os.path.isfile(file_name):
+                    continue  # Если файл уже существует, переходим к следующей итерации цикла
+                with open(file_name, "w", encoding='utf-8') as fl:
+                    fl.write(driver.page_source)
+                # table_product = driver.find_element(By.XPATH, '//table[@class="listingcollapsed__wrapper"]')
+                # products = table_product.find_elements(By.XPATH, "//tbody[contains(@class, 'listingcollapsed__item')]")
+                #
+                # with open(f"{category}.csv", 'a', newline='',
+                #           encoding='utf-8') as csvfile:  # Используем 'a' чтобы добавлять в файл, а не перезаписывать
+                #     writer = csv.writer(csvfile, delimiter=";")
+                #     for product in products:
+                #         name_product = product.find_element(By.XPATH,
+                #                                             ".//a[@data-test='activenumber,search-result-row-title']").get_attribute(
+                #             "data-id")
+                #         date_product = product.find_element(By.XPATH, './/div[@class="productdelivery__date"]').text
+                #         price_product = product.find_element(By.XPATH,
+                #                                              './/div[@class, "quantity quantity--pricesmall"]//div[@class="quantity__amount"]').text
+                #         datas = [name_product, date_product, price_product]
+                #         writer.writerow(datas)
 
+                try:
+                    next_page = driver.find_element(By.XPATH,
+                                                    '//li[@class="pagination__item pagination__item--smallmargin"][2]//a').get_attribute(
+                        "href")  # Получаем ссылку на следующую страницу
+                except:
+                    next_page = None  # Если следующей страницы нет, завершаем цикл while
+        # for i in urls[:1]:
+        #     driver.get(i)
+        #     time.sleep(1)
+        #
+        #     category = driver.find_element(By.XPATH, '//a[@data-test="parentCategoryName"]').get_attribute(
+        #         "title").replace("/",
+        #                          "_")
+        #     table_product = driver.find_element(By.XPATH, '//table[@class="listingcollapsed__wrapper"]')
+        #     products = table_product.find_elements(By.XPATH, "//tbody[contains(@class, 'listingcollapsed__item')]")
+        #     with open(f"{category}.csv", 'w', newline='', encoding='utf-8') as csvfile:
+        #         writer = csv.writer(csvfile, delimiter=";")
+        #         for i in products:
+        #             name_product = i.find_element(By.XPATH,
+        #                                           ".//a[@data-test='activenumber,search-result-row-title']").get_attribute(
+        #                 "data-id")
+        #             date_product = i.find_element(By.XPATH, './/div[@class="productdelivery__date"]').text
+        #             price_product = i.find_element(By.XPATH,
+        #                                            './/div[@class="quantity quantity--pricesmall productpricetoggle__gross  productpricetoggle__wholesale  js-product-wholesale-toggle"]//div[@class="quantity__amount"]').text
+        #             datas = [name_product, date_product, price_product]
+        #             writer.writerow(datas)
+        #
+        #         try:
+        #             pagin_next = driver.find_element(By.XPATH,
+        #                                              '//li[@class="pagination__item pagination__item--smallmargin"][2]//a').get_attribute(
+        #                 "href")
+        #             driver.get(pagin_next)
+        #         except:
+        #             continue
     except Exception as e:
         print(e)
     finally:
@@ -230,6 +283,29 @@ def get_product():
         driver.quit()
 
 
+def parsing():
+    driver = get_chromedriver()
+    driver.get('C:\\scrap_tutorial-master\\intercars_eu\\motorcycles.html')
+    category = driver.find_element(By.XPATH, '//a[@data-test="parentCategoryName"]').get_attribute("title").replace("/",
+                                                                                                                    "_")
+    table_product = driver.find_element(By.XPATH, '//table[@class="listingcollapsed__wrapper"]')
+    products = table_product.find_elements(By.XPATH, "//tbody[contains(@class, 'listingcollapsed__item')]")
+    with open(f"data.csv", 'w', newline='', encoding='utf-8') as csvfile:
+        writer = csv.writer(csvfile, delimiter=";")
+        for i in products:
+            name_product = i.find_element(By.XPATH,
+                                          ".//a[@data-test='activenumber,search-result-row-title']").get_attribute(
+                "data-id")
+            date_product = i.find_element(By.XPATH, './/div[@class="productdelivery__date"]').text
+            price_product = i.find_element(By.XPATH,
+                                           './/div[@class="quantity quantity--pricesmall productpricetoggle__gross  productpricetoggle__wholesale  js-product-wholesale-toggle"]//div[@class="quantity__amount"]').text
+            datas = [name_product, date_product, price_product]
+            writer.writerow(datas)
+            datas = [category, name_product, date_product, price_product]
+            writer.writerow(datas)
+
+
 if __name__ == '__main__':
     # get_category()
     get_product()
+    # parsing()
