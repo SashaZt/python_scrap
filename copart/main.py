@@ -249,7 +249,7 @@ def get_request():
     }
 
     ad = 19209
-    page_ad = ad // 20
+    page_ad = ad // 100
     start = 0
     page = 0
     # for i in range(0,3):
