@@ -212,7 +212,18 @@ def get_request():
     page_ad = ad // 20
     start = 0
     page = 0
-    for i in range(page_ad + 1):
+    for i in range(0,3):
+    # for i in range(page_ad + 1):
+        proxy = random.choice(proxies)
+        proxy_host = proxy[0]
+        proxy_port = proxy[1]
+        proxy_user = proxy[2]
+        proxy_pass = proxy[3]
+
+        proxi = {
+            'http': f'http://{proxy_user}:{proxy_pass}@{proxy_host}:{proxy_port}',
+            'https': f'http://{proxy_user}:{proxy_pass}@{proxy_host}:{proxy_port}'
+        }
 
         json_data = {
             'query': [
@@ -228,9 +239,9 @@ def get_request():
                 'auction_date_type desc',
                 'auction_date_utc asc',
             ],
-            'page': 0,
+            'page': page,
             'size': 20,
-            'start': 0,
+            'start': start,
             'watchListOnly': False,
             'freeFormSearch': False,
             'hideImages': False,
@@ -244,56 +255,69 @@ def get_request():
         }
 
         response = requests.post('https://www.copart.com/public/lots/search-results', cookies=cookies, headers=headers,
-                                 json=json_data)
-        src = response.text
+                                 json=json_data, proxies=proxi)
+        data = response.json()
+        filename = f"c:\\DATA\\copart\\list\\data_{page}.json"
+        with open(filename, 'w') as f:
+            json.dump(data, f)
+        page += 1
+        start += 20
 
 
 def get_id_ad_and_url():
-    folders_html = r"c:\DATA\copart\list\*.html"
+    folders_html = r"c:\DATA\copart\list\*.json"
     files_html = glob.glob(folders_html)
-    with open(f"id_ad.csv", 'w', newline='', encoding='utf-8') as csvfile:
-        writer = csv.writer(csvfile)
-        for i in files_html[:1]:
-            with open(i, encoding="utf-8") as file:
-                src = file.read()
-            soup = BeautifulSoup(src, 'lxml')
-            script_tags = soup.find_all('script')
-
-            json_data = None
-
-            for tag in script_tags:
-                content = tag.string
-                if content and 'var searchResults =' in content:
-                    # Удалить все до начала JSON и после окончания JSON
-                    json_str = content.split('var searchResults =', 1)[1].split('}};', 1)[0] + '}}'
-                    # Преобразовать строку в JSON
-                    # print(json_str)  # Проверка, что содержится в json_str
-                    json_data = json.loads(json_str)
-            content = json_data['results']['content']
-            for c in content:
-                id_ad = c['ln']
-                # print(type(id_ad))
-                writer.writerow([id_ad])
+    # with open(f"id_ad.csv", 'w', newline='', encoding='utf-8') as csvfile:
+    #     writer = csv.writer(csvfile)
+    #     for i in files_html[:1]:
+    #         with open(i, 'r') as f:
+    #             json_data = json.load(f)
+    #
+    #
+    #         #
+    #         # with open(i, encoding="utf-8") as file:
+    #         #     src = file.read()
+    #         # soup = BeautifulSoup(src, 'lxml')
+    #         # script_tags = soup.find_all('script')
+    #         #
+    #         # json_data = None
+    #         #
+    #         # for tag in script_tags:
+    #         #     content = tag.string
+    #         #     if content and 'var searchResults =' in content:
+    #         #         # Удалить все до начала JSON и после окончания JSON
+    #         #         json_str = content.split('var searchResults =', 1)[1].split('}};', 1)[0] + '}}'
+    #         #         # Преобразовать строку в JSON
+    #         #         # print(json_str)  # Проверка, что содержится в json_str
+    #         #         json_data = json.loads(json_str)
+    #         content = json_data['data']['results']['content']
+    #         # print(content)
+    #         for c in content:
+    #             id_ad = c['ln']
+    #             # print(type(id_ad))
+    #             writer.writerow([id_ad])
 
     with open(f"url.csv", 'w', newline='', encoding='utf-8') as csvfile:
         writer = csv.writer(csvfile)
-        for i in files_html[:1]:
-            with open(i, encoding="utf-8") as file:
-                src = file.read()
-            soup = BeautifulSoup(src, 'lxml')
-            script_tags = soup.find_all('script')
-
-            json_data = None
-
-            for tag in script_tags:
-                content = tag.string
-                if content and 'var searchResults =' in content:
-                    # Удалить все до начала JSON и после окончания JSON
-                    json_str = content.split('var searchResults =', 1)[1].split('}};', 1)[0] + '}}'
-                    # Преобразовать строку в JSON
-                    # print(json_str)  # Проверка, что содержится в json_str
-                    json_data = json.loads(json_str)
-            content = json_data['results']['content']
+        for i in files_html:
+            with open(i, 'r') as f:
+                json_data = json.load(f)
+            # with open(i, encoding="utf-8") as file:
+            #     src = file.read()
+            # soup = BeautifulSoup(src, 'lxml')
+            # script_tags = soup.find_all('script')
+            #
+            # json_data = None
+            #
+            # for tag in script_tags:
+            #     content = tag.string
+            #     if content and 'var searchResults =' in content:
+            #         # Удалить все до начала JSON и после окончания JSON
+            #         json_str = content.split('var searchResults =', 1)[1].split('}};', 1)[0] + '}}'
+            #         # Преобразовать строку в JSON
+            #         # print(json_str)  # Проверка, что содержится в json_str
+            #         json_data = json.loads(json_str)
+            content = json_data['data']['results']['content']
             for c in content:
                 id_ad = f'https://www.copart.com/public/data/lotdetails/solr/{c["ln"]}'
                 # print(id_ad)
@@ -314,42 +338,43 @@ def get_product():
         'g2usersessionid': '0b4f61da6613900ecce840bc5d774668',
         'search-table-rows': '20',
         'visid_incap_242093': 'UOYi1RRfTzyJ7jo9JOPVyJz6omQAAAAAQkIPAAAAAACAF2utAZJ4uQRFQhFj8qgTt+ndHEwc+Hdu',
-        'incap_ses_323_242093': 'aIGEbkfOcxhzexi0wId7BJkrpWQAAAAAOM24/pM9WsAdU7V1mu9xFQ==',
         'G2JSESSIONID': 'DE6C9C9F61E8ED4898A810D7852B0B7B-n1',
-        'classicSearchResultsView': 'true',
-        'reese84': '3:BnX8RLS4MJQAKxRpmEiwew==:a/Xy1nKWB3+dJVmLWI9/dKkHI1h8Qm4LtK8K71kFiBPmWRc8NR2JqWWUyIpn51d8ZLQZWYzwanKvamK5HAqBamrBIiViE9Z6CkIAShngiOOLGWBAyZxjrQhyejpXZavy+5pKAhTKdQc9FM+CrBqi3ag5nHJiuj8MiSCMWEyQ9xa2oCMXiuaXVYpjpXJsOqicLTEdHs0Jz5GojTl/BKudeLdhI2UMCL2zKtpSjZftUfPPTEmmT4B/COFqxvbOynFZATBPOGenWRkdPBGGF5Fvyszdfin5NnJIKD5oIuQ7UkXqtU7VE0PFCWsbyfiSS+BLtUudPxGcWusy1KDwdza6clRzhkpBLrm8DUknE2t4CkAxBnw6J6tApEeY4uQPes7EqOwb/Z2pJeIAX3/ISJi6bRihja5PYeXEniZO3m911kY89NZ0yK1IxZEipI/9SBS5SCLntrQzudNb7mya3dLaS0QRfHPqbBXSp14UFpwVUBd9yOOFGguR6HmHrK9N2/ywPE67IHsU2pECaNKXJaEu5w==:cVJCouWbe77w+B3nL5fwU+fk5hhX7nR5SzEeuoH9/3k=',
-        's_depth': '1',
-        's_pv': 'no%20value',
-        's_nr': '1688549546977-Repeat',
-        's_vnum': '1690995053533%26vn%3D5',
-        's_invisit': 'true',
-        's_lv': '1688549546978',
-        's_lv_s': 'Less%20than%201%20day',
+        'classicSearchResultsView': 'false',
         'copartTimezonePref': '%7B%22displayStr%22%3A%22GMT%2B3%22%2C%22offset%22%3A3%2C%22dst%22%3Atrue%2C%22windowsTz%22%3A%22Europe%2FKiev%22%7D',
-        'nlbi_242093_2147483392': 'Jai4SSOlUV/hmPIOJDHybgAAAABEl2Q8SU82VAIBNfgoSSQN',
+        'incap_ses_323_242093': 'TaeEVhlSfRU4LkK0wId7BFaApWQAAAAAcglukR3BDK2ff70EUk2rtw==',
+        'nlbi_242093_2147483392': 'fUO/LtdjBwRsGon6JDHybgAAAABM6QThHnGm1P7qXJ/FzZpf',
+        'reese84': '3:ukZGTHZ/9p9/bO+xemxVVQ==:hsEwA/sAJZ7jqnZJXOfr626Yk1FHNVPuFhAH1arWIKuVIGlNbekyl7zS5zY7nQzeAcyoaGnxhsF365JjsfzFVqQvdFFEjwVyFQkYpmHdhi5AQXrgRHLg8xFeEQn+bv90V0GIqG+vQBPnPlBIz5ob52ih7oTjOXKhQm8xJrNo2TXF7yM0ka4P8q242TUdk5E4g4EU7tjgDY/G2IH6SuEqOTAVinJ+XZHe5xrJmGUOTxH07Pzn5SZt11sQVMPA7SC3ObuVS7m69w+1QnMT50K9NOv4nt/8Ssvrebqo2V7+R1lwMykohkVIQOeZx9YnS7LC4PCbHS/hX72CZw6575Qx1KehllMH9krR4s2KSEHnbJEMgLI3AR8oIxTbSmHzPQkn44mqCcKK/1+5ToAl+C17XFAgPqqw4nbCNBTI85RZiJCU8VKwmlEr2KHtm4R++B6D4lK8dzc9xnxsBef4ava8vEyYfKC6YxJMBFQ7aloerXXB9aMCwUESYi+PK6Td7DQ/Qgt8PfP8Bf/kB2gtdxsTlg==:a9bD3jTQ3oh9uiP36qihPiFiWuqFD507dRzV8PZFZM0=',
+        's_pv': 'no%20value',
+        's_nr': '1688568638785-Repeat',
+        's_vnum': '1690995053533%26vn%3D8',
+        's_invisit': 'true',
+        's_lv': '1688568638786',
+        's_lv_s': 'Less%20than%201%20day',
     }
 
     headers = {
         'authority': 'www.copart.com',
-        'accept': '*/*',
+        'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
         'accept-language': 'ru,en-US;q=0.9,en;q=0.8,uk;q=0.7,de;q=0.6',
-        'cache-control': 'no-cache',
-        # 'cookie': 'userLang=en; nlbi_242093=3VItFF2VOBoHUUB+JDHybgAAAABsraBHQ9k9WpA8YOPY8dxS; timezone=Europe%2FKiev; s_ppv=100; userCategory=RPU; s_fid=7B97EB489ACC0C92-3446E08462F183D3; g2usersessionid=0b4f61da6613900ecce840bc5d774668; search-table-rows=20; visid_incap_242093=UOYi1RRfTzyJ7jo9JOPVyJz6omQAAAAAQkIPAAAAAACAF2utAZJ4uQRFQhFj8qgTt+ndHEwc+Hdu; incap_ses_323_242093=aIGEbkfOcxhzexi0wId7BJkrpWQAAAAAOM24/pM9WsAdU7V1mu9xFQ==; G2JSESSIONID=DE6C9C9F61E8ED4898A810D7852B0B7B-n1; classicSearchResultsView=true; reese84=3:BnX8RLS4MJQAKxRpmEiwew==:a/Xy1nKWB3+dJVmLWI9/dKkHI1h8Qm4LtK8K71kFiBPmWRc8NR2JqWWUyIpn51d8ZLQZWYzwanKvamK5HAqBamrBIiViE9Z6CkIAShngiOOLGWBAyZxjrQhyejpXZavy+5pKAhTKdQc9FM+CrBqi3ag5nHJiuj8MiSCMWEyQ9xa2oCMXiuaXVYpjpXJsOqicLTEdHs0Jz5GojTl/BKudeLdhI2UMCL2zKtpSjZftUfPPTEmmT4B/COFqxvbOynFZATBPOGenWRkdPBGGF5Fvyszdfin5NnJIKD5oIuQ7UkXqtU7VE0PFCWsbyfiSS+BLtUudPxGcWusy1KDwdza6clRzhkpBLrm8DUknE2t4CkAxBnw6J6tApEeY4uQPes7EqOwb/Z2pJeIAX3/ISJi6bRihja5PYeXEniZO3m911kY89NZ0yK1IxZEipI/9SBS5SCLntrQzudNb7mya3dLaS0QRfHPqbBXSp14UFpwVUBd9yOOFGguR6HmHrK9N2/ywPE67IHsU2pECaNKXJaEu5w==:cVJCouWbe77w+B3nL5fwU+fk5hhX7nR5SzEeuoH9/3k=; s_depth=1; s_pv=no%20value; s_nr=1688549546977-Repeat; s_vnum=1690995053533%26vn%3D5; s_invisit=true; s_lv=1688549546978; s_lv_s=Less%20than%201%20day; copartTimezonePref=%7B%22displayStr%22%3A%22GMT%2B3%22%2C%22offset%22%3A3%2C%22dst%22%3Atrue%2C%22windowsTz%22%3A%22Europe%2FKiev%22%7D; nlbi_242093_2147483392=Jai4SSOlUV/hmPIOJDHybgAAAABEl2Q8SU82VAIBNfgoSSQN',
+        'cache-control': 'max-age=0',
+        # 'cookie': 'userLang=en; nlbi_242093=3VItFF2VOBoHUUB+JDHybgAAAABsraBHQ9k9WpA8YOPY8dxS; timezone=Europe%2FKiev; s_ppv=100; userCategory=RPU; s_fid=7B97EB489ACC0C92-3446E08462F183D3; g2usersessionid=0b4f61da6613900ecce840bc5d774668; search-table-rows=20; visid_incap_242093=UOYi1RRfTzyJ7jo9JOPVyJz6omQAAAAAQkIPAAAAAACAF2utAZJ4uQRFQhFj8qgTt+ndHEwc+Hdu; G2JSESSIONID=DE6C9C9F61E8ED4898A810D7852B0B7B-n1; classicSearchResultsView=false; copartTimezonePref=%7B%22displayStr%22%3A%22GMT%2B3%22%2C%22offset%22%3A3%2C%22dst%22%3Atrue%2C%22windowsTz%22%3A%22Europe%2FKiev%22%7D; incap_ses_323_242093=TaeEVhlSfRU4LkK0wId7BFaApWQAAAAAcglukR3BDK2ff70EUk2rtw==; nlbi_242093_2147483392=fUO/LtdjBwRsGon6JDHybgAAAABM6QThHnGm1P7qXJ/FzZpf; reese84=3:ukZGTHZ/9p9/bO+xemxVVQ==:hsEwA/sAJZ7jqnZJXOfr626Yk1FHNVPuFhAH1arWIKuVIGlNbekyl7zS5zY7nQzeAcyoaGnxhsF365JjsfzFVqQvdFFEjwVyFQkYpmHdhi5AQXrgRHLg8xFeEQn+bv90V0GIqG+vQBPnPlBIz5ob52ih7oTjOXKhQm8xJrNo2TXF7yM0ka4P8q242TUdk5E4g4EU7tjgDY/G2IH6SuEqOTAVinJ+XZHe5xrJmGUOTxH07Pzn5SZt11sQVMPA7SC3ObuVS7m69w+1QnMT50K9NOv4nt/8Ssvrebqo2V7+R1lwMykohkVIQOeZx9YnS7LC4PCbHS/hX72CZw6575Qx1KehllMH9krR4s2KSEHnbJEMgLI3AR8oIxTbSmHzPQkn44mqCcKK/1+5ToAl+C17XFAgPqqw4nbCNBTI85RZiJCU8VKwmlEr2KHtm4R++B6D4lK8dzc9xnxsBef4ava8vEyYfKC6YxJMBFQ7aloerXXB9aMCwUESYi+PK6Td7DQ/Qgt8PfP8Bf/kB2gtdxsTlg==:a9bD3jTQ3oh9uiP36qihPiFiWuqFD507dRzV8PZFZM0=; s_pv=no%20value; s_nr=1688568638785-Repeat; s_vnum=1690995053533%26vn%3D8; s_invisit=true; s_lv=1688568638786; s_lv_s=Less%20than%201%20day',
         'dnt': '1',
-        'pragma': 'no-cache',
         'referer': 'https://www.copart.com/',
         'sec-ch-ua': '"Not.A/Brand";v="8", "Chromium";v="114", "Google Chrome";v="114"',
         'sec-ch-ua-mobile': '?0',
         'sec-ch-ua-platform': '"Windows"',
-        'sec-fetch-dest': 'script',
-        'sec-fetch-mode': 'no-cors',
+        'sec-fetch-dest': 'document',
+        'sec-fetch-mode': 'navigate',
         'sec-fetch-site': 'same-origin',
+        'sec-fetch-user': '?1',
+        'upgrade-insecure-requests': '1',
         'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36',
     }
     with open("url.csv", newline='', encoding='utf-8') as files:
         urls = list(csv.reader(files, delimiter=' ', quotechar='|'))
         counter = 0
-        for url in urls:
+        for url in urls[:5]:
+            pause_time = random.randint(1, 5)
             proxy = random.choice(proxies)
             proxy_host = proxy[0]
             proxy_port = proxy[1]
@@ -361,37 +386,48 @@ def get_product():
                 'https': f'http://{proxy_user}:{proxy_pass}@{proxy_host}:{proxy_port}'
             }
             counter += 1
-            response = requests.get(url[0], cookies=cookies, headers=headers, proxies=proxi)
+            response = requests.get(url[0], cookies=cookies, headers=headers) #, proxies=proxi
+            print(response.status_code)
             data = response.json()
             filename = f"c:\\DATA\\copart\\product\\data_{counter}.json"
             with open(filename, 'w') as f:
                 json.dump(data, f)
+            time.sleep(pause_time)
+            print(f"{pause_time}, сохранили {filename}")
 
 
 def parsin():
-    with open('c:\\DATA\\copart\\product\\data.json', 'r') as f:
-        # Загрузить JSON из файла
-        data_json = json.load(f)
-    'https: // www.copart.com / lot / 43079133 / salvage - 2018 - ford - focus - se - fl - miami - south'
-    ln = data_json['data']['lotDetails']['ln']
-    url_lot = f"https://www.copart.com/lot/{ln}"
-    url_img = data_json['data']['lotDetails']['tims']
-    name_lot = data_json['data']['lotDetails']['ld']
-    price_bnp = data_json['data']['lotDetails']['bnp']
-    odometer_lot = data_json['data']['lotDetails']['orr']
-    drive_lot = data_json['data']['lotDetails']['drv']
-    engine_type_lot = data_json['data']['lotDetails']['egn']
-    vehicle_type_lot = data_json['data']['lotDetails']['vehTypDesc']
-    highlights_lot = data_json['data']['lotDetails']['lcd']
-    sale_location = data_json['data']['lotDetails']['yn']
-    data = [url_lot, url_img, name_lot, price_bnp, odometer_lot, drive_lot, engine_type_lot, vehicle_type_lot,
-            highlights_lot, sale_location]
-    print(data)
+    folders_html = r"c:\DATA\copart\product\*.json"
+    files_html = glob.glob(folders_html)
+    with open(f'data.csv', "w", newline='', encoding='utf-8') as file:
+        writer = csv.writer(file, delimiter=";")
+
+        for i in files_html:
+            datas = []
+
+            with open(i, 'r') as f:
+                # Загрузить JSON из файла
+                data_json = json.load(f)
+            'https: // www.copart.com / lot / 43079133 / salvage - 2018 - ford - focus - se - fl - miami - south'
+            ln = data_json['data']['lotDetails']['ln']
+            url_lot = f"https://www.copart.com/lot/{ln}"
+            url_img = data_json['data']['lotDetails']['tims']
+            name_lot = data_json['data']['lotDetails']['ld']
+            price_bnp = data_json['data']['lotDetails']['bnp']
+            odometer_lot = data_json['data']['lotDetails']['orr']
+            drive_lot = data_json['data']['lotDetails']['drv']
+            engine_type_lot = data_json['data']['lotDetails']['egn']
+            vehicle_type_lot = data_json['data']['lotDetails']['vehTypDesc']
+            highlights_lot = data_json['data']['lotDetails']['lcd']
+            sale_location = data_json['data']['lotDetails']['yn']
+            datas = [url_lot, url_img, name_lot, price_bnp, odometer_lot, drive_lot, engine_type_lot, vehicle_type_lot,
+                    highlights_lot, sale_location]
+            writer.writerow(datas)
 
 
 if __name__ == '__main__':
-    get_selenium()
-    get()
+    # get_selenium()
+    # get_request()
     # get_id_ad_and_url()
     # get_product()
-    # parsin()
+    parsin()
