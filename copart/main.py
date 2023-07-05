@@ -163,28 +163,68 @@ def get_selenium():
 
 def get_request():
     cookies = {
+        'visid_incap_242093': '/HD7mKKsQ6G7gDsklJSPfCiNpWQAAAAAQUIPAAAAAABX+/wq/GldPxN2hTzvXtI9',
+        'incap_ses_323_242093': '0J1xL08wnkbqmUi0wId7BCiNpWQAAAAAu/wMleTtB0gvWw/edb+KYA==',
+        'g2usersessionid': '023c5fb0412f4eeeabb81f3a16fe981a',
+        'G2JSESSIONID': 'FFBA58978B544C41C9C38BDBE6012C63-n1',
         'userLang': 'en',
-        'nlbi_242093': '3VItFF2VOBoHUUB+JDHybgAAAABsraBHQ9k9WpA8YOPY8dxS',
+        'nlbi_242093': 'o0IsM2tuB2yjCyk3JDHybgAAAABJ8NpI3kDkI8cI8wNiVg8r',
+        'userCategory': 'PU',
         'timezone': 'Europe%2FKiev',
-        's_ppv': '100',
-        'userCategory': 'RPU',
-        's_fid': '7B97EB489ACC0C92-3446E08462F183D3',
-        'g2usersessionid': '0b4f61da6613900ecce840bc5d774668',
-        'search-table-rows': '20',
-        'visid_incap_242093': 'UOYi1RRfTzyJ7jo9JOPVyJz6omQAAAAAQkIPAAAAAACAF2utAZJ4uQRFQhFj8qgTt+ndHEwc+Hdu',
-        'incap_ses_323_242093': 'aIGEbkfOcxhzexi0wId7BJkrpWQAAAAAOM24/pM9WsAdU7V1mu9xFQ==',
-        'G2JSESSIONID': 'DE6C9C9F61E8ED4898A810D7852B0B7B-n1',
-        's_pv': 'no%20value',
-        's_vnum': '1690995053533%26vn%3D6',
-        's_invisit': 'true',
-        's_lv_s': 'Less%20than%201%20day',
-        'classicSearchResultsView': 'false',
-        'reese84': '3:j3nWFM5DfXwSWpXQE+uoBQ==:dBTMeIC1FPWMt7ed8gzdXQmPzxabSuoYU9f6tTddmYoiCW9Cvph95nLaMsVHpZ2d1+sYYQwjhxxHNRm9K4TYBCFW0HfgQhS1jF7QHpVErnNIDK+TcF3zWJYQ3RRAR9fvZLFJqm1cEIx7lao3/R+8RS/tU/my2R3WZBxsYE717gjup2I2npfWSAXcczd+IHryVBb6RzL63MA1qqB4nJJqqHftHQHSXzTRuoF1ZfvWwUbycffpj+CkyKrYkmY7OQb4vZvvVu5A3v27J8LmPw7qAeSQmuIXLuUJ4Zht5fUb/xTk8fvLCSN5vTFRdK6jb9gl/zXyrz/I4pwi8ESp6uFX9rKlKx/yGAXarkIEeSucQzrv6ofjYXkWa13hIk6C3qty9wrrc7LHEwwg3/wB4WqjGvGZvy/CrWv50YUvtXbUwgvXYO9/BX54kHut+W+3DPLVxA/10mA1Y80Detk9pbO0bIKC/wavLOoMH6zJW+SGh7stNbWykGpprfn40vnlV8iDpXtLUF1BqkqpuDkZiKMjlA==:Uet8RctMMVSxOXRArZflaN8YVnhCtvO8rZ+vZ+1cwgY=',
-        'nlbi_242093_2147483392': 'Ed2TSwo/TD7HvHMJJDHybgAAAACisH3S/7tajAF69TWPKcU6',
+        'nlbi_242093_2147483392': 'tpuOQ5JGAVx/DtteJDHybgAAAADqSMxl3e/th5uvsUtQ9ys5',
+        'reese84': '3:MIVtSpmsCY0FOHA09urRKQ==:vLEf9qESbUteJTxUXDkiHHC6/+PEInKZROzPxCyayrdMRaV/DXQhYLXLosis2uh+SHNh/o3I4dOE1RbpKPj+9nYLL6r9V4WwakHljTcMZ6N19uD/unrgQtgjaZCnZbfIvKP0FgUncJJLlXvhnoXDWjSDCjfel+5lB9yJSldsOyuYnSVnfU5PK4OAqxGGQ1VabnqEy5ygvGvtGmjvNC9tt5fQOKdQJIX1tvyN1KZX9VpxCrR9KDbIDn7mK/FZSJ4X/rzx0MWJfafgsmF3ieJsC/ajfR/wCWMgsYHDoiVr57u0t7iC4jFt5AA0R4ccT3bC4QFdAK5HXsz1T9DicNKJ22l6IGCB7nVdgwhf57SnCmLralEj9Kq5JBd1VGCnZiJ6av6dwxYr5nXtQm0RxuCYZy3KZSOlxORW8k4IMCtB5COJINnsks+RpDdz3uOVDEk81up/7swEoY17ZRkLeVQPqGuF7bfjEow8By7qFKMy79X+IZk3/0rBHCBK1TEV2DfSipHcQ3q0FKCzNKhc3Dc9cw==:+k9Ge5nP5yKkFjtVkPFi8ZxqcOnCMhg+TvJpjGumuUs=',
+        '_gcl_au': '1.1.98825793.1688571180',
+        '_ga': 'GA1.2.1755939870.1688571180',
+        '_gid': 'GA1.2.1493294689.1688571180',
+        '_gat_UA-90930613-6': '1',
+        '_uetsid': '392f34101b4911eeb4b20d2d8e1dcb8b',
+        '_uetvid': '392f45301b4911eebfa43969372e5ed1',
+        '_fbp': 'fb.1.1688571180107.576491671',
+        '_tt_enable_cookie': '1',
+        '_ttp': 'a4nDIBvtjS-sSBg9tKFnZhW_FT1',
+        '_clck': '1qdze69|2|fd1|0|1281',
+        'cto_bundle': 'G8UHWl94Y21FUEJVaFN3N3NySjJqcEh2MHQzUnNQSlduYWRCSnBwcG1hbUxJZjliNXVlVkJvSGozUVFLUXAweVE1bTdXMTRzNHk3WWRlbHlQeGN3Tm9tMVUwUVIxV0NkOXBaRFdQU2klMkZzbWk4cWpSaDhlMWhBdzZVbTBkQ0dSc0t3JTJCWFE',
+        '_cc_id': 'b836aeb22a0a3a359c23e8afd743771c',
+        'panoramaId_expiry': '1689175980866',
+        'panoramaId': 'b9d76f8aff9339cf023dc09cba4d16d539384251f146d8ab5b6b99fd099daf26',
+        'panoramaIdType': 'panoIndiv',
+        '_clsk': 's6h0np|1688571180947|1|0|o.clarity.ms/collect',
         'copartTimezonePref': '%7B%22displayStr%22%3A%22GMT%2B3%22%2C%22offset%22%3A3%2C%22dst%22%3Atrue%2C%22windowsTz%22%3A%22Europe%2FKiev%22%7D',
-        's_depth': '4',
-        's_nr': '1688559453085-Repeat',
-        's_lv': '1688559453086',
+        'FCNEC': '%5B%5B%22AKsRol99YIkBlUlshr-rZkLVTCoroq-b6ijXggvuNswvHx-SbvSR9CPsCBU1zA9q-oyNa0y269TadQ0q1egY7UIIO3h5y-IavxXo-Hkf541VSSQG9IemMM4iwYnytonOgmoO3gjt0sL3Xovjl0Z4Htm9bKgFmQZlSA%3D%3D%22%5D%2Cnull%2C%5B%5D%5D',
+        '_ga_VMJJLGQLHF': 'GS1.1.1688571179.1.1.1688571187.52.0.0',
+        's_ppv': '100',
+        '__gads': 'ID=4d25351eaa983cce:T=1688571188:RT=1688571188:S=ALNI_Mb-WoUPX53hCPeXgeNNb_2rdapMNQ',
+        '__gpi': 'UID=00000c373144cb15:T=1688571188:RT=1688571188:S=ALNI_MatCcOP289TJWma2keSKBwx5oMsVQ',
+        's_fid': '604563B7FACDB9E9-22394B2B905608F2',
+        's_depth': '1',
+        's_pv': 'no%20value',
+        's_vnum': '1691163188651%26vn%3D1',
+        's_invisit': 'true',
+        's_lv_s': 'First%20Visit',
+        'search-table-rows': '20',
+        's_nr': '1688571192347-New',
+        's_lv': '1688571192347',
+    }
+
+    headers = {
+        'authority': 'www.copart.com',
+        'accept': 'application/json, text/plain, */*',
+        'accept-language': 'ru',
+        'access-control-allow-headers': 'Content-Type, X-XSRF-TOKEN',
+        'content-type': 'application/json',
+        # 'cookie': 'visid_incap_242093=/HD7mKKsQ6G7gDsklJSPfCiNpWQAAAAAQUIPAAAAAABX+/wq/GldPxN2hTzvXtI9; incap_ses_323_242093=0J1xL08wnkbqmUi0wId7BCiNpWQAAAAAu/wMleTtB0gvWw/edb+KYA==; g2usersessionid=023c5fb0412f4eeeabb81f3a16fe981a; G2JSESSIONID=FFBA58978B544C41C9C38BDBE6012C63-n1; userLang=en; nlbi_242093=o0IsM2tuB2yjCyk3JDHybgAAAABJ8NpI3kDkI8cI8wNiVg8r; userCategory=PU; timezone=Europe%2FKiev; nlbi_242093_2147483392=tpuOQ5JGAVx/DtteJDHybgAAAADqSMxl3e/th5uvsUtQ9ys5; reese84=3:MIVtSpmsCY0FOHA09urRKQ==:vLEf9qESbUteJTxUXDkiHHC6/+PEInKZROzPxCyayrdMRaV/DXQhYLXLosis2uh+SHNh/o3I4dOE1RbpKPj+9nYLL6r9V4WwakHljTcMZ6N19uD/unrgQtgjaZCnZbfIvKP0FgUncJJLlXvhnoXDWjSDCjfel+5lB9yJSldsOyuYnSVnfU5PK4OAqxGGQ1VabnqEy5ygvGvtGmjvNC9tt5fQOKdQJIX1tvyN1KZX9VpxCrR9KDbIDn7mK/FZSJ4X/rzx0MWJfafgsmF3ieJsC/ajfR/wCWMgsYHDoiVr57u0t7iC4jFt5AA0R4ccT3bC4QFdAK5HXsz1T9DicNKJ22l6IGCB7nVdgwhf57SnCmLralEj9Kq5JBd1VGCnZiJ6av6dwxYr5nXtQm0RxuCYZy3KZSOlxORW8k4IMCtB5COJINnsks+RpDdz3uOVDEk81up/7swEoY17ZRkLeVQPqGuF7bfjEow8By7qFKMy79X+IZk3/0rBHCBK1TEV2DfSipHcQ3q0FKCzNKhc3Dc9cw==:+k9Ge5nP5yKkFjtVkPFi8ZxqcOnCMhg+TvJpjGumuUs=; _gcl_au=1.1.98825793.1688571180; _ga=GA1.2.1755939870.1688571180; _gid=GA1.2.1493294689.1688571180; _gat_UA-90930613-6=1; _uetsid=392f34101b4911eeb4b20d2d8e1dcb8b; _uetvid=392f45301b4911eebfa43969372e5ed1; _fbp=fb.1.1688571180107.576491671; _tt_enable_cookie=1; _ttp=a4nDIBvtjS-sSBg9tKFnZhW_FT1; _clck=1qdze69|2|fd1|0|1281; cto_bundle=G8UHWl94Y21FUEJVaFN3N3NySjJqcEh2MHQzUnNQSlduYWRCSnBwcG1hbUxJZjliNXVlVkJvSGozUVFLUXAweVE1bTdXMTRzNHk3WWRlbHlQeGN3Tm9tMVUwUVIxV0NkOXBaRFdQU2klMkZzbWk4cWpSaDhlMWhBdzZVbTBkQ0dSc0t3JTJCWFE; _cc_id=b836aeb22a0a3a359c23e8afd743771c; panoramaId_expiry=1689175980866; panoramaId=b9d76f8aff9339cf023dc09cba4d16d539384251f146d8ab5b6b99fd099daf26; panoramaIdType=panoIndiv; _clsk=s6h0np|1688571180947|1|0|o.clarity.ms/collect; copartTimezonePref=%7B%22displayStr%22%3A%22GMT%2B3%22%2C%22offset%22%3A3%2C%22dst%22%3Atrue%2C%22windowsTz%22%3A%22Europe%2FKiev%22%7D; FCNEC=%5B%5B%22AKsRol99YIkBlUlshr-rZkLVTCoroq-b6ijXggvuNswvHx-SbvSR9CPsCBU1zA9q-oyNa0y269TadQ0q1egY7UIIO3h5y-IavxXo-Hkf541VSSQG9IemMM4iwYnytonOgmoO3gjt0sL3Xovjl0Z4Htm9bKgFmQZlSA%3D%3D%22%5D%2Cnull%2C%5B%5D%5D; _ga_VMJJLGQLHF=GS1.1.1688571179.1.1.1688571187.52.0.0; s_ppv=100; __gads=ID=4d25351eaa983cce:T=1688571188:RT=1688571188:S=ALNI_Mb-WoUPX53hCPeXgeNNb_2rdapMNQ; __gpi=UID=00000c373144cb15:T=1688571188:RT=1688571188:S=ALNI_MatCcOP289TJWma2keSKBwx5oMsVQ; s_fid=604563B7FACDB9E9-22394B2B905608F2; s_depth=1; s_pv=no%20value; s_vnum=1691163188651%26vn%3D1; s_invisit=true; s_lv_s=First%20Visit; search-table-rows=20; s_nr=1688571192347-New; s_lv=1688571192347',
+        'dnt': '1',
+        'origin': 'https://www.copart.com',
+        'referer': 'https://www.copart.com/lotSearchResults?free=true&query=&searchCriteria=%7B%22query%22:%5B%22*%22%5D,%22filter%22:%7B%22FETI%22:%5B%22buy_it_now_code:B1%22%5D%7D,%22searchName%22:%22%22,%22watchListOnly%22:false,%22freeFormSearch%22:false%7D',
+        'sec-ch-ua': '"Not.A/Brand";v="8", "Chromium";v="114", "Google Chrome";v="114"',
+        'sec-ch-ua-mobile': '?0',
+        'sec-ch-ua-platform': '"Windows"',
+        'sec-fetch-dest': 'empty',
+        'sec-fetch-mode': 'cors',
+        'sec-fetch-site': 'same-origin',
+        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36',
+        'x-requested-with': 'XMLHttpRequest',
+        'x-xsrf-token': '1ebf6baf-d0db-4be9-95b4-7aa52967e6cf',
     }
 
     headers = {
@@ -212,8 +252,8 @@ def get_request():
     page_ad = ad // 20
     start = 0
     page = 0
-    for i in range(0,3):
-    # for i in range(page_ad + 1):
+    # for i in range(0,3):
+    for i in range(page_ad + 1):
         proxy = random.choice(proxies)
         proxy_host = proxy[0]
         proxy_port = proxy[1]
@@ -427,7 +467,7 @@ def parsin():
 
 if __name__ == '__main__':
     # get_selenium()
-    # get_request()
+    get_request()
     # get_id_ad_and_url()
     # get_product()
-    parsin()
+    # parsin()
