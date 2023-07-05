@@ -280,7 +280,7 @@ def get_request():
                 'auction_date_utc asc',
             ],
             'page': page,
-            'size': 20,
+            'size': 100,
             'start': start,
             'watchListOnly': False,
             'freeFormSearch': False,
