@@ -200,7 +200,7 @@ def get_product():
             filename = f"c:\\DATA\\iaai\\product\\data_{counter}.json"
             counter += 1
             if not os.path.exists(filename):
-                pause_time = random.randint(1, 5)
+                pause_time = random.randint(5, 10)
                 proxy = random.choice(proxies)
                 proxy_host = proxy[0]
                 proxy_port = proxy[1]
@@ -211,8 +211,10 @@ def get_product():
                     'http': f'http://{proxy_user}:{proxy_pass}@{proxy_host}:{proxy_port}',
                     'https': f'http://{proxy_user}:{proxy_pass}@{proxy_host}:{proxy_port}'
                 }
-
-                response = requests.get(url[0], cookies=cookies, headers=headers, proxies=proxi)  # , proxies=proxi
+                try:
+                    response = requests.get(url[0], cookies=cookies, headers=headers, proxies=proxi)  # , proxies=proxi
+                except:
+                    continue
                 src = response.text
                 soup = BeautifulSoup(src, 'lxml')
                 script_tag = soup.find('script', {'id': 'ProductDetailsVM'})
@@ -222,7 +224,6 @@ def get_product():
 
                 time.sleep(pause_time)
             else:
-                print(filename)
                 continue
 
 
@@ -303,6 +304,7 @@ def parsin():
             }
             with open(i, 'r') as f:
                 data_json = json.load(f)
+            print(i)
             name_lot = data_json['inventoryView']['attributes']['YearMakeModelSeries']
             lot_number = data_json['inventoryView']['attributes']['StockNumber']
             url_lot = f"https://www.iaai.com/VehicleDetail/{data_json['inventoryView']['attributes']['Id']}"
@@ -321,7 +323,10 @@ def parsin():
             odometer = data_json['inventoryView']['attributes']['ODOValue']
             drive_tyne_type = data_json['inventoryView']['vehicleDescription']['$values'][5]['value']
             vehicle_lot = data_json['inventoryView']['attributes']['InventoryType']
-            engine_lot = data_json['inventoryView']['attributes']['EngineSize'].strip()
+            try:
+                engine_lot = data_json['inventoryView']['attributes']['EngineSize'].strip()
+            except:
+                engine_lot = None
             start_code_lot = data_json['inventoryView']['attributes']['StartsDesc']
             branchname_lot = data_json['inventoryView']['attributes']['BranchName']
             datas = [name_lot, lot_number, url_lot, price_lot, odometer, drive_tyne_type, vehicle_lot, engine_lot,
@@ -332,5 +337,5 @@ def parsin():
 if __name__ == '__main__':
     # get_request()
     # get_id_ad_and_url()
-    get_product()
-    # parsin()
+    # get_product()
+    parsin()
