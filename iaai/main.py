@@ -372,6 +372,7 @@ def parsin():
             # sale_location = data_json['data']['lotDetails']['yn']
             datas = [name_lot, lot_number, url_lot, price_lot, odometer, drive_tyne_type, vehicle_lot, engine_lot, start_code_lot, branchname_lot, image_url]
             # writer.writerow(datas)
+            print(datas)
 
 
 if __name__ == '__main__':
