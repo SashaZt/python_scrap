@@ -336,15 +336,13 @@ def parsin():
             lot_number = data_json['inventoryView']['attributes']['StockNumber']
             url_lot = f"https://www.iaai.com/VehicleDetail/{data_json['inventoryView']['attributes']['Id']}"
             urls_img_lot =  data_json['inventoryView']['attributes']['KeyImageLink']
-            response = requests.get(urls_img_lot, cookies=cookies, headers=headers, proxies=proxi)  # , proxies=proxi
-            data = response.json()
-            data_json = json.loads(data)
+            response_img = requests.get(urls_img_lot, cookies=cookies, headers=headers, proxies=proxi)  # , proxies=proxi
+            data_json_img= response_img.json()
 
-            # URL шаблон
             url_template = "https://vis.iaai.com/resizer?imageKeys={}&width=845&height=633"
 
             # Извлекаем ключи из списка "keys"
-            keys = [item["K"] for item in data_json["keys"]]
+            keys = [item["K"] for item in data_json_img["keys"]]
 
             # Создаем список ссылок, подставляя каждый ключ в шаблон URL
             image_urls = [url_template.format(key) for key in keys]
@@ -352,7 +350,6 @@ def parsin():
             # Теперь у вас есть список всех URL изображений
             for url in image_urls[:1]:
                 image_url = url
-
 
             """После этого нужно получить ссылки на фото"""
             price_lot = data_json['auctionInformation']['biddingInformation']['buyNowPrice']
@@ -373,8 +370,7 @@ def parsin():
             # vehicle_type_lot = data_json['data']['lotDetails']['vehTypDesc']
             # highlights_lot = data_json['data']['lotDetails']['lcd']
             # sale_location = data_json['data']['lotDetails']['yn']
-            # datas = [name_lot, lot_number, url_lot, price_lot, odometer, drive_tyne_type, vehicle_lot, engine_lot, start_code_lot, branchname_lot, image_url]
-            print(data)
+            datas = [name_lot, lot_number, url_lot, price_lot, odometer, drive_tyne_type, vehicle_lot, engine_lot, start_code_lot, branchname_lot, image_url]
             # writer.writerow(datas)
 
 
