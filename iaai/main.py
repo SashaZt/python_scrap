@@ -1,41 +1,12 @@
 from bs4 import BeautifulSoup
-import csv
 import glob
-import re
+import os
 import requests
 import json
-import cloudscraper
-import os
-import time
-import undetected_chromedriver as webdriver
-from selenium.webdriver.chrome.service import Service
-import os
-from pathlib import Path
 import random
-import shutil
-import tempfile
-import os
-from proxi import proxies
-import concurrent.futures
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.common.action_chains import ActionChains
-import zipfile
 import time
-# import undetected_chromedriver as webdriver
-from selenium import webdriver
-import undetected_chromedriver
-from selenium.common.exceptions import TimeoutException
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.support.wait import WebDriverWait
-from concurrent.futures import ThreadPoolExecutor
 import csv
 from proxi import proxies
-
-proxy = [
-    ('185.112.12.122', 2831, '36675', 'g6Qply4q')
-]
-
 
 
 def get_request():
@@ -81,14 +52,12 @@ def get_request():
         'c': '1688572323571',
     }
 
-
-
     ad = 10821
     page_ad = ad // 10
 
     page = 0
-    for i in range(0,1):
-    # for i in range(page_ad + 1):
+    for i in range(1, 11):
+        # for i in range(page_ad + 1):
         proxy = random.choice(proxies)
         proxy_host = proxy[0]
         proxy_port = proxy[1]
@@ -143,14 +112,13 @@ def get_request():
             ],
         }
 
-        response = requests.post('https://www.iaai.com/Search', cookies=cookies, headers=headers,
-                                 json=json_data, proxies=proxi)
+        response = requests.post('https://www.iaai.com/Search', cookies=cookies, headers=headers, json=json_data,
+                                 proxies=proxi, params=params)
         filename = f"c:\\DATA\\iaai\\list\\data_{page}.html"
         src = response.text
         with open(filename, "w", encoding='utf-8') as file:
             file.write(src)
         page += 1
-
 
 
 def get_id_ad_and_url():
@@ -166,6 +134,7 @@ def get_id_ad_and_url():
             for u in all_url:
                 url = f'https://www.iaai.com{u.find("a").get("href")}'
                 writer.writerow([url])
+
 
 def get_product():
 
@@ -227,29 +196,34 @@ def get_product():
     with open("url.csv", newline='', encoding='utf-8') as files:
         urls = list(csv.reader(files, delimiter=' ', quotechar='|'))
         counter = 0
-        for url in urls[:1]:
-            pause_time = random.randint(1, 5)
-            proxy = random.choice(proxies)
-            proxy_host = proxy[0]
-            proxy_port = proxy[1]
-            proxy_user = proxy[2]
-            proxy_pass = proxy[3]
-
-            proxi = {
-                'http': f'http://{proxy_user}:{proxy_pass}@{proxy_host}:{proxy_port}',
-                'https': f'http://{proxy_user}:{proxy_pass}@{proxy_host}:{proxy_port}'
-            }
-
-            response = requests.get(url[0], cookies=cookies, headers=headers, proxies=proxi) #, proxies=proxi
-            src = response.text
-            soup = BeautifulSoup(src, 'lxml')
-            script_tag = soup.find('script', {'id': 'ProductDetailsVM'})
-            json_data = json.loads(script_tag.string)
+        for url in urls:
             filename = f"c:\\DATA\\iaai\\product\\data_{counter}.json"
-            with open(filename, 'w') as f:
-                json.dump(json_data, f)
             counter += 1
-            time.sleep(pause_time)
+            if not os.path.exists(filename):
+                pause_time = random.randint(1, 5)
+                proxy = random.choice(proxies)
+                proxy_host = proxy[0]
+                proxy_port = proxy[1]
+                proxy_user = proxy[2]
+                proxy_pass = proxy[3]
+
+                proxi = {
+                    'http': f'http://{proxy_user}:{proxy_pass}@{proxy_host}:{proxy_port}',
+                    'https': f'http://{proxy_user}:{proxy_pass}@{proxy_host}:{proxy_port}'
+                }
+
+                response = requests.get(url[0], cookies=cookies, headers=headers, proxies=proxi)  # , proxies=proxi
+                src = response.text
+                soup = BeautifulSoup(src, 'lxml')
+                script_tag = soup.find('script', {'id': 'ProductDetailsVM'})
+                json_data = json.loads(script_tag.string)
+                with open(filename, 'w') as f:
+                    json.dump(json_data, f)
+
+                time.sleep(pause_time)
+            else:
+                print(filename)
+                continue
 
 
 
@@ -329,25 +303,16 @@ def parsin():
             }
             with open(i, 'r') as f:
                 data_json = json.load(f)
-
-
-
             name_lot = data_json['inventoryView']['attributes']['YearMakeModelSeries']
             lot_number = data_json['inventoryView']['attributes']['StockNumber']
             url_lot = f"https://www.iaai.com/VehicleDetail/{data_json['inventoryView']['attributes']['Id']}"
-            urls_img_lot =  data_json['inventoryView']['attributes']['KeyImageLink']
-            response_img = requests.get(urls_img_lot, cookies=cookies, headers=headers, proxies=proxi)  # , proxies=proxi
-            data_json_img= response_img.json()
-
+            urls_img_lot = data_json['inventoryView']['attributes']['KeyImageLink']
+            response_img = requests.get(urls_img_lot, cookies=cookies, headers=headers, proxies=proxi)
+            data_json_img = response_img.json()
             url_template = "https://vis.iaai.com/resizer?imageKeys={}&width=845&height=633"
-
-            # Извлекаем ключи из списка "keys"
             keys = [item["K"] for item in data_json_img["keys"]]
-
-            # Создаем список ссылок, подставляя каждый ключ в шаблон URL
             image_urls = [url_template.format(key) for key in keys]
             image_url = ''
-            # Теперь у вас есть список всех URL изображений
             for url in image_urls[:1]:
                 image_url = url
 
@@ -359,24 +324,13 @@ def parsin():
             engine_lot = data_json['inventoryView']['attributes']['EngineSize'].strip()
             start_code_lot = data_json['inventoryView']['attributes']['StartsDesc']
             branchname_lot = data_json['inventoryView']['attributes']['BranchName']
-            # ln = data_json['data']['lotDetails']['ln']
-            # url_lot = f"https://www.copart.com/lot/{ln}"
-            # url_img = data_json['data']['lotDetails']['tims']
-            # name_lot = data_json['data']['lotDetails']['ld']
-            # price_bnp = data_json['data']['lotDetails']['bnp']
-            # odometer_lot = data_json['data']['lotDetails']['orr']
-            # drive_lot = data_json['data']['lotDetails']['drv']
-            # engine_type_lot = data_json['data']['lotDetails']['egn']
-            # vehicle_type_lot = data_json['data']['lotDetails']['vehTypDesc']
-            # highlights_lot = data_json['data']['lotDetails']['lcd']
-            # sale_location = data_json['data']['lotDetails']['yn']
-            datas = [name_lot, lot_number, url_lot, price_lot, odometer, drive_tyne_type, vehicle_lot, engine_lot, start_code_lot, branchname_lot, image_url]
-            # writer.writerow(datas)
-            print(datas)
+            datas = [name_lot, lot_number, url_lot, price_lot, odometer, drive_tyne_type, vehicle_lot, engine_lot,
+                     start_code_lot, branchname_lot, image_url]
+            writer.writerow(datas)
 
 
 if __name__ == '__main__':
     # get_request()
     # get_id_ad_and_url()
-    # get_product()
-    parsin()
+    get_product()
+    # parsin()
