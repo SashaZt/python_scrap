@@ -133,5 +133,5 @@ def parsing():
 
 
 if __name__ == '__main__':
-    # get_requests()
+    get_requests()
     parsing()
