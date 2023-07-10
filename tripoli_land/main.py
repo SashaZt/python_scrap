@@ -65,14 +65,14 @@ def get_selenium():
     passwords.send_keys(Keys.RETURN)
     time.sleep(1)
     coun = 0
-    with open('Ровно.csv', 'a', newline='', encoding='utf-8') as file_data:
+    with open('ХМ.csv', 'a', newline='', encoding='utf-8') as file_data:
         writer = csv.writer(file_data, delimiter=';')
         writer.writerow(['', '', '', '', '', '', '', ''])
-        for i in range(1, 13):
+        for i in range(39, 49): #Будет 48 страниц
 
-            pause_time = random.randint(1, 5)
+            pause_time = random.randint(1, 3)
             driver.get(
-                f'https://tripoli.land/farmers/proizvoditeli-zerna/rovenskaya?page={i}&q%5Bcategories_id_eq%5D=2&q%5Bdistrict_region_id_eq%5D=18')
+                f'https://tripoli.land/farmers/proizvoditeli-zerna/hmelnitskaya?page={i}&q%5Bcategories_id_eq%5D=2&q%5Bdistrict_region_id_eq%5D=24')
             wait_company = wait.until(
                 EC.presence_of_element_located((By.XPATH, '//span[@class="call-popup"]')))
             company = driver.find_element(By.XPATH, '//span[@class="call-popup"]')
