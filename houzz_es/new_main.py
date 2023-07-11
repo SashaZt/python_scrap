@@ -11,23 +11,21 @@ from urllib.parse import urlparse
 
 keywords = ["Commercial", "Residential", "LEED", "Greengaurd", "Phthalates", "Polyvinyl", "PVC"]
 cookies = {
-    'v': '1688917045_ebec72cc-e13c-4a7e-945d-7c90901c69bc_980c358c0be81aae3970453de17e9609',
-    'vct': 'en-US-CR811Kpk8B811KpkSBw11Kpk4R011Kpk4h011Kpk',
-    '_csrf': 'OSAWlrwvYtjyRdepleR34BL3',
-    'jdv': 't7WOzUb2vHLZtWVVHSk8XJEZN7ua9zR%2FUkXvZNRQChG1hUdDmLOue7C17p%2BpQAPhVLUnIp6hEQyoG04lKW%2Fm2Y79sdES',
+    'v': '1689076489_844d796b-afae-45d9-a402-afb22b6b6c71_e13e5a67651e3f4ad72d3580494e2d8b',
+    'vct': 'en-US-CR8JQ61k8B8JQ61kSBwJQ61k4R0JQ61k4h0JQ61k',
+    '_csrf': 'CVz3_VMX-r7Z0DsjFW8sdO5m',
+    'jdv': 't7WOzUb2vHLZtWVVHSk8XJEYN7ua9jR7X0XubdRfWUW1hRdAn%2B%2F6c7HkuMqiSwXuBLJ6I8unFQioHhomdG2xiY6t5dBH',
     'prf': 'prodirDistFil%7C%7D',
-    'kcan': '0',
     'documentWidth': '1920',
-    'kucan': '0',
-    '_gid': 'GA1.2.1416271440.1688917048',
-    '_gcl_au': '1.1.987361791.1688917048',
+    '_gid': 'GA1.2.2097402768.1689076492',
+    '_gcl_au': '1.1.90367831.1689076492',
     '_gat': '1',
-    '_pin_unauth': 'dWlkPU5EVmtOVFpoWkRRdFpUUm1PUzAwTkdRMkxXRTNZbUV0TjJGbU9EazBObUV6TW1Jdw',
-    'hzd': '343e25de-ba42-43ab-a230-cf7e16070b80%3A%3A%3A%3A%3AGetStarted',
-    '_ga_PB0RC2CT7B': 'GS1.1.1688917048.1.1.1688917050.58.0.0',
-    '_ga': 'GA1.1.947942910.1688917048',
-    '_uetsid': '82cd76001e6e11eeb9bd319f22c0bf0f',
-    '_uetvid': '82cda5301e6e11eeada4d5466af1ae28',
+    '_pin_unauth': 'dWlkPU5qbGpaR0UzTmpJdFpqUTNNQzAwTXpaaUxUbGlPR010WkdaaE9UVTROMlkyWldNeg',
+    'hzd': 'acfa5231-c483-421e-b7c9-8586c303569b%3A%3A%3A%3A%3AGetStarted',
+    '_ga_PB0RC2CT7B': 'GS1.1.1689076492.1.1.1689076494.58.0.0',
+    '_ga': 'GA1.1.263616427.1689076492',
+    '_uetsid': 'bec9eae01fe111eebcaed1af8211f75e',
+    '_uetvid': 'beca1c901fe111ee975175ae1159fa27',
 }
 
 headers = {
@@ -35,7 +33,7 @@ headers = {
     'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
     'accept-language': 'ru',
     'cache-control': 'no-cache',
-    # 'cookie': 'v=1688917045_ebec72cc-e13c-4a7e-945d-7c90901c69bc_980c358c0be81aae3970453de17e9609; vct=en-US-CR811Kpk8B811KpkSBw11Kpk4R011Kpk4h011Kpk; _csrf=OSAWlrwvYtjyRdepleR34BL3; jdv=t7WOzUb2vHLZtWVVHSk8XJEZN7ua9zR%2FUkXvZNRQChG1hUdDmLOue7C17p%2BpQAPhVLUnIp6hEQyoG04lKW%2Fm2Y79sdES; prf=prodirDistFil%7C%7D; kcan=0; documentWidth=1920; kucan=0; _gid=GA1.2.1416271440.1688917048; _gcl_au=1.1.987361791.1688917048; _gat=1; _pin_unauth=dWlkPU5EVmtOVFpoWkRRdFpUUm1PUzAwTkdRMkxXRTNZbUV0TjJGbU9EazBObUV6TW1Jdw; hzd=343e25de-ba42-43ab-a230-cf7e16070b80%3A%3A%3A%3A%3AGetStarted; _ga_PB0RC2CT7B=GS1.1.1688917048.1.1.1688917050.58.0.0; _ga=GA1.1.947942910.1688917048; _uetsid=82cd76001e6e11eeb9bd319f22c0bf0f; _uetvid=82cda5301e6e11eeada4d5466af1ae28',
+    # 'cookie': 'v=1689076489_844d796b-afae-45d9-a402-afb22b6b6c71_e13e5a67651e3f4ad72d3580494e2d8b; vct=en-US-CR8JQ61k8B8JQ61kSBwJQ61k4R0JQ61k4h0JQ61k; _csrf=CVz3_VMX-r7Z0DsjFW8sdO5m; jdv=t7WOzUb2vHLZtWVVHSk8XJEYN7ua9jR7X0XubdRfWUW1hRdAn%2B%2F6c7HkuMqiSwXuBLJ6I8unFQioHhomdG2xiY6t5dBH; prf=prodirDistFil%7C%7D; documentWidth=1920; _gid=GA1.2.2097402768.1689076492; _gcl_au=1.1.90367831.1689076492; _gat=1; _pin_unauth=dWlkPU5qbGpaR0UzTmpJdFpqUTNNQzAwTXpaaUxUbGlPR010WkdaaE9UVTROMlkyWldNeg; hzd=acfa5231-c483-421e-b7c9-8586c303569b%3A%3A%3A%3A%3AGetStarted; _ga_PB0RC2CT7B=GS1.1.1689076492.1.1.1689076494.58.0.0; _ga=GA1.1.263616427.1689076492; _uetsid=bec9eae01fe111eebcaed1af8211f75e; _uetvid=beca1c901fe111ee975175ae1159fa27',
     'dnt': '1',
     'pragma': 'no-cache',
     'referer': 'https://www.houzz.com/professionals/hznb/probr2-bo~t_11785~b_1v3-1v4',
@@ -74,8 +72,7 @@ def get_url_company():
                 os.remove('url_products.csv')
             with open('url_products.csv', 'a', newline='', encoding='utf-8') as csvfile:
                 writer = csv.writer(csvfile)
-                for i in range(1, 2): #Удалить, это для теста, ниже рабочий код
-                # for i in range(1, amount_page + 2):
+                for i in range(1, amount_page + 2):
                     pause_time = random.randint(1, 5)
                     if i == 1:
                         url_first = url
@@ -124,7 +121,7 @@ def get_company():
         with open('url_products.csv', newline='',
                   encoding='utf-8') as files:
             csv_reader = list(csv.reader(files, delimiter=' ', quotechar='|'))
-            for url in csv_reader[:2]: #Убрать срез, срез для теста
+            for url in csv_reader:
                 emails = set()
                 response = requests.get(url[0], cookies=cookies, headers=headers, )
                 src = response.text
