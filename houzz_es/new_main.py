@@ -10,22 +10,20 @@ from urllib.parse import urlparse
 
 keywords = ["Commercial", "Residential", "LEED", "Greengaurd", "Phthalates", "Polyvinyl", "PVC"]
 cookies = {
-    'v': '1689099389_4cfaa9ff-5156-4f08-8fd6-04e463fff45e_f25e391aaf89f6c7e0b1f3b57e1929ed',
-    'vct': 'en-US-CR99nK1k8B99nK1kSBx9nK1k4R19nK1k4h19nK1k',
-    '_csrf': '6p7nT5pK2EZfk1gsiBzo0WPD',
-    'prf': 'prodirDistFil%7C%7D',
-    'documentWidth': '1920',
-    '_gcl_au': '1.1.2066993161.1689099416',
-    '_gid': 'GA1.2.1283829895.1689099416',
-    '_pin_unauth': 'dWlkPU1HWm1aakEzWXpZdFlXRmhZaTAwTURsbUxUZzJaV1l0TnpGbU5qbGlOV05oTmpFNA',
+    'v': '1689232282_acaa195e-8fba-4bc6-b1a0-33a3f5187d6d_fcc234c25c227bc932110f5bf7a3ed90',
+    'vct': 'en-US-CR%2Bao69k8B%2Bao69kSByao69k4R2ao69k4h2ao69k',
+    '_csrf': 'rCFYDoBRDb4YRTwntTUysLd-',
     'jdv': 't7WOzUb2vHLZtWVVHSk8XJAeN7ua9zR8UkXoYtRfWRbjhUARyr6uKbLj7Jj5SQXvBLcrdsb3Rw6tTUojfDm1itWv448S',
-    '_gali': 'hz-primary-header-container',
-    'hzd': '437f5b75-e570-4541-ad1a-32372342f83d%3A%3A%3A%3A%3AGetStarted',
+    'documentWidth': '1920',
+    'hzd': 'fc53112f-9ab3-434e-8574-64d8b9bc3303%3A%3A%3A%3A%3AGetStarted',
+    '_gid': 'GA1.2.1009462869.1689232284',
     '_gat': '1',
-    '_uetsid': '1feacaa0201711eeaaa28323f46224c5',
-    '_uetvid': '1feb0070201711eea7d657adb6a604a8',
-    '_ga_PB0RC2CT7B': 'GS1.1.1689139345.3.1.1689139347.58.0.0',
-    '_ga': 'GA1.1.1637593233.1689099416',
+    '_gcl_au': '1.1.1320362438.1689232284',
+    '_ga_PB0RC2CT7B': 'GS1.1.1689232284.1.0.1689232284.60.0.0',
+    '_ga': 'GA1.1.836547781.1689232284',
+    '_uetsid': '7a11f140214c11ee97194fe925ba19d3',
+    '_uetvid': '7a1226e0214c11ee892f8562f18e84d3',
+    '_pin_unauth': 'dWlkPU9HRmhOalF6T0dRdE9EYzBaUzAwT1RGaExXRXpNR1V0WWprMU5qazFNRGxpWldGaA',
 }
 
 headers = {
@@ -33,10 +31,9 @@ headers = {
     'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
     'accept-language': 'ru',
     'cache-control': 'no-cache',
-    # 'cookie': 'v=1689099389_4cfaa9ff-5156-4f08-8fd6-04e463fff45e_f25e391aaf89f6c7e0b1f3b57e1929ed; vct=en-US-CR99nK1k8B99nK1kSBx9nK1k4R19nK1k4h19nK1k; _csrf=6p7nT5pK2EZfk1gsiBzo0WPD; prf=prodirDistFil%7C%7D; documentWidth=1920; _gcl_au=1.1.2066993161.1689099416; _gid=GA1.2.1283829895.1689099416; _pin_unauth=dWlkPU1HWm1aakEzWXpZdFlXRmhZaTAwTURsbUxUZzJaV1l0TnpGbU5qbGlOV05oTmpFNA; jdv=t7WOzUb2vHLZtWVVHSk8XJAeN7ua9zR8UkXoYtRfWRbjhUARyr6uKbLj7Jj5SQXvBLcrdsb3Rw6tTUojfDm1itWv448S; _gali=hz-primary-header-container; hzd=437f5b75-e570-4541-ad1a-32372342f83d%3A%3A%3A%3A%3AGetStarted; _gat=1; _uetsid=1feacaa0201711eeaaa28323f46224c5; _uetvid=1feb0070201711eea7d657adb6a604a8; _ga_PB0RC2CT7B=GS1.1.1689139345.3.1.1689139347.58.0.0; _ga=GA1.1.1637593233.1689099416',
+    # 'cookie': 'v=1689232282_acaa195e-8fba-4bc6-b1a0-33a3f5187d6d_fcc234c25c227bc932110f5bf7a3ed90; vct=en-US-CR%2Bao69k8B%2Bao69kSByao69k4R2ao69k4h2ao69k; _csrf=rCFYDoBRDb4YRTwntTUysLd-; jdv=t7WOzUb2vHLZtWVVHSk8XJAeN7ua9zR8UkXoYtRfWRbjhUARyr6uKbLj7Jj5SQXvBLcrdsb3Rw6tTUojfDm1itWv448S; documentWidth=1920; hzd=fc53112f-9ab3-434e-8574-64d8b9bc3303%3A%3A%3A%3A%3AGetStarted; _gid=GA1.2.1009462869.1689232284; _gat=1; _gcl_au=1.1.1320362438.1689232284; _ga_PB0RC2CT7B=GS1.1.1689232284.1.0.1689232284.60.0.0; _ga=GA1.1.836547781.1689232284; _uetsid=7a11f140214c11ee97194fe925ba19d3; _uetvid=7a1226e0214c11ee892f8562f18e84d3; _pin_unauth=dWlkPU9HRmhOalF6T0dRdE9EYzBaUzAwT1RGaExXRXpNR1V0WWprMU5qazFNRGxpWldGaA',
     'dnt': '1',
     'pragma': 'no-cache',
-    'referer': 'https://www.houzz.com/professionals/hznb/probr2-bo~t_11785~b_1v3-1v4',
     'sec-ch-ua': '"Not.A/Brand";v="8", "Chromium";v="114", "Google Chrome";v="114"',
     'sec-ch-ua-mobile': '?0',
     'sec-ch-ua-platform': '"Windows"',
@@ -60,22 +57,34 @@ def get_random_proxy(proxies):
 
 
 def get_url_company():
+    if os.path.exists('url_products.csv'):
+        return
     with open('houzz_input.txt', 'r') as file:
         for line in file:
             url = line.strip()
 
             proxies = load_proxies(file_path)
-            proxy = get_random_proxy(proxies)
-            login_password, ip_port = proxy.split('@')
-            login, password = login_password.split(':')
-            ip, port = ip_port.split(':')
+            attempt_count = 0
+            connected = False
+            while not connected and attempt_count < 5:
+                try:
+                    s = requests.Session()
+                    proxy = get_random_proxy(proxies)
+                    login_password, ip_port = proxy.split('@')
+                    login, password = login_password.split(':')
+                    ip, port = ip_port.split(':')
 
-            proxy_dict = {
-                "http": f"http://{login}:{password}@{ip}:{port}",
-                "https": f"http://{login}:{password}@{ip}:{port}"
-            }
-
-            response = requests.get(url, cookies=cookies, headers=headers, proxies=proxy_dict)
+                    proxy_dict = {
+                        "http": f"http://{login}:{password}@{ip}:{port}",
+                        "https": f"http://{login}:{password}@{ip}:{port}"
+                    }
+                    s.proxies = proxy_dict
+                    response = s.get(url, headers=headers)
+                    connected = True
+                except:
+                    attempt_count += 1
+            if not connected:
+                continue
             src = response.text
             soup = BeautifulSoup(src, 'lxml')
             script_json = soup.find('script', type="application/json")
@@ -88,65 +97,88 @@ def get_url_company():
                 continue
             amount_page = pagination_total // 15
             coun = 0
-            if os.path.exists('url_products.csv'):
-                os.remove('url_products.csv')
+
             with open('url_products.csv', 'a', newline='', encoding='utf-8') as csvfile:
                 writer = csv.writer(csvfile)
                 count = 0
+                # for i in range(1, 2):
                 for i in range(1, amount_page + 2):
-                    proxies = load_proxies(file_path)
-
-                    proxy = get_random_proxy(proxies)
-                    login_password, ip_port = proxy.split('@')
-                    login, password = login_password.split(':')
-                    ip, port = ip_port.split(':')
-
-                    proxy_dict = {
-                        "http": f"http://{login}:{password}@{ip}:{port}",
-                        "https": f"http://{login}:{password}@{ip}:{port}"
-                    }
-
                     pause_time = random.randint(1, 5)
                     count += 1
                     datas_urls = []
                     if i == 1:
                         url_first = url
-                        try:
-                            response = requests.get(url_first, cookies=cookies, headers=headers, proxies=proxy_dict)
-                            src_1 = response.text
-                            soup = BeautifulSoup(src_1, 'lxml')
+                        attempt_count = 0
+                        connected = False
+                        while not connected and attempt_count < 5:
                             try:
-                                products_urls = soup.find('ul', attrs={'class': 'hz-pro-search-results mb0'}).find_all(
-                                    'a')
+                                s = requests.Session()
+                                proxy = get_random_proxy(proxies)
+                                login_password, ip_port = proxy.split('@')
+                                login, password = login_password.split(':')
+                                ip, port = ip_port.split(':')
+
+                                proxy_dict = {
+                                    "http": f"http://{login}:{password}@{ip}:{port}",
+                                    "https": f"http://{login}:{password}@{ip}:{port}"
+                                }
+                                s.proxies = proxy_dict
+                                response = s.get(url_first, headers=headers)
+                                connected = True
                             except:
-                                continue
-                            for u in products_urls:
-                                url_sc = u.get("href")
-                                writer.writerow([url_sc])
+                                attempt_count += 1
+                        if not connected:
+                            continue
+                        src_1 = response.text
+                        soup = BeautifulSoup(src_1, 'lxml')
+                        try:
+                            products_urls = soup.find('ul', attrs={'class': 'hz-pro-search-results mb0'}).find_all(
+                                'a')
                         except:
                             continue
+                        for u in products_urls:
+                            url_sc = u.get("href")
+                            writer.writerow([url_sc])
 
                     elif i > 1:
                         coun += 15
                         urls = f'{url}?fi={coun}'
-                        try:
-                            response = requests.get(urls, cookies=cookies, headers=headers, proxies=proxy_dict)
-                            src_2 = response.text
-                            soup = BeautifulSoup(src_2, 'lxml')
+                        attempt_count = 0
+                        connected = False
+                        while not connected and attempt_count < 5:
                             try:
-                                products_urls = soup.find('ul', attrs={'class': 'hz-pro-search-results mb0'}).find_all(
-                                    'a')
+                                s = requests.Session()
+                                proxy = get_random_proxy(proxies)
+                                login_password, ip_port = proxy.split('@')
+                                login, password = login_password.split(':')
+                                ip, port = ip_port.split(':')
+
+                                proxy_dict = {
+                                    "http": f"http://{login}:{password}@{ip}:{port}",
+                                    "https": f"http://{login}:{password}@{ip}:{port}"
+                                }
+                                s.proxies = proxy_dict
+                                response = s.get(urls, headers=headers)
+                                connected = True
                             except:
-                                continue
-                            for u in products_urls:
-                                url_pr = u.get("href")
-                                writer.writerow([url_pr])
+                                attempt_count += 1
+                        if not connected:
+                            continue
+                        src_2 = response.text
+                        soup = BeautifulSoup(src_2, 'lxml')
+                        try:
+                            products_urls = soup.find('ul', attrs={'class': 'hz-pro-search-results mb0'}).find_all('a')
                         except:
                             continue
+                        for u in products_urls:
+                            url_pr = u.get("href")
+                            writer.writerow([url_pr])
                     time.sleep(pause_time)
 
 
 def get_company():
+    if os.path.exists('data_test.csv'):
+        os.remove('data_test.csv')
     with open(f'data_test.csv', "w", errors='ignore', encoding="utf-8") as file:
         writer = csv.writer(file, delimiter=",", lineterminator="\r", quoting=csv.QUOTE_ALL)
         headers_csv = ('url', 'name_company', 'www_company', 'telephone_company', 'address', 'street_address',
@@ -156,27 +188,38 @@ def get_company():
         with open('url_products.csv', newline='',
                   encoding='utf-8') as files:
             csv_reader = list(csv.reader(files, delimiter=' ', quotechar='|'))
+            coum = 0
             for url in csv_reader:
                 proxies = load_proxies(file_path)
-                proxy = get_random_proxy(proxies)
-                login_password, ip_port = proxy.split('@')
-                login, password = login_password.split(':')
-                ip, port = ip_port.split(':')
+                attempt_count = 0
+                connected = False
+                while not connected and attempt_count < 5:
+                    try:
+                        s = requests.Session()
+                        proxy = get_random_proxy(proxies)
+                        login_password, ip_port = proxy.split('@')
+                        login, password = login_password.split(':')
+                        ip, port = ip_port.split(':')
+                        proxy_dict = {
+                            "http": f"http://{login}:{password}@{ip}:{port}",
+                            "https": f"http://{login}:{password}@{ip}:{port}"
+                        }
 
-                proxy_dict = {
-                    "http": f"http://{login}:{password}@{ip}:{port}",
-                    "https": f"http://{login}:{password}@{ip}:{port}"
-                }
+                        s.proxies = proxy_dict
+                        response = s.get(url[0], headers=headers)
+                        connected = True
+                    except:
+                        attempt_count += 1
+                if not connected:
+                    continue
                 emails = set()
-                response = requests.get(url[0], cookies=cookies, headers=headers, proxies=proxy_dict)
                 src = response.text
                 soup = BeautifulSoup(src, 'lxml')
                 script_tag = soup.find('script', {'type': 'application/json'})
                 try:
                     json_data = json.loads(script_tag.string)
                 except:
-
-                    continue
+                    print(f"{url[0]} -------------------------------- Нет данных")
                 try:
                     sfru = json_data['sfru']
 
@@ -203,7 +246,7 @@ def get_company():
 
                 try:
                     main_site = requests.get(www_company, proxies=proxy_dict)
-                except requests.exceptions.RequestException:
+                except:
                     main_site = None
                 Commercial = ''
                 Residential = ''
@@ -231,10 +274,29 @@ def get_company():
                                 link = www_company + link[1:]
                             else:
                                 link = www_company + link
-                        try:
-                            site = requests.get(link, proxies=proxy_dict)
-                        except requests.exceptions.RequestException:
+                        attempt_count = 0
+                        connected = False
+                        while not connected and attempt_count < 5:
+                            try:
+                                s = requests.Session()
+                                proxy = get_random_proxy(proxies)
+                                login_password, ip_port = proxy.split('@')
+                                login, password = login_password.split(':')
+                                ip, port = ip_port.split(':')
+
+                                proxy_dict = {
+                                    "http": f"http://{login}:{password}@{ip}:{port}",
+                                    "https": f"http://{login}:{password}@{ip}:{port}"
+                                }
+                                s.proxies = proxy_dict
+                                site = s.get(link, headers=headers)
+                                connected = True
+                            except:
+                                attempt_count += 1
+                        if not connected:
+
                             continue
+                        print(f"{link} -------------------- Идем дальше")
                         soup = BeautifulSoup(site.text, 'html.parser')
                         domain = urlparse(www_company).netloc
                         matches = re.findall(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', site.text)
@@ -333,8 +395,10 @@ def get_company():
                 ]
 
                 writer.writerows(datas)
+                coum +=1
+                print(coum)
 
 
 if __name__ == '__main__':
-    get_url_company()
+    # get_url_company()
     get_company()
