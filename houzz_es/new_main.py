@@ -9,22 +9,6 @@ import re
 from urllib.parse import urlparse
 
 keywords = ["Commercial", "Residential", "LEED", "Greengaurd", "Phthalates", "Polyvinyl", "PVC"]
-cookies = {
-    'v': '1689232282_acaa195e-8fba-4bc6-b1a0-33a3f5187d6d_fcc234c25c227bc932110f5bf7a3ed90',
-    'vct': 'en-US-CR%2Bao69k8B%2Bao69kSByao69k4R2ao69k4h2ao69k',
-    '_csrf': 'rCFYDoBRDb4YRTwntTUysLd-',
-    'jdv': 't7WOzUb2vHLZtWVVHSk8XJAeN7ua9zR8UkXoYtRfWRbjhUARyr6uKbLj7Jj5SQXvBLcrdsb3Rw6tTUojfDm1itWv448S',
-    'documentWidth': '1920',
-    'hzd': 'fc53112f-9ab3-434e-8574-64d8b9bc3303%3A%3A%3A%3A%3AGetStarted',
-    '_gid': 'GA1.2.1009462869.1689232284',
-    '_gat': '1',
-    '_gcl_au': '1.1.1320362438.1689232284',
-    '_ga_PB0RC2CT7B': 'GS1.1.1689232284.1.0.1689232284.60.0.0',
-    '_ga': 'GA1.1.836547781.1689232284',
-    '_uetsid': '7a11f140214c11ee97194fe925ba19d3',
-    '_uetvid': '7a1226e0214c11ee892f8562f18e84d3',
-    '_pin_unauth': 'dWlkPU9HRmhOalF6T0dRdE9EYzBaUzAwT1RGaExXRXpNR1V0WWprMU5qazFNRGxpWldGaA',
-}
 
 headers = {
     'authority': 'www.houzz.com',
@@ -47,6 +31,15 @@ headers = {
 file_path = "proxies.txt"
 
 
+def is_valid_url(url):
+    # проверка, является ли ссылка абсолютной и не содержит ли она нежелательных элементов
+    parsed = urlparse(url)
+    if bool(parsed.netloc) and bool(parsed.scheme):
+        if "javascript:void(0)" not in url and "tel:" not in url and "#" not in url:
+            return True
+    return False
+
+
 def load_proxies(file_path):
     with open(file_path, 'r') as file:
         return [line.strip() for line in file if '@' in line and ':' in line]
@@ -64,25 +57,29 @@ def get_url_company():
             url = line.strip()
 
             proxies = load_proxies(file_path)
-            attempt_count = 0
+            proxy_attempt_count = 0
             connected = False
-            while not connected and attempt_count < 5:
-                try:
-                    s = requests.Session()
-                    proxy = get_random_proxy(proxies)
-                    login_password, ip_port = proxy.split('@')
-                    login, password = login_password.split(':')
-                    ip, port = ip_port.split(':')
-
-                    proxy_dict = {
-                        "http": f"http://{login}:{password}@{ip}:{port}",
-                        "https": f"http://{login}:{password}@{ip}:{port}"
-                    }
-                    s.proxies = proxy_dict
-                    response = s.get(url, headers=headers)
-                    connected = True
-                except:
-                    attempt_count += 1
+            while not connected and proxy_attempt_count < 1:
+                s = requests.Session()
+                proxy = get_random_proxy(proxies)
+                login_password, ip_port = proxy.split('@')
+                login, password = login_password.split(':')
+                ip, port = ip_port.split(':')
+                proxy_dict = {
+                    "http": f"http://{login}:{password}@{ip}:{port}",
+                    "https": f"http://{login}:{password}@{ip}:{port}"
+                }
+                s.proxies = proxy_dict
+                for attempt_count in range(3):
+                    try:
+                        response = s.get(url, headers=headers)
+                        connected = True
+                        break
+                    except:
+                        continue
+                proxy_attempt_count += 1
+                if connected:
+                    break
             if not connected:
                 continue
             src = response.text
@@ -101,32 +98,39 @@ def get_url_company():
             with open('url_products.csv', 'a', newline='', encoding='utf-8') as csvfile:
                 writer = csv.writer(csvfile)
                 count = 0
-                # for i in range(1, 2):
                 for i in range(1, amount_page + 2):
                     pause_time = random.randint(1, 5)
                     count += 1
                     datas_urls = []
                     if i == 1:
                         url_first = url
-                        attempt_count = 0
+                        proxy_attempt_count = 0
                         connected = False
-                        while not connected and attempt_count < 5:
-                            try:
-                                s = requests.Session()
-                                proxy = get_random_proxy(proxies)
-                                login_password, ip_port = proxy.split('@')
-                                login, password = login_password.split(':')
-                                ip, port = ip_port.split(':')
+                        while not connected and proxy_attempt_count < 1:
+                            s = requests.Session()
+                            proxy = get_random_proxy(proxies)
+                            login_password, ip_port = proxy.split('@')
+                            login, password = login_password.split(':')
+                            ip, port = ip_port.split(':')
 
-                                proxy_dict = {
-                                    "http": f"http://{login}:{password}@{ip}:{port}",
-                                    "https": f"http://{login}:{password}@{ip}:{port}"
-                                }
-                                s.proxies = proxy_dict
-                                response = s.get(url_first, headers=headers)
-                                connected = True
-                            except:
-                                attempt_count += 1
+                            proxy_dict = {
+                                "http": f"http://{login}:{password}@{ip}:{port}",
+                                "https": f"http://{login}:{password}@{ip}:{port}"
+                            }
+                            s.proxies = proxy_dict
+
+                            for attempt_count in range(3):
+                                try:
+                                    response = s.get(url_first, headers=headers)
+                                    connected = True
+                                    break
+                                except:
+                                    continue
+
+                            proxy_attempt_count += 1
+                            if connected:
+                                break
+
                         if not connected:
                             continue
                         src_1 = response.text
@@ -143,25 +147,32 @@ def get_url_company():
                     elif i > 1:
                         coun += 15
                         urls = f'{url}?fi={coun}'
-                        attempt_count = 0
+                        proxy_attempt_count = 0
                         connected = False
-                        while not connected and attempt_count < 5:
-                            try:
-                                s = requests.Session()
-                                proxy = get_random_proxy(proxies)
-                                login_password, ip_port = proxy.split('@')
-                                login, password = login_password.split(':')
-                                ip, port = ip_port.split(':')
+                        while not connected and proxy_attempt_count < 1:
+                            s = requests.Session()
+                            proxy = get_random_proxy(proxies)
+                            login_password, ip_port = proxy.split('@')
+                            login, password = login_password.split(':')
+                            ip, port = ip_port.split(':')
 
-                                proxy_dict = {
-                                    "http": f"http://{login}:{password}@{ip}:{port}",
-                                    "https": f"http://{login}:{password}@{ip}:{port}"
-                                }
-                                s.proxies = proxy_dict
-                                response = s.get(urls, headers=headers)
-                                connected = True
-                            except:
-                                attempt_count += 1
+                            proxy_dict = {
+                                "http": f"http://{login}:{password}@{ip}:{port}",
+                                "https": f"http://{login}:{password}@{ip}:{port}"
+                            }
+                            s.proxies = proxy_dict
+
+                            for attempt_count in range(3):
+                                try:
+                                    response = s.get(urls, headers=headers)
+                                    connected = True
+                                    break
+                                except:
+                                    continue
+                            proxy_attempt_count += 1
+                            if connected:
+                                break
+
                         if not connected:
                             continue
                         src_2 = response.text
@@ -173,7 +184,6 @@ def get_url_company():
                         for u in products_urls:
                             url_pr = u.get("href")
                             writer.writerow([url_pr])
-                    time.sleep(pause_time)
 
 
 def get_company():
@@ -191,27 +201,34 @@ def get_company():
             coum = 0
             for url in csv_reader:
                 proxies = load_proxies(file_path)
-                attempt_count = 0
+                proxy_attempt_count = 0
                 connected = False
-                while not connected and attempt_count < 5:
-                    try:
-                        s = requests.Session()
-                        proxy = get_random_proxy(proxies)
-                        login_password, ip_port = proxy.split('@')
-                        login, password = login_password.split(':')
-                        ip, port = ip_port.split(':')
-                        proxy_dict = {
-                            "http": f"http://{login}:{password}@{ip}:{port}",
-                            "https": f"http://{login}:{password}@{ip}:{port}"
-                        }
+                while not connected and proxy_attempt_count < 1:
+                    s = requests.Session()
+                    proxy = get_random_proxy(proxies)
+                    login_password, ip_port = proxy.split('@')
+                    login, password = login_password.split(':')
+                    ip, port = ip_port.split(':')
 
-                        s.proxies = proxy_dict
-                        response = s.get(url[0], headers=headers)
-                        connected = True
-                    except:
-                        attempt_count += 1
+                    proxy_dict = {
+                        "http": f"http://{login}:{password}@{ip}:{port}",
+                        "https": f"http://{login}:{password}@{ip}:{port}"
+                    }
+                    s.proxies = proxy_dict
+
+                    for attempt_count in range(3):
+                        try:
+                            response = s.get(url[0], headers=headers)
+                            connected = True
+                            break
+                        except:
+                            continue
+                    proxy_attempt_count += 1
+                    if connected:
+                        break
                 if not connected:
                     continue
+
                 emails = set()
                 src = response.text
                 soup = BeautifulSoup(src, 'lxml')
@@ -259,7 +276,6 @@ def get_company():
                     main_soup = BeautifulSoup(main_site.text, 'html.parser')
                     emails |= set(re.findall(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', main_site.text))
                     main_text = main_soup.get_text().lower()
-
                     Commercial = 'yes' if 'commercial' in main_text else 'no'
                     Residential = 'yes' if 'residential' in main_text else 'no'
                     LEED = 'yes' if 'leed' in main_text else 'no'
@@ -274,6 +290,8 @@ def get_company():
                                 link = www_company + link[1:]
                             else:
                                 link = www_company + link
+                        if is_valid_url(link):
+                            url_link = link
                         attempt_count = 0
                         connected = False
                         while not connected and attempt_count < 5:
@@ -289,14 +307,12 @@ def get_company():
                                     "https": f"http://{login}:{password}@{ip}:{port}"
                                 }
                                 s.proxies = proxy_dict
-                                site = s.get(link, headers=headers)
+                                site = s.get(url_link, headers=headers)
                                 connected = True
                             except:
                                 attempt_count += 1
                         if not connected:
-
                             continue
-                        print(f"{link} -------------------- Идем дальше")
                         soup = BeautifulSoup(site.text, 'html.parser')
                         domain = urlparse(www_company).netloc
                         matches = re.findall(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', site.text)
@@ -318,30 +334,27 @@ def get_company():
                         json_data['data']['stores']['data']['ProProfileStore']['data']['user']['professional'][
                             'formattedAddress']
                 except:
-                    continue
+                    pass
                 address = ''
-
                 try:
-                    soup_add = BeautifulSoup(address_company, 'html.parser')
+                    soup_add = BeautifulSoup(address_company, 'lxml')
                     address_elements = soup_add.find_all('span', itemprop='streetAddress')
                     for element in address_elements:
                         address += element.text.strip() + ' '
                 except:
-                    continue
-
+                    pass
                 try:
                     postal_code_element = soup_add.find('span', itemprop='postalCode')
                     if postal_code_element:
                         address += postal_code_element.text.strip() + ' '
                 except:
-                    continue
-
+                    pass
                 try:
                     locality_element = soup_add.find('span', itemprop='addressLocality')
                     if locality_element:
                         address += locality_element.text.strip() + ' '
                 except:
-                    continue
+                    pass
                 street_address = ""
                 addressLocality = ""
                 addressRegion = ""
@@ -377,7 +390,7 @@ def get_company():
                                 except:
                                     addressCountry = ""
                 except:
-                    continue
+                    pass
                 if not postalCode:
                     postalCode = \
                         json_data['data']['stores']['data']['ProProfileStore']['data']['user']['professional']['zip']
@@ -395,10 +408,8 @@ def get_company():
                 ]
 
                 writer.writerows(datas)
-                coum +=1
-                print(coum)
 
 
 if __name__ == '__main__':
-    # get_url_company()
+    get_url_company()
     get_company()
