@@ -199,7 +199,7 @@ def get_company():
                   encoding='utf-8') as files:
             csv_reader = list(csv.reader(files, delimiter=' ', quotechar='|'))
             coum = 0
-            for url in csv_reader:
+            for url in csv_reader[55:57]:
                 proxies = load_proxies(file_path)
                 proxy_attempt_count = 0
                 connected = False
@@ -259,19 +259,17 @@ def get_company():
                         json_data['data']['stores']['data']['ProProfileStore']['data']['user']['professional'][
                             'rawDomain']
                 except:
-                    www_company = None
-
-                try:
-                    main_site = requests.get(www_company, proxies=proxy_dict)
-                except:
-                    main_site = None
-                Commercial = ''
-                Residential = ''
-                LEED = ''
-                Greengaurd = ''
-                Phthalates = ''
-                Polyvinyl = ''
-                PVC = ''
+                    pass
+                main_site = requests.get(www_company)
+                Commercial = 'no'
+                Residential = 'no'
+                LEED = 'no'
+                Greengaurd = 'no'
+                Phthalates = 'no'
+                Polyvinyl = 'no'
+                PVC = 'no'
+                print(url[0])
+                print('Идем дальше')
                 if main_site is not None:
                     main_soup = BeautifulSoup(main_site.text, 'html.parser')
                     emails |= set(re.findall(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', main_site.text))
@@ -294,7 +292,8 @@ def get_company():
                             url_link = link
                         attempt_count = 0
                         connected = False
-                        while not connected and attempt_count < 5:
+                        print(link)
+                        while not connected and attempt_count < 1:
                             try:
                                 s = requests.Session()
                                 proxy = get_random_proxy(proxies)
@@ -311,6 +310,8 @@ def get_company():
                                 connected = True
                             except:
                                 attempt_count += 1
+                                print(site.status_code)
+                                print(url_link)
                         if not connected:
                             continue
                         soup = BeautifulSoup(site.text, 'html.parser')
@@ -408,6 +409,8 @@ def get_company():
                 ]
 
                 writer.writerows(datas)
+                coum += 1
+                print(coum)
 
 
 if __name__ == '__main__':
