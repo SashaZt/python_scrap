@@ -6,8 +6,8 @@ import glob
 import json
 import os
 import time
-import pandas as pd
-from openpyxl import load_workbook
+from datetime import datetime
+from dateutil import parser
 
 
 def course_dollars():
@@ -129,14 +129,20 @@ def get_id_ad():
     folders_json = fr"C:\scrap_tutorial-master\kupypai\json_list\*.json"
     files_json = glob.glob(folders_json)
     with open('id_ad.csv', 'w', newline='', encoding='utf-8') as csvfile:
-        writer = csv.writer(csvfile)
+        writer = csv.writer(csvfile, delimiter=';', quotechar='|')
         for j in files_json:
             with open(j, 'r', encoding='utf-8') as f:
                 json_data = json.load(f)
             id_ads = json_data['data']
             for item in id_ads['items']:
                 id_ad = item['id']
-                writer.writerow([id_ad])
+                data_ad = item['createdAt']
+                dt = parser.parse(data_ad)
+
+                # Приведите объект datetime к нужному формату
+                formatted_time = dt.strftime('%H:%M')
+                formatted_date = dt.strftime('%d.%m.%Y')
+                writer.writerow([id_ad,formatted_time,formatted_date])
 
 
 def get_ad():
@@ -193,8 +199,18 @@ def parsing_ad():
     files_json = glob.glob(folders_json)
     dollars = course_dollars().replace(",", ".")
     dollars = float(dollars)
+    data_row = []
 
-    heandler = ['Дата публікації',
+    with open('id_ad.csv', 'r', encoding='utf-8') as csvfile:
+        reader = csv.reader(csvfile)
+        for row in reader:
+            data_row.append(row)
+    data_dict = {}
+
+    for row in data_row:
+        id_ad_row, formatted_time_row, formatted_date_row = row[0].split(';')
+        data_dict[int(id_ad_row)] = (formatted_time_row, formatted_date_row)
+    heandler = ['Дата публікації', 'Час публікації',
         'Id', 'Статус', 'Оголошення ID', 'Кадастровий номер', 'Ціна ділянки UAH', 'Ціна ділянки $',
         'Ціна за 1 га UAH', 'Ціна за 1 га $', 'Термін оренди', 'Орендна плата, за рік UAH', 'Орендна плата, за рік $',
         'Річний орендний дохід після податків UAH', 'Річний орендний дохід після податків $', 'Площа', 'Призначення', 'Дохідність',
@@ -208,8 +224,11 @@ def parsing_ad():
         for j in files_json[:21]:
             with open(j, 'r', encoding='utf-8') as f:
                 json_data = json.load(f)
-            data_ad = json_data['data']['item']['estimateDate']
             id_ad = json_data['data']['item']['id']
+            formatted_time_row = ''
+            formatted_date_row = ''
+            if id_ad in data_dict:
+                formatted_time_row, formatted_date_row = data_dict[id_ad]
             status_ad = json_data['data']['item']['statusDisplay']
             currency_ad = json_data['data']['item']['currency']  # Валюта
             identifier_ad = json_data['data']['item']['identifier']  # Индификатор
@@ -241,7 +260,7 @@ def parsing_ad():
             contactPhone_ad = json_data['data']['item']['renterCompany']['contactPhone']  # Фирми ЕДРПО
             email_ad = json_data['data']['item']['renterCompany']['email']  # Фирми ЕДРПО
             data = [
-                       data_ad, id_ad, status_ad, identifier_ad, cadastre_ad, price_ad, price_ad_dol, pricePerOne_ad,
+                       formatted_date_row, formatted_time_row, id_ad, status_ad, identifier_ad, cadastre_ad, price_ad, price_ad_dol, pricePerOne_ad,
                        pricePerOne_ad_dol, rentPeriod_ad, rentRate_ad, rentRate_ad_dol, rentRateClean_ad, rentRateClean_ad_dol, area_ad, purpose_ad,
                        rentalYield_ad] + locations_list + [geoCoordinates_ad, ownerEdrpou_ad, ownerName_ad,
                                                            ownerPhone_ad, title_ad, edrpou_ad, contactName_ad,
@@ -303,5 +322,5 @@ if __name__ == '__main__':
     # get_url_ad()
     # get_id_ad()
     # get_ad()
-    parsing_ad()
-    # update_ad()
+    # parsing_ad()
+    update_ad()
