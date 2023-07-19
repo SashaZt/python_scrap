@@ -138,11 +138,11 @@ def get_id_ad():
                 id_ad = item['id']
                 data_ad = item['createdAt']
                 dt = parser.parse(data_ad)
-
+                status_ad = item['statusDisplay']
                 # Приведите объект datetime к нужному формату
                 formatted_time = dt.strftime('%H:%M')
                 formatted_date = dt.strftime('%d.%m.%Y')
-                writer.writerow([id_ad,formatted_time,formatted_date])
+                writer.writerow([id_ad,status_ad, formatted_time, formatted_date])
 
 
 def get_ad():
@@ -210,14 +210,14 @@ def parsing_ad():
     for row in data_row:
         id_ad_row, formatted_time_row, formatted_date_row = row[0].split(';')
         data_dict[int(id_ad_row)] = (formatted_time_row, formatted_date_row)
-    heandler = ['Дата публікації', 'Час публікації',
-        'Id', 'Статус', 'Оголошення ID', 'Кадастровий номер', 'Ціна ділянки UAH', 'Ціна ділянки $',
-        'Ціна за 1 га UAH', 'Ціна за 1 га $', 'Термін оренди', 'Орендна плата, за рік UAH', 'Орендна плата, за рік $',
-        'Річний орендний дохід після податків UAH', 'Річний орендний дохід після податків $', 'Площа', 'Призначення', 'Дохідність',
-        'Населений пункт', "", "Район", "Область", "Країна", 'Координати', "Власник ЄДРПО", "Власник", "Телефон",
-        "Назва компанії", 'ЄДРПО Компаніїї', "ПІБ", 'Контакти компанії', 'email'
+    heandler = [ 'Id', 'Статус', 'Площа',  'Дохідність',  'Ціна за 1 га UAH', 'Ціна за 1 га $','Ціна ділянки UAH', 'Ціна ділянки $', 'Річний орендний дохід після податків UAH',
+                'Річний орендний дохід після податків $', 'Населений пункт', "",
+                "Район", "Область", "Країна", 'Дата публікації', 'Час публікації', 'Оголошення ID', 'Кадастровий номер',
+                'Термін оренди',
+                'Орендна плата, за рік UAH', 'Орендна плата, за рік $', 'Призначення','Координати', "Власник ЄДРПО", "Власник", "Телефон", "Назва компанії",
+                'ЄДРПО Компаніїї', "ПІБ", 'Контакти компанії', 'email'
 
-    ]
+                ]
     with open('ad.csv', 'w', newline='', encoding='utf-8') as csvfile:
         writer = csv.writer(csvfile, delimiter=';', quotechar='|')
         writer.writerow(heandler)
@@ -241,7 +241,8 @@ def parsing_ad():
             rentRate_ad_dol = round(int(json_data['data']['item']['rentRate']) / dollars)  # Орендна плата, за рік $
             rentRate_ad = f"{json_data['data']['item']['rentRate']} {currency_ad}"  # Орендна плата, за рік
             rentRateClean_ad = f"{json_data['data']['item']['rentRateClean']} {currency_ad}"  # Річний орендний дохід після податків
-            rentRateClean_ad_dol = round(int(json_data['data']['item']['rentRateClean'])  / dollars) # Річний орендний дохід після податків $
+            rentRateClean_ad_dol = round(
+                int(json_data['data']['item']['rentRateClean']) / dollars)  # Річний орендний дохід після податків $
             area_ad = json_data['data']['item']['rentalYield'].replace('.', ',')  # Площа:
             purpose_ad = json_data['data']['item']['purpose']  # Призначення
             rentalYield_ad = json_data['data']['item']['rentalYield']  # Дохідність:
@@ -260,9 +261,10 @@ def parsing_ad():
             contactPhone_ad = json_data['data']['item']['renterCompany']['contactPhone']  # Фирми ЕДРПО
             email_ad = json_data['data']['item']['renterCompany']['email']  # Фирми ЕДРПО
             data = [
-                       formatted_date_row, formatted_time_row, id_ad, status_ad, identifier_ad, cadastre_ad, price_ad, price_ad_dol, pricePerOne_ad,
-                       pricePerOne_ad_dol, rentPeriod_ad, rentRate_ad, rentRate_ad_dol, rentRateClean_ad, rentRateClean_ad_dol, area_ad, purpose_ad,
-                       rentalYield_ad] + locations_list + [geoCoordinates_ad, ownerEdrpou_ad, ownerName_ad,
+                       id_ad, status_ad, area_ad, rentalYield_ad, pricePerOne_ad,
+                       pricePerOne_ad_dol,price_ad,
+                       price_ad_dol,  rentRateClean_ad,
+                       rentRateClean_ad_dol] + locations_list + [formatted_date_row, formatted_time_row, identifier_ad, cadastre_ad, rentPeriod_ad, rentRate_ad, rentRate_ad_dol,purpose_ad,geoCoordinates_ad, ownerEdrpou_ad, ownerName_ad,
                                                            ownerPhone_ad, title_ad, edrpou_ad, contactName_ad,
                                                            contactPhone_ad, email_ad
                                                            ]
@@ -271,12 +273,17 @@ def parsing_ad():
 
 
 def update_ad():
-    data_old = []
+    data_row = []
 
     with open('id_ad.csv', 'r', encoding='utf-8') as csvfile:
         reader = csv.reader(csvfile)
         for row in reader:
-            data_old.append(row)
+            data_row.append(row)
+    data_dict = {}
+
+    for row in data_row:
+        id_ad_row, formatted_time_row, formatted_date_row = row[0].split(';')
+        data_dict[int(id_ad_row)] = (formatted_time_row, formatted_date_row)
     cookies = {
         'current_currency': 'UAH',
         '_ga': 'GA1.2.905147567.1689674622',
@@ -316,11 +323,17 @@ def update_ad():
         cookies=cookies,
         headers=headers,
     )
+    json_data = response.json()
+    id_ads = json_data['data']
+    for item in id_ads['items']:
+        id_ad = item['id']
+        if id_ad not in data_dict:
+            print(id_ad)
 
 
 if __name__ == '__main__':
     # get_url_ad()
-    # get_id_ad()
+    get_id_ad()
     # get_ad()
     # parsing_ad()
-    update_ad()
+    # update_ad()
