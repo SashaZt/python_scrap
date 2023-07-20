@@ -1,3 +1,4 @@
+import mysql.connector
 import random
 from bs4 import BeautifulSoup
 import csv
@@ -50,6 +51,7 @@ def course_dollars():
     json_data = json.loads(json_str)  # Преобразовываем строку JSON в словарь Python
     course_dollars = json_data[7]['rate']
     return course_dollars
+
 
 def get_url_ad():
 
@@ -125,6 +127,7 @@ def get_url_ad():
                 offset += 100
             time.sleep(10)
 
+
 def get_id_ad():
     """Получаем список всех объявлений"""
     folders_json = fr"C:\scrap_tutorial-master\kupypai\json_list\*.json"
@@ -145,6 +148,7 @@ def get_id_ad():
                 formatted_time = dt.strftime('%H:%M')
                 formatted_date = dt.strftime('%d.%m.%Y')
                 writer.writerow([id_ad, status_ad, formatted_time, formatted_date])
+
 
 def get_ad():
     data = []
@@ -209,7 +213,7 @@ def parsing_ad():
     data_dict = {}
 
     for row in data_row:
-        id_ad_row, formatted_time_row, formatted_date_row = row[0].split(';')
+        id_ad_row, status_ad, formatted_time_row, formatted_date_row = row[0].split(';')
         data_dict[int(id_ad_row)] = (formatted_time_row, formatted_date_row)
     heandler = ['Id', 'Статус', 'Площа', 'Дохідність', 'Ціна за 1 га UAH', 'Ціна за 1 га $', 'Ціна ділянки UAH',
                 'Ціна ділянки $', 'Річний орендний дохід після податків UAH',
@@ -224,7 +228,7 @@ def parsing_ad():
     with open('ad.csv', 'w', newline='', encoding='utf-8') as csvfile:
         writer = csv.writer(csvfile, delimiter=';', quotechar='|')
         writer.writerow(heandler)
-        for j in files_json[:21]:
+        for j in files_json:
             with open(j, 'r', encoding='utf-8') as f:
                 json_data = json.load(f)
             id_ad = json_data['data']['item']['id']
@@ -334,8 +338,7 @@ def update_ad():
     json_data = response.json()
     id_ads = json_data['data']
     all_ad = int(json_data['data']['pagination']['total'])
-    pages_list = all_ad//100
-
+    pages_list = all_ad // 100
 
     # for item in id_ads['items']:
     #     id_ad = item['id']
@@ -344,7 +347,7 @@ def update_ad():
     """Новые объявления"""
     with open('id_ad.csv', 'a', newline='', encoding='utf-8') as csvfile:
         writer = csv.writer(csvfile, delimiter=';', quotechar='|')
-        for page_list in range(1, 2): #Проверяем сугубо первую страницу
+        for page_list in range(1, 2):  # Проверяем сугубо первую страницу
             if page_list == 1:
                 params = {
                     'limit': '100',
@@ -463,13 +466,16 @@ def update_ad():
                     price_ad = f"{json_data['data']['item']['price']} {currency_ad}"  # Ціна ділянки:
                     price_ad_dol = round(int(json_data['data']['item']['price']) / dollars)  # Ціна ділянки $:
                     pricePerOne_ad = f"{json_data['data']['item']['pricePerOne']} {currency_ad}"  # Ціна за 1 га
-                    pricePerOne_ad_dol = round(int(json_data['data']['item']['pricePerOne']) / dollars)  # Ціна за 1 га $
+                    pricePerOne_ad_dol = round(
+                        int(json_data['data']['item']['pricePerOne']) / dollars)  # Ціна за 1 га $
                     rentPeriod_ad = json_data['data']['item']['rentPeriod']  # Термін оренди:
-                    rentRate_ad_dol = round(int(json_data['data']['item']['rentRate']) / dollars)  # Орендна плата, за рік $
+                    rentRate_ad_dol = round(
+                        int(json_data['data']['item']['rentRate']) / dollars)  # Орендна плата, за рік $
                     rentRate_ad = f"{json_data['data']['item']['rentRate']} {currency_ad}"  # Орендна плата, за рік
                     rentRateClean_ad = f"{json_data['data']['item']['rentRateClean']} {currency_ad}"  # Річний орендний дохід після податків
                     rentRateClean_ad_dol = round(
-                        int(json_data['data']['item']['rentRateClean']) / dollars)  # Річний орендний дохід після податків $
+                        int(json_data['data']['item'][
+                                'rentRateClean']) / dollars)  # Річний орендний дохід після податків $
                     area_ad = json_data['data']['item']['rentalYield'].replace('.', ',')  # Площа:
                     purpose_ad = json_data['data']['item']['purpose']  # Призначення
                     rentalYield_ad = json_data['data']['item']['rentalYield']  # Дохідність:
@@ -487,6 +493,7 @@ def update_ad():
                     contactName_ad = json_data['data']['item']['renterCompany']['contactName']  # Фирми ЕДРПО
                     contactPhone_ad = json_data['data']['item']['renterCompany']['contactPhone']  # Фирми ЕДРПО
                     email_ad = json_data['data']['item']['renterCompany']['email']  # Фирми ЕДРПО
+
                     data = [
                                id_ad, status_ad, area_ad, rentalYield_ad, pricePerOne_ad,
                                pricePerOne_ad_dol, price_ad,
@@ -496,7 +503,8 @@ def update_ad():
                                                                          cadastre_ad, rentPeriod_ad, rentRate_ad,
                                                                          rentRate_ad_dol, purpose_ad, geoCoordinates_ad,
                                                                          ownerEdrpou_ad, ownerName_ad,
-                                                                         ownerPhone_ad, title_ad, edrpou_ad, contactName_ad,
+                                                                         ownerPhone_ad, title_ad, edrpou_ad,
+                                                                         contactName_ad,
                                                                          contactPhone_ad, email_ad
                                                                          ]
 
@@ -563,7 +571,7 @@ def update_status_ad():
         now = datetime.now()
         formatted_now = now.strftime("%H_%M_%d.%m.%Y")
         # for page_list in range(1, 2):
-        for page_list in range(1, pages_list +1):
+        for page_list in range(1, pages_list + 1):
             missing_ids = []
             if page_list == 1:
                 params = {
@@ -591,7 +599,7 @@ def update_status_ad():
                         # Элемент найден в data_dict
                         if data_dict[item_id][0] != item_status:
                             # Статус изменился
-                            writer.writerow([formatted_now ,id_ad, status_ad])
+                            writer.writerow([formatted_now, id_ad, status_ad])
                             # data_dict[item_id] = (item_status, *data_dict[item_id][1:])
                     else:
 
@@ -635,12 +643,653 @@ def update_status_ad():
             time.sleep(5)
 
 
+def create_sql():
+
+    # 1. Подключаемся к серверу MySQL
+    cnx = mysql.connector.connect(user='python_mysql', password='python_mysql', host='localhost')
+
+    # Создаем объект курсора, чтобы выполнять SQL-запросы
+    cursor = cnx.cursor()
+
+    # 2. Создаем базу данных с именем kupypai_com
+    cursor.execute("CREATE DATABASE kupypai_com")
+
+    # Указываем, что будем использовать эту базу данных
+    cursor.execute("USE kupypai_com")
+
+    # 3. В базе данных создаем таблицу ad
+    # 4. Создаем необходимые колонки
+    cursor.execute("""
+    CREATE TABLE ad (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        id_ad INT,
+        status_ad VARCHAR(255),
+        area_ad FLOAT,
+        rentalYield_ad FLOAT,
+        pricePerOne_ad FLOAT,
+        pricePerOne_ad_dol FLOAT,
+        price_ad FLOAT,
+        price_ad_dol FLOAT,
+        rentRateClean_ad FLOAT,
+        rentRateClean_ad_dol FLOAT,
+        locations_list_00 VARCHAR(255),
+        locations_list_01 VARCHAR(255),
+        locations_list_02 VARCHAR(255),
+        locations_list_03 VARCHAR(255),
+        locations_list_04 VARCHAR(255),
+        formatted_date_row_add DATE,
+        formatted_time_row_add TIME,
+        formatted_date_row_chn DATE,
+        formatted_time_row_chn TIME,
+        identifier_ad VARCHAR(255),
+        cadastre_ad VARCHAR(255),
+        rentPeriod_ad VARCHAR(255),
+        rentRate_ad FLOAT,
+        rentRate_ad_dol FLOAT,
+        purpose_ad VARCHAR(255),
+        geoCoordinates_ad VARCHAR(255),
+        ownerEdrpou_ad VARCHAR(255),
+        ownerName_ad VARCHAR(255),
+        ownerPhone_ad VARCHAR(255),
+        title_ad VARCHAR(255),
+        edrpou_ad VARCHAR(255),
+        contactName_ad VARCHAR(255),
+        contactPhone_ad VARCHAR(255),
+        email_ad VARCHAR(255)
+    )
+    """)
+
+    # Закрываем соединение
+    cnx.close()
+
+
+def parsing_ad_in_sql():
+    folders_json = fr"C:\scrap_tutorial-master\kupypai\json_ad\*.json"
+    files_json = glob.glob(folders_json)
+    dollars = course_dollars().replace(",", ".")
+    dollars = float(dollars)
+    data_row = []
+
+    with open('id_ad.csv', 'r', encoding='utf-8') as csvfile:
+        reader = csv.reader(csvfile)
+        for row in reader:
+            data_row.append(row)
+    data_dict = {}
+
+    for row in data_row:
+        id_ad_row, status_ad, formatted_time_row, formatted_date_row = row[0].split(';')
+        data_dict[int(id_ad_row)] = (formatted_time_row, formatted_date_row)
+    cnx = mysql.connector.connect(
+        host="localhost",  # ваш хост, например "localhost"
+        user="python_mysql",  # ваше имя пользователя
+        password="python_mysql",  # ваш пароль
+        database="kupypai_com"  # имя вашей базы данных
+    )
+    cursor = cnx.cursor()
+    for j in files_json:
+        with open(j, 'r', encoding='utf-8') as f:
+            json_data = json.load(f)
+        id_ad = json_data['data']['item']['id']
+        formatted_time_row_add = ''
+        formatted_date_row_add = ''
+        if id_ad in data_dict:
+            formatted_time_row_add, formatted_date_row_add = data_dict[id_ad]
+        status_ad = json_data['data']['item']['statusDisplay']
+        # currency_ad = json_data['data']['item']['currency']  # Валюта
+        identifier_ad = json_data['data']['item']['identifier']  # Индификатор
+        cadastre_ad = json_data['data']['item']['cadastre']  # Кадастровий номер
+        price_ad = f"{json_data['data']['item']['price']}"  # Ціна ділянки:
+        price_ad_dol = round(int(json_data['data']['item']['price']) / dollars)  # Ціна ділянки $:
+        pricePerOne_ad = f"{json_data['data']['item']['pricePerOne']}"  # Ціна за 1 га
+        pricePerOne_ad_dol = round(int(json_data['data']['item']['pricePerOne']) / dollars)  # Ціна за 1 га $
+        rentPeriod_ad = json_data['data']['item']['rentPeriod']  # Термін оренди:
+        rentRate_ad_dol = round(int(json_data['data']['item']['rentRate']) / dollars)  # Орендна плата, за рік $
+        rentRate_ad = f"{json_data['data']['item']['rentRate']}"  # Орендна плата, за рік
+        rentRateClean_ad = f"{json_data['data']['item']['rentRateClean']}"  # Річний орендний дохід після податків
+        rentRateClean_ad_dol = round(
+            int(json_data['data']['item']['rentRateClean']) / dollars)  # Річний орендний дохід після податків $
+        area_ad = json_data['data']['item']['rentalYield']  # Площа:.replace('.', ',')
+        purpose_ad = json_data['data']['item']['purpose']  # Призначення
+        rentalYield_ad = json_data['data']['item']['rentalYield']  # Дохідність:
+        koatuuLocation_ad = json_data['data']['item']['koatuuLocation']  # Адреса
+        locations_list = koatuuLocation_ad.split(", ")
+        if len(locations_list) == 4:
+            locations_list.insert(0, None)
+        locations_list += [None] * (5 - len(locations_list))
+        locations_list_00 = locations_list[0]
+        locations_list_01 = locations_list[1]
+        locations_list_02 = locations_list[2]
+        locations_list_03 = locations_list[3]
+        locations_list_04 = locations_list[4]
+        geoCoordinates_ad = ",".join(str(x) for x in json_data['data']['item']['geoCoordinates'])
+        ownerEdrpou_ad = json_data['data']['item']['ownerEdrpou']  # ЕДРПО
+        ownerName_ad = json_data['data']['item']['ownerName']  # Назва
+        ownerPhone_ad = json_data['data']['item']['ownerPhone']  # Телефон
+        title_ad = json_data['data']['item']['renterCompany']['title']  # Назва фирми
+        edrpou_ad = json_data['data']['item']['renterCompany']['edrpou']  # Фирми ЕДРПО
+        contactName_ad = json_data['data']['item']['renterCompany']['contactName']  # Фирми ЕДРПО
+        contactPhone_ad = json_data['data']['item']['renterCompany']['contactPhone']  # Фирми ЕДРПО
+        email_ad = json_data['data']['item']['renterCompany']['email']  # Фирми ЕДРПО
+        formatted_date_row_chn = formatted_date_row_add
+        formatted_time_row_chn = "00:00:00"
+        data = [
+            id_ad, status_ad, area_ad, rentalYield_ad, pricePerOne_ad, pricePerOne_ad_dol, price_ad,
+            price_ad_dol, rentRateClean_ad, rentRateClean_ad_dol, locations_list_00, locations_list_01,
+            locations_list_02, locations_list_03, locations_list_04, formatted_date_row_add,
+            formatted_time_row_add, formatted_date_row_chn, formatted_time_row_chn, identifier_ad, cadastre_ad,
+            rentPeriod_ad, rentRate_ad, rentRate_ad_dol, purpose_ad, geoCoordinates_ad,
+            ownerEdrpou_ad, ownerName_ad, ownerPhone_ad, title_ad, edrpou_ad, contactName_ad,
+            contactPhone_ad, email_ad
+        ]
+        insert_query = """
+            INSERT INTO ad (
+                id_ad, status_ad, area_ad, rentalYield_ad, pricePerOne_ad, pricePerOne_ad_dol, price_ad, 
+                price_ad_dol, rentRateClean_ad, rentRateClean_ad_dol, locations_list_00, locations_list_01, 
+                locations_list_02, locations_list_03, locations_list_04, formatted_date_row_add, 
+                formatted_time_row_add, formatted_date_row_chn, formatted_time_row_chn, identifier_ad, cadastre_ad, 
+                rentPeriod_ad, rentRate_ad, rentRate_ad_dol, purpose_ad, geoCoordinates_ad, 
+                ownerEdrpou_ad, ownerName_ad, ownerPhone_ad, title_ad, edrpou_ad, contactName_ad, 
+                contactPhone_ad, email_ad
+            ) VALUES (
+                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 
+                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+            )
+        """
+
+        cursor.execute(insert_query, data)
+    # Закрываем соединение
+    cnx.commit()
+    cnx.close()
+
+
+def update_ad_in_sql():
+    cnx = mysql.connector.connect(
+        host="localhost",  # ваш хост, например "localhost"
+        user="python_mysql",  # ваше имя пользователя
+        password="python_mysql",  # ваш пароль
+        database="kupypai_com"  # имя вашей базы данных
+    )
+    cursor = cnx.cursor()
+    cursor.execute("SELECT id_ad, status_ad FROM ad")  #
+
+    data_dict = {}
+    for row in cursor:
+        data_dict[int(row[0])] = row[1]  # row[0] это id_ad, row[1] это status_ad
+    dollars = course_dollars().replace(",", ".")
+    dollars = float(dollars)
+    cookies = {
+        'current_currency': 'UAH',
+        '_ga': 'GA1.2.905147567.1689674622',
+        '_gid': 'GA1.2.555662714.1689674622',
+        'csrftoken': 'K5uPBwwPeP67R82c5M5y2OTFiKChd4hKBCxR7b5PIUyYBNAXMveyjTHptqaimZiO',
+        'sessionid': 'nz041h2nmtl03vyfdjuf3jvgwzyvky3m',
+        '_gat_UA-200319004-1': '1',
+        '_ga_MD7LGRXX6R': 'GS1.2.1689689658.4.1.1689691128.60.0.0',
+    }
+
+    headers = {
+        'authority': 'kupypai.com',
+        'accept': '*/*',
+        'accept-language': 'uk',
+        'cache-control': 'no-cache',
+        'content-type': 'application/json',
+        # 'cookie': 'current_currency=UAH; _ga=GA1.2.905147567.1689674622; _gid=GA1.2.555662714.1689674622; csrftoken=K5uPBwwPeP67R82c5M5y2OTFiKChd4hKBCxR7b5PIUyYBNAXMveyjTHptqaimZiO; sessionid=nz041h2nmtl03vyfdjuf3jvgwzyvky3m; _gat_UA-200319004-1=1; _ga_MD7LGRXX6R=GS1.2.1689689658.4.1.1689691128.60.0.0',
+        'dnt': '1',
+        'pragma': 'no-cache',
+        'referer': 'https://kupypai.com/profile/announcement/list/client',
+        'sec-ch-ua': '"Not.A/Brand";v="8", "Chromium";v="114", "Google Chrome";v="114"',
+        'sec-ch-ua-mobile': '?0',
+        'sec-ch-ua-platform': '"Windows"',
+        'sec-fetch-dest': 'empty',
+        'sec-fetch-mode': 'same-origin',
+        'sec-fetch-site': 'same-origin',
+        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36',
+        'x-csrftoken': 'K5uPBwwPeP67R82c5M5y2OTFiKChd4hKBCxR7b5PIUyYBNAXMveyjTHptqaimZiO',
+        'x-requested-with': 'XMLHttpRequest',
+    }
+    params = {
+        'limit': '100',
+    }
+    response = requests.get(
+        'https://kupypai.com/api/v1/announcement/list/%3Bsort%3Dcreated_at_up/',
+        params=params,
+        cookies=cookies,
+        headers=headers,
+    )
+    now = datetime.now()
+    formatted_now = now.strftime("%H_%M_%d.%m.%Y")
+    json_data = response.json()
+    id_ads = json_data['data']
+    all_ad = int(json_data['data']['pagination']['total'])
+    pages_list = all_ad // 100
+    """Новые объявления"""
+    for page_list in range(1, pages_list +1):  # Проверяем сугубо первую страницу
+        pause_time = random.randint(5, 10)
+        if page_list == 1:
+            params = {
+                'limit': '100',
+            }
+            response = requests.get(
+                'https://kupypai.com/api/v1/announcement/list/%3Bsort%3Dcreated_at_up/',
+                params=params,
+                cookies=cookies,
+                headers=headers,
+            )
+            json_data = response.json()
+            id_ads = json_data['data']
+            for item in id_ads['items']:
+                id_ad = item['id']
+
+                if id_ad not in data_dict:
+                    id_ad = item['id']
+                    cookies = {
+                        'current_currency': 'UAH',
+                        '_ga': 'GA1.2.905147567.1689674622',
+                        '_gid': 'GA1.2.555662714.1689674622',
+                        'csrftoken': 'K5uPBwwPeP67R82c5M5y2OTFiKChd4hKBCxR7b5PIUyYBNAXMveyjTHptqaimZiO',
+                        'sessionid': 'nz041h2nmtl03vyfdjuf3jvgwzyvky3m',
+                        '_ga_MD7LGRXX6R': 'GS1.2.1689689658.4.1.1689691463.60.0.0',
+                    }
+
+                    headers = {
+                        'authority': 'kupypai.com',
+                        'accept': '*/*',
+                        'accept-language': 'uk',
+                        'content-type': 'application/json',
+                        # 'cookie': 'current_currency=UAH; _ga=GA1.2.905147567.1689674622; _gid=GA1.2.555662714.1689674622; csrftoken=K5uPBwwPeP67R82c5M5y2OTFiKChd4hKBCxR7b5PIUyYBNAXMveyjTHptqaimZiO; sessionid=nz041h2nmtl03vyfdjuf3jvgwzyvky3m; _ga_MD7LGRXX6R=GS1.2.1689689658.4.1.1689691463.60.0.0',
+                        'dnt': '1',
+                        'referer': 'https://kupypai.com/profile/announcement/2181/client',
+                        'sec-ch-ua': '"Not.A/Brand";v="8", "Chromium";v="114", "Google Chrome";v="114"',
+                        'sec-ch-ua-mobile': '?0',
+                        'sec-ch-ua-platform': '"Windows"',
+                        'sec-fetch-dest': 'empty',
+                        'sec-fetch-mode': 'same-origin',
+                        'sec-fetch-site': 'same-origin',
+                        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36',
+                        'x-csrftoken': 'K5uPBwwPeP67R82c5M5y2OTFiKChd4hKBCxR7b5PIUyYBNAXMveyjTHptqaimZiO',
+                        'x-requested-with': 'XMLHttpRequest',
+                    }
+                    response = requests.get(f'https://kupypai.com/api/v1/announcement/{id_ad}/retrieve-update/',
+                                            cookies=cookies,
+                                            headers=headers)
+                    json_data = response.json()
+                    id_ad = json_data['data']['item']['id']
+                    formatted_time_row_add = "00:00:00"
+                    formatted_date_row_add = json_data['data']['item']['estimateDate']
+
+                    status_ad = json_data['data']['item']['statusDisplay']
+                    currency_ad = json_data['data']['item']['currency']  # Валюта
+                    identifier_ad = json_data['data']['item']['identifier']  # Индификатор
+                    cadastre_ad = json_data['data']['item']['cadastre']  # Кадастровий номер
+                    price_ad = f"{json_data['data']['item']['price']}"  # Ціна ділянки:
+                    price_ad_dol = round(int(json_data['data']['item']['price']) / dollars)  # Ціна ділянки $:
+                    pricePerOne_ad = f"{json_data['data']['item']['pricePerOne']}"  # Ціна за 1 га
+                    pricePerOne_ad_dol = round(
+                        int(json_data['data']['item']['pricePerOne']) / dollars)  # Ціна за 1 га $
+                    rentPeriod_ad = json_data['data']['item']['rentPeriod']  # Термін оренди:
+                    rentRate_ad_dol = round(
+                        int(json_data['data']['item']['rentRate']) / dollars)  # Орендна плата, за рік $
+                    rentRate_ad = f"{json_data['data']['item']['rentRate']}"  # Орендна плата, за рік
+                    rentRateClean_ad = f"{json_data['data']['item']['rentRateClean']}"  # Річний орендний дохід після податків
+                    rentRateClean_ad_dol = round(
+                        int(json_data['data']['item'][
+                                'rentRateClean']) / dollars)  # Річний орендний дохід після податків $
+                    area_ad = json_data['data']['item']['rentalYield']  # Площа:.replace('.', ',')
+                    purpose_ad = json_data['data']['item']['purpose']  # Призначення
+                    rentalYield_ad = json_data['data']['item']['rentalYield']  # Дохідність:
+                    koatuuLocation_ad = json_data['data']['item']['koatuuLocation']  # Адреса
+                    locations_list = koatuuLocation_ad.split(", ")
+                    if len(locations_list) == 4:
+                        locations_list.insert(0, None)
+                    locations_list += [None] * (5 - len(locations_list))
+                    locations_list_00 = locations_list[0]
+                    locations_list_01 = locations_list[1]
+                    locations_list_02 = locations_list[2]
+                    locations_list_03 = locations_list[3]
+                    locations_list_04 = locations_list[4]
+                    geoCoordinates_ad = ",".join(str(x) for x in json_data['data']['item']['geoCoordinates'])
+                    ownerEdrpou_ad = json_data['data']['item']['ownerEdrpou']  # ЕДРПО
+                    ownerName_ad = json_data['data']['item']['ownerName']  # Назва
+                    ownerPhone_ad = json_data['data']['item']['ownerPhone']  # Телефон
+                    title_ad = json_data['data']['item']['renterCompany']['title']  # Назва фирми
+                    edrpou_ad = json_data['data']['item']['renterCompany']['edrpou']  # Фирми ЕДРПО
+                    contactName_ad = json_data['data']['item']['renterCompany']['contactName']  # Фирми ЕДРПО
+                    contactPhone_ad = json_data['data']['item']['renterCompany']['contactPhone']  # Фирми ЕДРПО
+                    email_ad = json_data['data']['item']['renterCompany']['email']  # Фирми ЕДРПО
+                    formatted_date_row_chn = formatted_date_row_add
+                    formatted_time_row_chn = "00:00:00"
+                    data = [
+                        id_ad, status_ad, area_ad, rentalYield_ad, pricePerOne_ad, pricePerOne_ad_dol, price_ad,
+                        price_ad_dol, rentRateClean_ad, rentRateClean_ad_dol, locations_list_00, locations_list_01,
+                        locations_list_02, locations_list_03, locations_list_04, formatted_date_row_add,
+                        formatted_time_row_add, formatted_date_row_chn, formatted_time_row_chn, identifier_ad,
+                        cadastre_ad,
+                        rentPeriod_ad, rentRate_ad, rentRate_ad_dol, purpose_ad, geoCoordinates_ad,
+                        ownerEdrpou_ad, ownerName_ad, ownerPhone_ad, title_ad, edrpou_ad, contactName_ad,
+                        contactPhone_ad, email_ad
+                    ]
+                    insert_query = """
+                                INSERT INTO ad (
+                                    id_ad, status_ad, area_ad, rentalYield_ad, pricePerOne_ad, pricePerOne_ad_dol, price_ad,
+                                    price_ad_dol, rentRateClean_ad, rentRateClean_ad_dol, locations_list_00, locations_list_01,
+                                    locations_list_02, locations_list_03, locations_list_04, formatted_date_row_add,
+                                    formatted_time_row_add, formatted_date_row_chn, formatted_time_row_chn, identifier_ad, cadastre_ad,
+                                    rentPeriod_ad, rentRate_ad, rentRate_ad_dol, purpose_ad, geoCoordinates_ad,
+                                    ownerEdrpou_ad, ownerName_ad, ownerPhone_ad, title_ad, edrpou_ad, contactName_ad,
+                                    contactPhone_ad, email_ad
+                                ) VALUES (
+                                    %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                                    %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+                                )
+                            """
+
+                    cursor.execute(insert_query, data)
+                    print(f'Новое {id_ad}')
+                    # Закрываем соединение
+                else:
+                    continue
+        # Пауза на каждой итерации
+        time.sleep(pause_time)
+
+        offset = 100
+        if page_list > 1:
+            params = {
+                'limit': '100',
+                'offset': offset,
+            }
+            response = requests.get(
+                'https://kupypai.com/api/v1/announcement/list/%3Bsort%3Dcreated_at_up/',
+                params=params,
+                cookies=cookies,
+                headers=headers,
+            )
+            json_data = response.json()
+            id_ads = json_data['data']
+            for item in id_ads['items']:
+                id_ad = item['id']
+                if id_ad not in data_dict:
+                    id_ad = item['id']
+                    cookies = {
+                        'current_currency': 'UAH',
+                        '_ga': 'GA1.2.905147567.1689674622',
+                        '_gid': 'GA1.2.555662714.1689674622',
+                        'csrftoken': 'K5uPBwwPeP67R82c5M5y2OTFiKChd4hKBCxR7b5PIUyYBNAXMveyjTHptqaimZiO',
+                        'sessionid': 'nz041h2nmtl03vyfdjuf3jvgwzyvky3m',
+                        '_ga_MD7LGRXX6R': 'GS1.2.1689689658.4.1.1689691463.60.0.0',
+                    }
+
+                    headers = {
+                        'authority': 'kupypai.com',
+                        'accept': '*/*',
+                        'accept-language': 'uk',
+                        'content-type': 'application/json',
+                        # 'cookie': 'current_currency=UAH; _ga=GA1.2.905147567.1689674622; _gid=GA1.2.555662714.1689674622; csrftoken=K5uPBwwPeP67R82c5M5y2OTFiKChd4hKBCxR7b5PIUyYBNAXMveyjTHptqaimZiO; sessionid=nz041h2nmtl03vyfdjuf3jvgwzyvky3m; _ga_MD7LGRXX6R=GS1.2.1689689658.4.1.1689691463.60.0.0',
+                        'dnt': '1',
+                        'referer': 'https://kupypai.com/profile/announcement/2181/client',
+                        'sec-ch-ua': '"Not.A/Brand";v="8", "Chromium";v="114", "Google Chrome";v="114"',
+                        'sec-ch-ua-mobile': '?0',
+                        'sec-ch-ua-platform': '"Windows"',
+                        'sec-fetch-dest': 'empty',
+                        'sec-fetch-mode': 'same-origin',
+                        'sec-fetch-site': 'same-origin',
+                        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36',
+                        'x-csrftoken': 'K5uPBwwPeP67R82c5M5y2OTFiKChd4hKBCxR7b5PIUyYBNAXMveyjTHptqaimZiO',
+                        'x-requested-with': 'XMLHttpRequest',
+                    }
+                    response = requests.get(f'https://kupypai.com/api/v1/announcement/{id_ad}/retrieve-update/',
+                                            cookies=cookies,
+                                            headers=headers)
+                    json_data = response.json()
+                    id_ad = json_data['data']['item']['id']
+                    formatted_time_row_add = "00:00:00"
+                    formatted_date_row_add = json_data['data']['item']['estimateDate']
+
+                    status_ad = json_data['data']['item']['statusDisplay']
+                    currency_ad = json_data['data']['item']['currency']  # Валюта
+                    identifier_ad = json_data['data']['item']['identifier']  # Индификатор
+                    cadastre_ad = json_data['data']['item']['cadastre']  # Кадастровий номер
+                    price_ad = f"{json_data['data']['item']['price']}"  # Ціна ділянки:
+                    price_ad_dol = round(int(json_data['data']['item']['price']) / dollars)  # Ціна ділянки $:
+                    pricePerOne_ad = f"{json_data['data']['item']['pricePerOne']}"  # Ціна за 1 га
+                    pricePerOne_ad_dol = round(
+                        int(json_data['data']['item']['pricePerOne']) / dollars)  # Ціна за 1 га $
+                    rentPeriod_ad = json_data['data']['item']['rentPeriod']  # Термін оренди:
+                    rentRate_ad_dol = round(
+                        int(json_data['data']['item']['rentRate']) / dollars)  # Орендна плата, за рік $
+                    rentRate_ad = f"{json_data['data']['item']['rentRate']}"  # Орендна плата, за рік
+                    rentRateClean_ad = f"{json_data['data']['item']['rentRateClean']}"  # Річний орендний дохід після податків
+                    rentRateClean_ad_dol = round(
+                        int(json_data['data']['item'][
+                                'rentRateClean']) / dollars)  # Річний орендний дохід після податків $
+                    area_ad = json_data['data']['item']['rentalYield']  # Площа:.replace('.', ',')
+                    purpose_ad = json_data['data']['item']['purpose']  # Призначення
+                    rentalYield_ad = json_data['data']['item']['rentalYield']  # Дохідність:
+                    koatuuLocation_ad = json_data['data']['item']['koatuuLocation']  # Адреса
+                    locations_list = koatuuLocation_ad.split(", ")
+                    if len(locations_list) == 4:
+                        locations_list.insert(0, None)
+                    locations_list += [None] * (5 - len(locations_list))
+                    locations_list_00 = locations_list[0]
+                    locations_list_01 = locations_list[1]
+                    locations_list_02 = locations_list[2]
+                    locations_list_03 = locations_list[3]
+                    locations_list_04 = locations_list[4]
+                    geoCoordinates_ad = ",".join(str(x) for x in json_data['data']['item']['geoCoordinates'])
+                    ownerEdrpou_ad = json_data['data']['item']['ownerEdrpou']  # ЕДРПО
+                    ownerName_ad = json_data['data']['item']['ownerName']  # Назва
+                    ownerPhone_ad = json_data['data']['item']['ownerPhone']  # Телефон
+                    title_ad = json_data['data']['item']['renterCompany']['title']  # Назва фирми
+                    edrpou_ad = json_data['data']['item']['renterCompany']['edrpou']  # Фирми ЕДРПО
+                    contactName_ad = json_data['data']['item']['renterCompany']['contactName']  # Фирми ЕДРПО
+                    contactPhone_ad = json_data['data']['item']['renterCompany']['contactPhone']  # Фирми ЕДРПО
+                    email_ad = json_data['data']['item']['renterCompany']['email']  # Фирми ЕДРПО
+                    formatted_date_row_chn = formatted_date_row_add
+                    formatted_time_row_chn = "00:00:00"
+                    data = [
+                        id_ad, status_ad, area_ad, rentalYield_ad, pricePerOne_ad, pricePerOne_ad_dol, price_ad,
+                        price_ad_dol, rentRateClean_ad, rentRateClean_ad_dol, locations_list_00, locations_list_01,
+                        locations_list_02, locations_list_03, locations_list_04, formatted_date_row_add,
+                        formatted_time_row_add, formatted_date_row_chn, formatted_time_row_chn, identifier_ad,
+                        cadastre_ad,
+                        rentPeriod_ad, rentRate_ad, rentRate_ad_dol, purpose_ad, geoCoordinates_ad,
+                        ownerEdrpou_ad, ownerName_ad, ownerPhone_ad, title_ad, edrpou_ad, contactName_ad,
+                        contactPhone_ad, email_ad
+                    ]
+                    insert_query = """
+                                INSERT INTO ad (
+                                    id_ad, status_ad, area_ad, rentalYield_ad, pricePerOne_ad, pricePerOne_ad_dol, price_ad,
+                                    price_ad_dol, rentRateClean_ad, rentRateClean_ad_dol, locations_list_00, locations_list_01,
+                                    locations_list_02, locations_list_03, locations_list_04, formatted_date_row_add,
+                                    formatted_time_row_add, formatted_date_row_chn, formatted_time_row_chn, identifier_ad, cadastre_ad,
+                                    rentPeriod_ad, rentRate_ad, rentRate_ad_dol, purpose_ad, geoCoordinates_ad,
+                                    ownerEdrpou_ad, ownerName_ad, ownerPhone_ad, title_ad, edrpou_ad, contactName_ad,
+                                    contactPhone_ad, email_ad
+                                ) VALUES (
+                                    %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                                    %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+                                )
+                            """
+
+                    cursor.execute(insert_query, data)
+                    print(f'Новое {id_ad}')
+                    offset += 100
+                    # Закрываем соединение
+                else:
+                    continue
+        #Пауза на каждой итерации
+        time.sleep(pause_time)
+
+
+
+    cnx.commit()
+    cnx.close()
+
+
+    """Обновляем статус"""
+    cnx = mysql.connector.connect(
+        host="localhost",  # ваш хост, например "localhost"
+        user="python_mysql",  # ваше имя пользователя
+        password="python_mysql",  # ваш пароль
+        database="kupypai_com"  # имя вашей базы данных
+    )
+    cursor = cnx.cursor()
+    cursor.execute("SELECT id_ad, status_ad FROM ad")  #
+
+    data_dict = {}
+    for row in cursor:
+        data_dict[int(row[0])] = row[1]  # row[0] это id_ad, row[1] это status_ad
+    cookies = {
+        'current_currency': 'UAH',
+        '_ga': 'GA1.2.905147567.1689674622',
+        '_gid': 'GA1.2.555662714.1689674622',
+        'csrftoken': 'K5uPBwwPeP67R82c5M5y2OTFiKChd4hKBCxR7b5PIUyYBNAXMveyjTHptqaimZiO',
+        'sessionid': 'nz041h2nmtl03vyfdjuf3jvgwzyvky3m',
+        '_gat_UA-200319004-1': '1',
+        '_ga_MD7LGRXX6R': 'GS1.2.1689689658.4.1.1689691128.60.0.0',
+    }
+
+    headers = {
+        'authority': 'kupypai.com',
+        'accept': '*/*',
+        'accept-language': 'uk',
+        'cache-control': 'no-cache',
+        'content-type': 'application/json',
+        # 'cookie': 'current_currency=UAH; _ga=GA1.2.905147567.1689674622; _gid=GA1.2.555662714.1689674622; csrftoken=K5uPBwwPeP67R82c5M5y2OTFiKChd4hKBCxR7b5PIUyYBNAXMveyjTHptqaimZiO; sessionid=nz041h2nmtl03vyfdjuf3jvgwzyvky3m; _gat_UA-200319004-1=1; _ga_MD7LGRXX6R=GS1.2.1689689658.4.1.1689691128.60.0.0',
+        'dnt': '1',
+        'pragma': 'no-cache',
+        'referer': 'https://kupypai.com/profile/announcement/list/client',
+        'sec-ch-ua': '"Not.A/Brand";v="8", "Chromium";v="114", "Google Chrome";v="114"',
+        'sec-ch-ua-mobile': '?0',
+        'sec-ch-ua-platform': '"Windows"',
+        'sec-fetch-dest': 'empty',
+        'sec-fetch-mode': 'same-origin',
+        'sec-fetch-site': 'same-origin',
+        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36',
+        'x-csrftoken': 'K5uPBwwPeP67R82c5M5y2OTFiKChd4hKBCxR7b5PIUyYBNAXMveyjTHptqaimZiO',
+        'x-requested-with': 'XMLHttpRequest',
+    }
+    params = {
+        'limit': '100',
+    }
+    response = requests.get(
+        'https://kupypai.com/api/v1/announcement/list/%3Bsort%3Dcreated_at_up/',
+        params=params,
+        cookies=cookies,
+        headers=headers,
+    )
+    json_data = response.json()
+    all_ad = int(json_data['data']['pagination']['total'])
+    pages_list = all_ad // 100
+    offset = 100
+    now = datetime.now()
+    time_now = now.strftime("%H:%M")
+    for page_list in range(1, pages_list + 1):
+
+    # for page_list in range(1, 2):
+        pause_time = random.randint(5, 10)
+        if page_list == 1:
+            params = {
+                'limit': '100',
+            }
+            response = requests.get(
+                'https://kupypai.com/api/v1/announcement/list/%3Bsort%3Dcreated_at_up/',
+                params=params,
+                cookies=cookies,
+                headers=headers,
+            )
+            json_data = response.json()
+            id_ads_site = json_data['data']
+            site_data = []
+
+            for item_site in id_ads_site['items']:
+                id_ad = item_site['id']
+                status_ad = item_site['statusDisplay']
+                site_data.append({'id': id_ad, 'status': status_ad})
+
+            for item in site_data:
+                item_id = item['id']
+                item_status = item['status']
+
+                if item_id in data_dict:
+                    if item_status != data_dict[item_id]:
+                        cursor.execute("UPDATE ad SET status_ad = %s, formatted_time_row_chn = %s WHERE id_ad = %s",
+                                       (item_status, time_now, item_id))
+                        print(f'Был статус {item_status}, стал статус {data_dict[item_id]}')
+                    else:
+                        continue
+
+                else:
+                    print(item_id)
+                    item_status = "Нет больше на сайте"
+                    cursor.execute("UPDATE ad SET status_ad = %s, formatted_time_row_chn = %s WHERE id_ad = %s",
+                                   (item_status, time_now, item_id))
+        time.sleep(pause_time)
+        if page_list > 1:
+            params = {
+                'limit': '100',
+                'offset': offset,
+            }
+            response = requests.get(
+                'https://kupypai.com/api/v1/announcement/list/%3Bsort%3Dcreated_at_up/',
+                params=params,
+                cookies=cookies,
+                headers=headers,
+            )
+            json_data = response.json()
+            id_ads_site = json_data['data']
+            site_data = []
+
+            for item_site in id_ads_site['items']:
+                id_ad = item_site['id']
+                status_ad = item_site['statusDisplay']
+                site_data.append({'id': id_ad, 'status': status_ad})
+
+            for item in site_data:
+                item_id = item['id']
+                item_status = item['status']
+
+                if item_id in data_dict:
+                    if item_status != data_dict[item_id]:
+                        cursor.execute("UPDATE ad SET status_ad = %s, formatted_time_row_chn = %s WHERE id_ad = %s",
+                                       (item_status, time_now, item_id))
+                        print(f'Был статус {item_status}, стал статус {data_dict[item_id]}')
+                    else:
+                        continue
+
+
+                else:
+                    print(item_id)
+                    item_status = "Нет больше на сайте"
+                    cursor.execute("UPDATE ad SET status_ad = %s, formatted_time_row_chn = %s WHERE id_ad = %s",
+                                   (item_status, time_now, item_id))
+            offset += 100
+        time.sleep(pause_time)
+    cnx.commit()
+
+def delete_ad():
+    """"безвозвратно удаляет все данные из указанной таблицы"""
+    cnx = mysql.connector.connect(
+        host="localhost",  # ваш хост, например "localhost"
+        user="python_mysql",  # ваше имя пользователя
+        password="python_mysql",  # ваш пароль
+        database="kupypai_com"  # имя вашей базы данных
+    )
+    cursor = cnx.cursor()
+    cursor.execute("TRUNCATE TABLE ad")
+
+    # закрываем соединение
+    cnx.close()
+
+
 if __name__ == '__main__':
     # get_url_ad()
     # get_id_ad()
     # get_ad()
     # parsing_ad()
 
-
-    update_ad()
+    # update_ad()
     # update_status_ad()
+    # create_sql()
+    parsing_ad_in_sql()
+    # update_ad_in_sql()
+    # delete_ad()
