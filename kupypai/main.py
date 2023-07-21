@@ -6,7 +6,6 @@ import requests
 import glob
 import json
 import os
-import time
 from datetime import datetime
 from dateutil import parser
 import schedule
@@ -678,7 +677,6 @@ def create_sql():
         locations_list_03 VARCHAR(255),
         locations_list_04 VARCHAR(255),
         formatted_date_row_add DATE,
-        formatted_time_row_add TIME,
         formatted_date_row_chn DATE,
         formatted_time_row_chn TIME,
         identifier_ad VARCHAR(255),
@@ -708,17 +706,6 @@ def parsing_ad_in_sql():
     files_json = glob.glob(folders_json)
     dollars = course_dollars().replace(",", ".")
     dollars = float(dollars)
-    data_row = []
-
-    with open('id_ad.csv', 'r', encoding='utf-8') as csvfile:
-        reader = csv.reader(csvfile)
-        for row in reader:
-            data_row.append(row)
-    data_dict = {}
-
-    for row in data_row:
-        id_ad_row, status_ad, formatted_time_row, formatted_date_row = row[0].split(';')
-        data_dict[int(id_ad_row)] = (formatted_time_row, formatted_date_row)
     cnx = mysql.connector.connect(
         host="localhost",  # ваш хост, например "localhost"
         user="python_mysql",  # ваше имя пользователя
@@ -730,12 +717,7 @@ def parsing_ad_in_sql():
         with open(j, 'r', encoding='utf-8') as f:
             json_data = json.load(f)
         id_ad = json_data['data']['item']['id']
-        formatted_time_row_add = ''
-        formatted_date_row_add = ''
-        if id_ad in data_dict:
-            formatted_time_row_add, formatted_date_row_add = data_dict[id_ad]
         status_ad = json_data['data']['item']['statusDisplay']
-        # currency_ad = json_data['data']['item']['currency']  # Валюта
         identifier_ad = json_data['data']['item']['identifier']  # Индификатор
         cadastre_ad = json_data['data']['item']['cadastre']  # Кадастровий номер
         price_ad = f"{json_data['data']['item']['price']}"  # Ціна ділянки:
@@ -761,6 +743,7 @@ def parsing_ad_in_sql():
         locations_list_02 = locations_list[2]
         locations_list_03 = locations_list[3]
         locations_list_04 = locations_list[4]
+        formatted_date_row_add = json_data['data']['item']['estimateDate']
         geoCoordinates_ad = ",".join(str(x) for x in json_data['data']['item']['geoCoordinates'])
         ownerEdrpou_ad = json_data['data']['item']['ownerEdrpou']  # ЕДРПО
         ownerName_ad = json_data['data']['item']['ownerName']  # Назва
@@ -776,7 +759,7 @@ def parsing_ad_in_sql():
             id_ad, status_ad, area_ad, rentalYield_ad, pricePerOne_ad, pricePerOne_ad_dol, price_ad,
             price_ad_dol, rentRateClean_ad, rentRateClean_ad_dol, locations_list_00, locations_list_01,
             locations_list_02, locations_list_03, locations_list_04, formatted_date_row_add,
-            formatted_time_row_add, formatted_date_row_chn, formatted_time_row_chn, identifier_ad, cadastre_ad,
+            formatted_date_row_chn, formatted_time_row_chn, identifier_ad, cadastre_ad,
             rentPeriod_ad, rentRate_ad, rentRate_ad_dol, purpose_ad, geoCoordinates_ad,
             ownerEdrpou_ad, ownerName_ad, ownerPhone_ad, title_ad, edrpou_ad, contactName_ad,
             contactPhone_ad, email_ad
@@ -786,12 +769,12 @@ def parsing_ad_in_sql():
                 id_ad, status_ad, area_ad, rentalYield_ad, pricePerOne_ad, pricePerOne_ad_dol, price_ad, 
                 price_ad_dol, rentRateClean_ad, rentRateClean_ad_dol, locations_list_00, locations_list_01, 
                 locations_list_02, locations_list_03, locations_list_04, formatted_date_row_add, 
-                formatted_time_row_add, formatted_date_row_chn, formatted_time_row_chn, identifier_ad, cadastre_ad, 
+                 formatted_date_row_chn, formatted_time_row_chn, identifier_ad, cadastre_ad, 
                 rentPeriod_ad, rentRate_ad, rentRate_ad_dol, purpose_ad, geoCoordinates_ad, 
                 ownerEdrpou_ad, ownerName_ad, ownerPhone_ad, title_ad, edrpou_ad, contactName_ad, 
                 contactPhone_ad, email_ad
             ) VALUES (
-                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 
+                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 
                 %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
             )
         """
@@ -856,14 +839,11 @@ def update_ad_in_sql():
         cookies=cookies,
         headers=headers,
     )
-    now = datetime.now()
-    formatted_now = now.strftime("%H_%M_%d.%m.%Y")
     json_data = response.json()
-    id_ads = json_data['data']
     all_ad = int(json_data['data']['pagination']['total'])
     pages_list = all_ad // 100
     """Новые объявления"""
-    for page_list in range(1, pages_list +1):  # Проверяем сугубо первую страницу
+    for page_list in range(1, pages_list +1):
         pause_time = random.randint(5, 10)
         if page_list == 1:
             params = {
@@ -914,11 +894,7 @@ def update_ad_in_sql():
                                             headers=headers)
                     json_data = response.json()
                     id_ad = json_data['data']['item']['id']
-                    formatted_time_row_add = "00:00:00"
-                    formatted_date_row_add = json_data['data']['item']['estimateDate']
-
                     status_ad = json_data['data']['item']['statusDisplay']
-                    currency_ad = json_data['data']['item']['currency']  # Валюта
                     identifier_ad = json_data['data']['item']['identifier']  # Индификатор
                     cadastre_ad = json_data['data']['item']['cadastre']  # Кадастровий номер
                     price_ad = f"{json_data['data']['item']['price']}"  # Ціна ділянки:
@@ -947,6 +923,7 @@ def update_ad_in_sql():
                     locations_list_02 = locations_list[2]
                     locations_list_03 = locations_list[3]
                     locations_list_04 = locations_list[4]
+                    formatted_date_row_add = json_data['data']['item']['estimateDate']
                     geoCoordinates_ad = ",".join(str(x) for x in json_data['data']['item']['geoCoordinates'])
                     ownerEdrpou_ad = json_data['data']['item']['ownerEdrpou']  # ЕДРПО
                     ownerName_ad = json_data['data']['item']['ownerName']  # Назва
@@ -962,33 +939,31 @@ def update_ad_in_sql():
                         id_ad, status_ad, area_ad, rentalYield_ad, pricePerOne_ad, pricePerOne_ad_dol, price_ad,
                         price_ad_dol, rentRateClean_ad, rentRateClean_ad_dol, locations_list_00, locations_list_01,
                         locations_list_02, locations_list_03, locations_list_04, formatted_date_row_add,
-                        formatted_time_row_add, formatted_date_row_chn, formatted_time_row_chn, identifier_ad,
-                        cadastre_ad,
+                        formatted_date_row_chn, formatted_time_row_chn, identifier_ad, cadastre_ad,
                         rentPeriod_ad, rentRate_ad, rentRate_ad_dol, purpose_ad, geoCoordinates_ad,
                         ownerEdrpou_ad, ownerName_ad, ownerPhone_ad, title_ad, edrpou_ad, contactName_ad,
                         contactPhone_ad, email_ad
                     ]
                     insert_query = """
                                 INSERT INTO ad (
-                                    id_ad, status_ad, area_ad, rentalYield_ad, pricePerOne_ad, pricePerOne_ad_dol, price_ad,
-                                    price_ad_dol, rentRateClean_ad, rentRateClean_ad_dol, locations_list_00, locations_list_01,
-                                    locations_list_02, locations_list_03, locations_list_04, formatted_date_row_add,
-                                    formatted_time_row_add, formatted_date_row_chn, formatted_time_row_chn, identifier_ad, cadastre_ad,
-                                    rentPeriod_ad, rentRate_ad, rentRate_ad_dol, purpose_ad, geoCoordinates_ad,
-                                    ownerEdrpou_ad, ownerName_ad, ownerPhone_ad, title_ad, edrpou_ad, contactName_ad,
+                                    id_ad, status_ad, area_ad, rentalYield_ad, pricePerOne_ad, pricePerOne_ad_dol, price_ad, 
+                                    price_ad_dol, rentRateClean_ad, rentRateClean_ad_dol, locations_list_00, locations_list_01, 
+                                    locations_list_02, locations_list_03, locations_list_04, formatted_date_row_add, 
+                                     formatted_date_row_chn, formatted_time_row_chn, identifier_ad, cadastre_ad, 
+                                    rentPeriod_ad, rentRate_ad, rentRate_ad_dol, purpose_ad, geoCoordinates_ad, 
+                                    ownerEdrpou_ad, ownerName_ad, ownerPhone_ad, title_ad, edrpou_ad, contactName_ad, 
                                     contactPhone_ad, email_ad
                                 ) VALUES (
-                                    %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                                    %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 
                                     %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
                                 )
                             """
 
                     cursor.execute(insert_query, data)
-                    print(f'Новое {id_ad}')
-                    # Закрываем соединение
+                    # print(f'Новое {id_ad}')
                 else:
+                    # print(f'Уже есть такой {id_ad}')
                     continue
-        # Пауза на каждой итерации
         time.sleep(pause_time)
 
         offset = 100
@@ -1041,11 +1016,7 @@ def update_ad_in_sql():
                                             headers=headers)
                     json_data = response.json()
                     id_ad = json_data['data']['item']['id']
-                    formatted_time_row_add = "00:00:00"
-                    formatted_date_row_add = json_data['data']['item']['estimateDate']
-
                     status_ad = json_data['data']['item']['statusDisplay']
-                    currency_ad = json_data['data']['item']['currency']  # Валюта
                     identifier_ad = json_data['data']['item']['identifier']  # Индификатор
                     cadastre_ad = json_data['data']['item']['cadastre']  # Кадастровий номер
                     price_ad = f"{json_data['data']['item']['price']}"  # Ціна ділянки:
@@ -1074,6 +1045,7 @@ def update_ad_in_sql():
                     locations_list_02 = locations_list[2]
                     locations_list_03 = locations_list[3]
                     locations_list_04 = locations_list[4]
+                    formatted_date_row_add = json_data['data']['item']['estimateDate']
                     geoCoordinates_ad = ",".join(str(x) for x in json_data['data']['item']['geoCoordinates'])
                     ownerEdrpou_ad = json_data['data']['item']['ownerEdrpou']  # ЕДРПО
                     ownerName_ad = json_data['data']['item']['ownerName']  # Назва
@@ -1089,34 +1061,33 @@ def update_ad_in_sql():
                         id_ad, status_ad, area_ad, rentalYield_ad, pricePerOne_ad, pricePerOne_ad_dol, price_ad,
                         price_ad_dol, rentRateClean_ad, rentRateClean_ad_dol, locations_list_00, locations_list_01,
                         locations_list_02, locations_list_03, locations_list_04, formatted_date_row_add,
-                        formatted_time_row_add, formatted_date_row_chn, formatted_time_row_chn, identifier_ad,
-                        cadastre_ad,
+                        formatted_date_row_chn, formatted_time_row_chn, identifier_ad, cadastre_ad,
                         rentPeriod_ad, rentRate_ad, rentRate_ad_dol, purpose_ad, geoCoordinates_ad,
                         ownerEdrpou_ad, ownerName_ad, ownerPhone_ad, title_ad, edrpou_ad, contactName_ad,
                         contactPhone_ad, email_ad
                     ]
                     insert_query = """
                                 INSERT INTO ad (
-                                    id_ad, status_ad, area_ad, rentalYield_ad, pricePerOne_ad, pricePerOne_ad_dol, price_ad,
-                                    price_ad_dol, rentRateClean_ad, rentRateClean_ad_dol, locations_list_00, locations_list_01,
-                                    locations_list_02, locations_list_03, locations_list_04, formatted_date_row_add,
-                                    formatted_time_row_add, formatted_date_row_chn, formatted_time_row_chn, identifier_ad, cadastre_ad,
-                                    rentPeriod_ad, rentRate_ad, rentRate_ad_dol, purpose_ad, geoCoordinates_ad,
-                                    ownerEdrpou_ad, ownerName_ad, ownerPhone_ad, title_ad, edrpou_ad, contactName_ad,
+                                    id_ad, status_ad, area_ad, rentalYield_ad, pricePerOne_ad, pricePerOne_ad_dol, price_ad, 
+                                    price_ad_dol, rentRateClean_ad, rentRateClean_ad_dol, locations_list_00, locations_list_01, 
+                                    locations_list_02, locations_list_03, locations_list_04, formatted_date_row_add, 
+                                     formatted_date_row_chn, formatted_time_row_chn, identifier_ad, cadastre_ad, 
+                                    rentPeriod_ad, rentRate_ad, rentRate_ad_dol, purpose_ad, geoCoordinates_ad, 
+                                    ownerEdrpou_ad, ownerName_ad, ownerPhone_ad, title_ad, edrpou_ad, contactName_ad, 
                                     contactPhone_ad, email_ad
                                 ) VALUES (
-                                    %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                                    %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 
                                     %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
                                 )
                             """
 
                     cursor.execute(insert_query, data)
-                    print(f'Новое {id_ad}')
+                    # print(f'Новое {id_ad}')
                     offset += 100
                     # Закрываем соединение
                 else:
+                    # print(f'Уже есть такой {id_ad}')
                     continue
-        #Пауза на каждой итерации
         time.sleep(pause_time)
 
 
@@ -1183,9 +1154,9 @@ def update_ad_in_sql():
     offset = 100
     now = datetime.now()
     time_now = now.strftime("%H:%M")
-    for page_list in range(1, pages_list + 1):
+    data_now = now.strftime("%Y-%m-%d")
 
-    # for page_list in range(1, 2):
+    for page_list in range(1, pages_list + 1):
         pause_time = random.randint(5, 10)
         if page_list == 1:
             params = {
@@ -1212,17 +1183,18 @@ def update_ad_in_sql():
 
                 if item_id in data_dict:
                     if item_status != data_dict[item_id]:
-                        cursor.execute("UPDATE ad SET status_ad = %s, formatted_time_row_chn = %s WHERE id_ad = %s",
-                                       (item_status, time_now, item_id))
-                        print(f'Был статус {item_status}, стал статус {data_dict[item_id]}')
+                        cursor.execute("UPDATE ad SET status_ad = %s, formatted_time_row_chn = %s, formatted_date_row_chn = %s WHERE id_ad = %s",
+                                       (item_status, time_now,data_now, item_id))
+                        # print(f'Был статус {data_dict[item_id]}, стал статус {item_status}')
                     else:
                         continue
 
                 else:
-                    print(item_id)
+                    # print(item_id)
                     item_status = "Нет больше на сайте"
-                    cursor.execute("UPDATE ad SET status_ad = %s, formatted_time_row_chn = %s WHERE id_ad = %s",
-                                   (item_status, time_now, item_id))
+                    cursor.execute(
+                        "UPDATE ad SET status_ad = %s, formatted_time_row_chn = %s, formatted_date_row_chn = %s WHERE id_ad = %s",
+                        (item_status, time_now, data_now, item_id))
         time.sleep(pause_time)
         if page_list > 1:
             params = {
@@ -1250,23 +1222,25 @@ def update_ad_in_sql():
 
                 if item_id in data_dict:
                     if item_status != data_dict[item_id]:
-                        cursor.execute("UPDATE ad SET status_ad = %s, formatted_time_row_chn = %s WHERE id_ad = %s",
-                                       (item_status, time_now, item_id))
-                        print(f'Был статус {item_status}, стал статус {data_dict[item_id]}')
+                        cursor.execute(
+                            "UPDATE ad SET status_ad = %s, formatted_time_row_chn = %s, formatted_date_row_chn = %s WHERE id_ad = %s",
+                            (item_status, time_now, data_now, item_id))
+                        # print(f'Был статус {data_dict[item_id]}, стал статус {item_status}')
                     else:
                         continue
 
 
                 else:
-                    print(item_id)
+                    # print(item_id)
                     item_status = "Нет больше на сайте"
-                    cursor.execute("UPDATE ad SET status_ad = %s, formatted_time_row_chn = %s WHERE id_ad = %s",
-                                   (item_status, time_now, item_id))
+                    cursor.execute(
+                        "UPDATE ad SET status_ad = %s, formatted_time_row_chn = %s, formatted_date_row_chn = %s WHERE id_ad = %s",
+                        (item_status, time_now, data_now, item_id))
             offset += 100
         time.sleep(pause_time)
     cnx.commit()
 
-def delete_ad():
+def delete_data_in_ad():
     """"безвозвратно удаляет все данные из указанной таблицы"""
     cnx = mysql.connector.connect(
         host="localhost",  # ваш хост, например "localhost"
@@ -1280,16 +1254,75 @@ def delete_ad():
     # закрываем соединение
     cnx.close()
 
+def delete_diblicate_ad():
+    cnx = mysql.connector.connect(
+        host="localhost",  # ваш хост, например "localhost"
+        user="python_mysql",  # ваше имя пользователя
+        password="python_mysql",  # ваш пароль
+        database="kupypai_com"  # имя вашей базы данных
+    )
+    cursor = cnx.cursor()
 
-if __name__ == '__main__':
-    # get_url_ad()
-    # get_id_ad()
-    # get_ad()
-    # parsing_ad()
+    # # получаем id_ad, которые дублируются
+    # cursor.execute("""
+    # SELECT id_ad, COUNT(id_ad)
+    # FROM ad
+    # GROUP BY id_ad
+    # HAVING COUNT(id_ad) > 1
+    # """)
+    #
+    # # выводим дубликаты
+    # for (id_ad, count) in cursor:
+    #     print(f"id_ad {id_ad} повторяется {count} раз(а)")
+    #
+    """Удалить колонку"""
+    cursor.execute("""
+        ALTER TABLE ad
+        DROP COLUMN formatted_time_row_add
+    """)
+    cnx.commit()
+    # удаляем дубликаты
+    # cursor.execute("""
+    #     DELETE a1 FROM ad a1
+    #     JOIN (
+    #         SELECT id_ad, MAX(id) AS max_id
+    #         FROM ad
+    #         GROUP BY id_ad
+    #         HAVING COUNT(*) > 1
+    #     ) a2 ON a1.id_ad = a2.id_ad AND a1.id != a2.max_id
+    # """)
+    #
+    # cnx.commit()
 
-    # update_ad()
-    # update_status_ad()
-    # create_sql()
-    parsing_ad_in_sql()
-    # update_ad_in_sql()
-    # delete_ad()
+    # закрываем соединение с базой данных
+    cursor.close()
+    cnx.close()
+
+def job():
+    update_ad_in_sql()
+# Задаем расписание
+for i in range(9, 22):  # 22 для того, чтобы включить 21:00 в диапазон
+    schedule.every().day.at(f"{i:02d}:00").do(job)
+
+if __name__ == "__main__":
+    while True:
+        # Время сейчас
+        now = datetime.now().hour
+
+        # Если время между 9 утра и 21 вечера, запустить все запланированные задания
+        if 9 <= now < 22:
+            schedule.run_pending()
+        time.sleep(1)
+# if __name__ == '__main__':
+#     # get_url_ad()
+#     # get_id_ad()
+#     # get_ad()
+#     # parsing_ad()
+#
+#     # update_ad()
+#     # update_status_ad()
+#     # create_sql()
+#     # parsing_ad_in_sql()
+#     update_ad_in_sql()
+#     # delete_data_in_ad()
+#     # delete_diblicate_ad()
