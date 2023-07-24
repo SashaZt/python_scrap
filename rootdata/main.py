@@ -3,7 +3,7 @@ from bs4 import BeautifulSoup
 import random
 import glob
 import natsort
-
+import pandas as pd
 import re
 import requests
 import json
@@ -209,8 +209,17 @@ def get_data():
             writer.writerow(data)
 
 
+def drop_duplicates():
+    df = pd.read_csv('datas.csv', delimiter=';')
+    # удалить дубликаты строк и сохранить уникальные строки в новом DataFrame
+    df_unique = df.drop_duplicates()
+
+    # сохранить уникальные строки в CSV-файл
+    df_unique.to_csv(f'datas_.csv', index=False)
+    # print("Дубликты удалили, переходим к обработке main_asio")
 if __name__ == '__main__':
-    get_page()
-    get_url_company()
-    get_page_company()
-    get_data()
+    # get_page()
+    # get_url_company()
+    # get_page_company()
+    # get_data()
+    drop_duplicates()
