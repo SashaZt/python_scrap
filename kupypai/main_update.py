@@ -331,6 +331,7 @@ def main():
 
     """Обновляем статус"""
     cnx = mysql.connector.connect(
+        # host="185.65.245.79",  # ваш хост, например "localhost"
         host="localhost",  # ваш хост, например "localhost"
         user="python_mysql",  # ваше имя пользователя
         password="4tz_{4!r%x8~E@W",  # ваш пароль
@@ -402,7 +403,7 @@ def main():
     time_now = now.strftime("%H:%M")
     data_now = now.strftime("%Y-%m-%d")
 
-    # for page_list in range(1, 2):
+    # for page_list in range(1, 3):
     for page_list in range(1, pages_list + 1):
         pause_time = random.randint(5, 10)
         if page_list == 1:
@@ -427,9 +428,9 @@ def main():
             for item in site_data:
                 item_id = item['id']
                 item_status = item['status']
-
+                # print(item_status, data_dict[item_id][0].strip(), item_id)
                 if item_id in data_dict:
-                    if item_status != data_dict[item_id]:
+                    if item_status != data_dict[item_id][0].strip():
                         formatted_date_row_add = data_dict[item_id][1]  # [1] это для formatted_date_row_add
 
                         # Добавляем время 09:00 к formatted_date_row_add
@@ -447,7 +448,7 @@ def main():
                         cursor.execute(
                             "UPDATE ad SET status_ad = %s, delta_time = %s, formatted_time_row_chn = %s, formatted_date_row_chn = %s WHERE id_ad = %s",
                             (item_status, hours, time_now, data_now, item_id))
-                        print(f'Был статус {data_dict[item_id]} у {item_id}, стал статус {item_status}')
+                        print(f'Был статус {data_dict[item_id][0]} у {item_id}, стал статус {item_status}')
 
                     else:
                         continue
@@ -484,30 +485,30 @@ def main():
                 item_status = item['status']
 
                 if item_id in data_dict:
-                    if item_status != data_dict[item_id][
-                        0]:  # Теперь row[1] это tuple, поэтому нужно использовать [0] для статуса
+                    # print(item_status, data_dict[item_id][0].strip(), item_id)
+                    if item_status != data_dict[item_id][0].strip():
+
                         formatted_date_row_add = data_dict[item_id][1]  # [1] это для formatted_date_row_add
 
-                        hours = None  # Устанавливаем дефолтное значение для hours
+                        # Добавляем время 09:00 к formatted_date_row_add
+                        nine_oclock = dt_time(9, 0)
+                        formatted_date_row_add = datetime.combine(formatted_date_row_add, nine_oclock)
+                        delta_time = now - formatted_date_row_add
 
-                        if formatted_date_row_add is not None:
-                            # Добавляем время 09:00 к formatted_date_row_add
-                            nine_oclock = dt_time(9, 0)
-                            formatted_date_row_add = datetime.combine(formatted_date_row_add, nine_oclock)
-                            delta_time = now - formatted_date_row_add
-
-                            # Получаем количество часов из delta_time
-                            delta_hours = delta_time.total_seconds() / 3600
-                            hours = int(delta_hours)
-
+                        # Получаем количество часов из delta_time
+                        delta_hours = delta_time.total_seconds() / 3600
+                        hours = int(delta_hours)
                         now = datetime.now()
-                        data_now = now.date()  # Это дата
-                        time_now = now.time()  # Это время
+                        # data_now = now.date()  # Это дата
+                        # time_now = now.time()  # Это время
+                        # now_all = datetime.combine(data_now, time_now)
                         cursor.execute(
                             "UPDATE ad SET status_ad = %s, delta_time = %s, formatted_time_row_chn = %s, formatted_date_row_chn = %s WHERE id_ad = %s",
                             (item_status, hours, time_now, data_now, item_id))
-                        print(f'Был статус {data_dict[item_id]} у {item_id}, стал статус {item_status}')
+                        print(f'Был статус {data_dict[item_id][0]} у {item_id}, стал статус {item_status}')
 
+                    else:
+                        continue
 
 
                 else:
