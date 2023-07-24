@@ -1,3 +1,4 @@
+from datetime import time as dt_time
 import mysql.connector
 import random
 from bs4 import BeautifulSoup
@@ -6,6 +7,7 @@ import json
 from datetime import datetime
 import time
 import schedule
+
 
 def main():
     """Новые объявления"""
@@ -19,7 +21,7 @@ def main():
     now = datetime.now()
     time_now = now.strftime("%H:%M")
     data_now = now.strftime("%Y-%m-%d")
-    print(f'Подключился к БД в {time_now} - {data_now} для поиска новых id_av')
+    print(f'Подключился {time_now} {data_now} к БД для поиска новых id_av')
     cursor.execute("SELECT id_ad, status_ad FROM ad")  #
 
     data_dict = {}
@@ -70,8 +72,8 @@ def main():
     json_data = response.json()
     all_ad = int(json_data['data']['pagination']['total'])
     pages_list = all_ad // 100
-    print(f'Получил количество страниц {pages_list}')
-    for page_list in range(1, pages_list + 1):
+    print(f'Получил количество страниц {pages_list} в {time_now} {data_now}')
+    for page_list in range(1, pages_list + 2):
         pause_time = random.randint(5, 10)
         if page_list == 1:
             params = {
@@ -191,7 +193,7 @@ def main():
                     now = datetime.now()
                     time_now = now.strftime("%H:%M")
                     data_now = now.strftime("%Y-%m-%d")
-                    print(f'Новое {id_ad} объявление в {time_now} {data_now}')
+                    print(f'Новое {id_ad} в {time_now} {data_now}')
                 else:
                     # print(f'Уже есть такой {id_ad}')
                     continue
@@ -313,7 +315,10 @@ def main():
                                 """
 
                     cursor.execute(insert_query, data)
-                    print(f'Новое {id_ad}')
+                    now = datetime.now()
+                    time_now = now.strftime("%H:%M")
+                    data_now = now.strftime("%Y-%m-%d")
+                    print(f'Новое {id_ad} в {time_now} {data_now}')
                     offset += 100
                     # Закрываем соединение
                 else:
@@ -331,15 +336,25 @@ def main():
         password="4tz_{4!r%x8~E@W",  # ваш пароль
         database="kupypai_com"  # имя вашей базы данных
     )
+    # """Обновляем статус"""
+    # cnx = mysql.connector.connect(
+    #     host="localhost",  # ваш хост, например "localhost"
+    #     user="python_mysql",  # ваше имя пользователя
+    #     password="python_mysql",  # ваш пароль
+    #     database="kupypai_com"  # имя вашей базы данных
+    # )
+
     cursor = cnx.cursor()
-    cursor.execute("SELECT id_ad, status_ad FROM ad")
+    cursor.execute("SELECT id_ad, status_ad, formatted_date_row_add FROM ad")
     now = datetime.now()
     time_now = now.strftime("%H:%M")
     data_now = now.strftime("%Y-%m-%d")
     print(f'Подключился в {time_now} {data_now} к БД для поиска новых статусов')
     data_dict = {}
     for row in cursor:
-        data_dict[int(row[0])] = row[1]  # row[0] это id_ad, row[1] это status_ad
+        data_dict[int(row[0])] = (row[1], row[2])  # row[0] это id_ad, row[1] это status_ad
+    # for id_ad, (status_ad, formatted_date_row_add) in data_dict.items():
+    #     print(f'ID: {id_ad}, Status: {status_ad}, Date: {formatted_date_row_add}')
     cookies = {
         'current_currency': 'UAH',
         '_ga': 'GA1.2.905147567.1689674622',
@@ -347,7 +362,7 @@ def main():
         'csrftoken': 'K5uPBwwPeP67R82c5M5y2OTFiKChd4hKBCxR7b5PIUyYBNAXMveyjTHptqaimZiO',
         'sessionid': 'nz041h2nmtl03vyfdjuf3jvgwzyvky3m',
         '_gat_UA-200319004-1': '1',
-        '_ga_MD7LGRXX6R': 'GS1.2.1689689658.4.1.1689691128.60.0.0',
+        '_ga_MD7LGRXX6R': 'GS1.2.1689941792.16.1.1689941999.60.0.0',
     }
 
     headers = {
@@ -356,17 +371,17 @@ def main():
         'accept-language': 'uk',
         'cache-control': 'no-cache',
         'content-type': 'application/json',
-        # 'cookie': 'current_currency=UAH; _ga=GA1.2.905147567.1689674622; _gid=GA1.2.555662714.1689674622; csrftoken=K5uPBwwPeP67R82c5M5y2OTFiKChd4hKBCxR7b5PIUyYBNAXMveyjTHptqaimZiO; sessionid=nz041h2nmtl03vyfdjuf3jvgwzyvky3m; _gat_UA-200319004-1=1; _ga_MD7LGRXX6R=GS1.2.1689689658.4.1.1689691128.60.0.0',
+        # 'cookie': 'current_currency=UAH; _ga=GA1.2.905147567.1689674622; _gid=GA1.2.555662714.1689674622; csrftoken=K5uPBwwPeP67R82c5M5y2OTFiKChd4hKBCxR7b5PIUyYBNAXMveyjTHptqaimZiO; sessionid=nz041h2nmtl03vyfdjuf3jvgwzyvky3m; _gat_UA-200319004-1=1; _ga_MD7LGRXX6R=GS1.2.1689941792.16.1.1689941999.60.0.0',
         'dnt': '1',
         'pragma': 'no-cache',
         'referer': 'https://kupypai.com/profile/announcement/list/client',
-        'sec-ch-ua': '"Not.A/Brand";v="8", "Chromium";v="114", "Google Chrome";v="114"',
+        'sec-ch-ua': '"Not/A)Brand";v="99", "Google Chrome";v="115", "Chromium";v="115"',
         'sec-ch-ua-mobile': '?0',
         'sec-ch-ua-platform': '"Windows"',
         'sec-fetch-dest': 'empty',
         'sec-fetch-mode': 'same-origin',
         'sec-fetch-site': 'same-origin',
-        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36',
+        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36',
         'x-csrftoken': 'K5uPBwwPeP67R82c5M5y2OTFiKChd4hKBCxR7b5PIUyYBNAXMveyjTHptqaimZiO',
         'x-requested-with': 'XMLHttpRequest',
     }
@@ -387,6 +402,7 @@ def main():
     time_now = now.strftime("%H:%M")
     data_now = now.strftime("%Y-%m-%d")
 
+    # for page_list in range(1, 2):
     for page_list in range(1, pages_list + 1):
         pause_time = random.randint(5, 10)
         if page_list == 1:
@@ -414,10 +430,25 @@ def main():
 
                 if item_id in data_dict:
                     if item_status != data_dict[item_id]:
+                        formatted_date_row_add = data_dict[item_id][1]  # [1] это для formatted_date_row_add
+
+                        # Добавляем время 09:00 к formatted_date_row_add
+                        nine_oclock = dt_time(9, 0)
+                        formatted_date_row_add = datetime.combine(formatted_date_row_add, nine_oclock)
+                        delta_time = now - formatted_date_row_add
+
+                        # Получаем количество часов из delta_time
+                        delta_hours = delta_time.total_seconds() / 3600
+                        hours = int(delta_hours)
+                        now = datetime.now()
+                        # data_now = now.date()  # Это дата
+                        # time_now = now.time()  # Это время
+                        # now_all = datetime.combine(data_now, time_now)
                         cursor.execute(
-                            "UPDATE ad SET status_ad = %s, formatted_time_row_chn = %s, formatted_date_row_chn = %s WHERE id_ad = %s",
-                            (item_status, time_now, data_now, item_id))
+                            "UPDATE ad SET status_ad = %s, delta_time = %s, formatted_time_row_chn = %s, formatted_date_row_chn = %s WHERE id_ad = %s",
+                            (item_status, hours, time_now, data_now, item_id))
                         print(f'Был статус {data_dict[item_id]} у {item_id}, стал статус {item_status}')
+
                     else:
                         continue
 
@@ -453,13 +484,30 @@ def main():
                 item_status = item['status']
 
                 if item_id in data_dict:
-                    if item_status != data_dict[item_id]:
+                    if item_status != data_dict[item_id][
+                        0]:  # Теперь row[1] это tuple, поэтому нужно использовать [0] для статуса
+                        formatted_date_row_add = data_dict[item_id][1]  # [1] это для formatted_date_row_add
+
+                        hours = None  # Устанавливаем дефолтное значение для hours
+
+                        if formatted_date_row_add is not None:
+                            # Добавляем время 09:00 к formatted_date_row_add
+                            nine_oclock = dt_time(9, 0)
+                            formatted_date_row_add = datetime.combine(formatted_date_row_add, nine_oclock)
+                            delta_time = now - formatted_date_row_add
+
+                            # Получаем количество часов из delta_time
+                            delta_hours = delta_time.total_seconds() / 3600
+                            hours = int(delta_hours)
+
+                        now = datetime.now()
+                        data_now = now.date()  # Это дата
+                        time_now = now.time()  # Это время
                         cursor.execute(
-                            "UPDATE ad SET status_ad = %s, formatted_time_row_chn = %s, formatted_date_row_chn = %s WHERE id_ad = %s",
-                            (item_status, time_now, data_now, item_id))
+                            "UPDATE ad SET status_ad = %s, delta_time = %s, formatted_time_row_chn = %s, formatted_date_row_chn = %s WHERE id_ad = %s",
+                            (item_status, hours, time_now, data_now, item_id))
                         print(f'Был статус {data_dict[item_id]} у {item_id}, стал статус {item_status}')
-                    else:
-                        continue
+
 
 
                 else:
@@ -471,6 +519,8 @@ def main():
             offset += 100
         time.sleep(pause_time)
     cnx.commit()
+
+
 def course_dollars():
     import requests
 
@@ -507,8 +557,8 @@ def course_dollars():
     json_str = scripts[2].string.split('window.results = JSON.parse(', 1)[1].rsplit(')', 1)[0].strip("'")
     json_data = json.loads(json_str)  # Преобразовываем строку JSON в словарь Python
     course_dollars = json_data[7]['rate']
-    print(f'Сегодня доллар по {course_dollars}')
     return course_dollars
+
 
 if __name__ == '__main__':
     main()
