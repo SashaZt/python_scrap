@@ -4,7 +4,7 @@ import pandas as pd
 import numpy as np
 
 # Укажите путь к файлу с учетными данными JSON и идентификатор таблицы
-CREDENTIALS_FILE = 'laboratory.json'
+CREDENTIALS_FILE = 'C:\scrap_tutorial-master\synevo\laboratory.json'
 spreadsheet_id = '1e3hDtNw-3jdqFOvn02a3rNMyJNCX7DpBnur4xiOw-FM'
 
 
@@ -56,9 +56,9 @@ def update_sheet_from_csv(credentials_file, spreadsheet_id, sheet_name, csv_file
 
 
 # Укажите путь к CSV-файлам и соответствующим названиям листов
-csv_file_synevo = "/home/alex/PycharmProjects/scrap_tutorial-master/Google Sheets/synevo_data.csv"
-csv_file_esculab = "/home/alex/PycharmProjects/scrap_tutorial-master/Google Sheets/esculab_data.csv"
-csv_file_onelab = "/home/alex/PycharmProjects/scrap_tutorial-master/Google Sheets/data_onelab.csv"
+csv_file_synevo = 'C:\scrap_tutorial-master\synevo\synevo.csv'
+csv_file_esculab = 'C:\scrap_tutorial-master\synevo\esculab.csv'
+csv_file_onelab = 'C:\scrap_tutorial-master\synevo\onelab.csv'
 
 # Обновляем данные в каждом листе
 update_sheet_from_csv(CREDENTIALS_FILE, spreadsheet_id, "synevo", csv_file_synevo)
