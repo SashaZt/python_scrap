@@ -3,31 +3,34 @@ import json
 import csv
 from bs4 import BeautifulSoup
 
-
 def get_synevo():
 
     cookies = {
-        'cookiesession1': '678A3EE4486EB95915E1BB52DB06333A',
-        'XSRF-TOKEN': 'eyJpdiI6IlYyZlVDWHZ0a01BcVlyOHRcL2ZDbThnPT0iLCJ2YWx1ZSI6InFVdnVRbTFtT1FQZW9WSUJCRUdYT3R4NEhVMGRMekd0UmVPUUdrTTVmQlJmVEZ5SmllbnNPaTdjSFJpVXV1ME4iLCJtYWMiOiJmZjZlYTdmNzk1ZjA4NDhmOWRlZDEwY2FkODVlNTY2NTg4ODA0OWY4YTIyZTVhYzAwOWE1ZjMyODlmZTU3MzY5In0%3D',
-        'laravel_session': 'eyJpdiI6InZMekZCc3psS3VwSzFWV3FGT2FjaVE9PSIsInZhbHVlIjoidkRtY3V5SEY5NTBVdGdBR1c3ekhjMWdjZTREWElkUklYNjJna2FcL1dVVVFqOEtjN1ZmU2YybXYrU091Q05heXoiLCJtYWMiOiI5ZDgwMzk3MzZkYmQ2ZTYxNzhmNzllYmNhNDUwYjI0ZTUxNGY1NTU4Mzc1ZTUyYTNiZjIxZTJiNmUwYjA1NzJlIn0%3D',
+        'cookiesession1': '678A3ED620B6DA870B8CFCCFEC898BD3',
+        '_gid': 'GA1.2.23311358.1691222848',
+        '_clck': '1d3dezd|2|fdw|0|1312',
+        '_fbp': 'fb.1.1691222848224.1595282608',
+        '_ga_2B071QW08K': 'GS1.1.1691222847.1.1.1691222885.0.0.0',
+        '_ga': 'GA1.1.594218207.1691222848',
+        '_clsk': 'go9nqt|1691222886248|4|1|o.clarity.ms/collect',
+        'XSRF-TOKEN': 'eyJpdiI6Imt6Sk9KOGpab01wdWJcL3oya3ByNFBnPT0iLCJ2YWx1ZSI6IlA0aVpkV1dXakZ6b1gzenV0SjV3WVM3VllcL1YwYlU3SlgrRjZOZ0hMR2JQN08xQ1pQZzVCM2VEQnpDeGhwZStmIiwibWFjIjoiM2ZjMTA3M2VjMjkxY2FiYzFiMDcwYWRiOGFlZGMyMmRlZWE3N2JkODY3Yzc4YTI3YWI2ZWY4ODNjM2YzOTg2YiJ9',
+        'laravel_session': 'eyJpdiI6Inh1QVBwUmR2NitCOG1kbjFaUitzYmc9PSIsInZhbHVlIjoiM1FiMTFWU05NT3VKb3BnYWZ4MWlHUTVFNW9aY1ZjRHZpQm1UeVJzNkNPR2tINXA2bkFxSjBab0xESWlKY0IzXC8iLCJtYWMiOiIxMzk1MmYyZTJiN2MzNTRmYzVmMjU2NjEyMTA2OGU0MGQ4NjNkYjM1OThiNjAzYzEzMGM1MDkxMTgyMTEwZTM3In0%3D',
     }
 
     headers = {
         'Accept': '*/*',
-        'Accept-Language': 'ru,en-US;q=0.9,en;q=0.8,uk;q=0.7,de;q=0.6',
-        'Cache-Control': 'no-cache',
+        'Accept-Language': 'ru',
         'Connection': 'keep-alive',
         'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-        # 'Cookie': 'cookiesession1=678A3EE4486EB95915E1BB52DB06333A; XSRF-TOKEN=eyJpdiI6IlYyZlVDWHZ0a01BcVlyOHRcL2ZDbThnPT0iLCJ2YWx1ZSI6InFVdnVRbTFtT1FQZW9WSUJCRUdYT3R4NEhVMGRMekd0UmVPUUdrTTVmQlJmVEZ5SmllbnNPaTdjSFJpVXV1ME4iLCJtYWMiOiJmZjZlYTdmNzk1ZjA4NDhmOWRlZDEwY2FkODVlNTY2NTg4ODA0OWY4YTIyZTVhYzAwOWE1ZjMyODlmZTU3MzY5In0%3D; laravel_session=eyJpdiI6InZMekZCc3psS3VwSzFWV3FGT2FjaVE9PSIsInZhbHVlIjoidkRtY3V5SEY5NTBVdGdBR1c3ekhjMWdjZTREWElkUklYNjJna2FcL1dVVVFqOEtjN1ZmU2YybXYrU091Q05heXoiLCJtYWMiOiI5ZDgwMzk3MzZkYmQ2ZTYxNzhmNzllYmNhNDUwYjI0ZTUxNGY1NTU4Mzc1ZTUyYTNiZjIxZTJiNmUwYjA1NzJlIn0%3D',
+        # 'Cookie': 'cookiesession1=678A3ED620B6DA870B8CFCCFEC898BD3; _gid=GA1.2.23311358.1691222848; _clck=1d3dezd|2|fdw|0|1312; _fbp=fb.1.1691222848224.1595282608; _ga_2B071QW08K=GS1.1.1691222847.1.1.1691222885.0.0.0; _ga=GA1.1.594218207.1691222848; _clsk=go9nqt|1691222886248|4|1|o.clarity.ms/collect; XSRF-TOKEN=eyJpdiI6Imt6Sk9KOGpab01wdWJcL3oya3ByNFBnPT0iLCJ2YWx1ZSI6IlA0aVpkV1dXakZ6b1gzenV0SjV3WVM3VllcL1YwYlU3SlgrRjZOZ0hMR2JQN08xQ1pQZzVCM2VEQnpDeGhwZStmIiwibWFjIjoiM2ZjMTA3M2VjMjkxY2FiYzFiMDcwYWRiOGFlZGMyMmRlZWE3N2JkODY3Yzc4YTI3YWI2ZWY4ODNjM2YzOTg2YiJ9; laravel_session=eyJpdiI6Inh1QVBwUmR2NitCOG1kbjFaUitzYmc9PSIsInZhbHVlIjoiM1FiMTFWU05NT3VKb3BnYWZ4MWlHUTVFNW9aY1ZjRHZpQm1UeVJzNkNPR2tINXA2bkFxSjBab0xESWlKY0IzXC8iLCJtYWMiOiIxMzk1MmYyZTJiN2MzNTRmYzVmMjU2NjEyMTA2OGU0MGQ4NjNkYjM1OThiNjAzYzEzMGM1MDkxMTgyMTEwZTM3In0%3D',
         'DNT': '1',
         'Origin': 'https://www.synevo.ua',
-        'Pragma': 'no-cache',
         'Referer': 'https://www.synevo.ua/ua/tests',
         'Sec-Fetch-Dest': 'empty',
         'Sec-Fetch-Mode': 'cors',
         'Sec-Fetch-Site': 'same-origin',
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36',
-        'X-CSRF-TOKEN': 'hujVsTTW3EcLYy5FoQnmAQUPO81gYvvBduyBc0ZW',
+        'X-CSRF-TOKEN': 'DRfRsH3OT4QPJzgun6XM6BXItvuFfyFYvTb4BOh4',
         'X-Requested-With': 'XMLHttpRequest',
         'sec-ch-ua': '"Not/A)Brand";v="99", "Google Chrome";v="115", "Chromium";v="115"',
         'sec-ch-ua-mobile': '?0',
@@ -49,7 +52,7 @@ def parsing_synevo():
     with open(file_name, encoding='utf-8') as f:
         data = json.load(f)
     heandler = ['code', 'name_ru', 'name_ua', 'term', 'location_id', 'price']
-    with open('synevo_data.csv', 'w', newline='', encoding='utf-8') as file:
+    with open('synevo.csv', 'w', newline='', encoding='utf-8') as file:
         writer = csv.writer(file, delimiter=",")
         writer.writerow(heandler)  # Записываем заголовки только один раз
         for key in data['json']:
@@ -99,7 +102,7 @@ def parsing_esculab():
     with open(file_name, encoding='utf-8') as f:
         data = json.load(f)
     heandler = ['code', 'name', 'nameRu', 'duration_day', 'price']
-    with open('esculab_data.csv', 'w', newline='', encoding='utf-8') as file:
+    with open('esculab.csv', 'w', newline='', encoding='utf-8') as file:
         writer = csv.writer(file, delimiter=",")
         writer.writerow(heandler)  # Записываем заголовки только один раз
         for item in data:
@@ -156,7 +159,7 @@ def parsing_onelab():
         cols = [ele.text.replace('\n', '').strip() for ele in cols]
         cols[1] = cols[1].replace("[", "").replace("]", "")  # Удаляем скобки только из первого элемента
         data.append([ele for ele in cols if ele])
-    with open('data_onelab.csv', 'w', newline='', encoding='utf-8') as file:
+    with open('onelab.csv', 'w', newline='', encoding='utf-8') as file:
         writer = csv.writer(file, delimiter=",")
         headers = ["Id", "Description", "Time", "Cost"]  # Замените на свои заголовки
         writer.writerow(headers)
@@ -165,10 +168,11 @@ def parsing_onelab():
     #     print(item)
 
 
+
 if __name__ == '__main__':
-    # get_synevo()
-    # parsing_synevo()
-    # get_esculab()
-    # parsing_esculab()
-    # get_onelab()
+    get_synevo()
+    get_esculab()
+    get_onelab()
+    parsing_synevo()
+    parsing_esculab()
     parsing_onelab()
