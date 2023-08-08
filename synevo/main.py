@@ -2,40 +2,145 @@ import requests
 import json
 import csv
 from bs4 import BeautifulSoup
+import time
+import re
+from selenium.webdriver.chrome.service import Service
+from selenium import webdriver
+from browsermobproxy import Server
 
-def get_synevo():
+server = Server(r"c:\Program Files (x86)\browsermob-proxy\bin\browsermob-proxy")
+server.start()
+proxy = server.create_proxy()
 
-    cookies = {
-        'cookiesession1': '678A3ED620B6DA870B8CFCCFEC898BD3',
-        '_gid': 'GA1.2.23311358.1691222848',
-        '_clck': '1d3dezd|2|fdw|0|1312',
-        '_fbp': 'fb.1.1691222848224.1595282608',
-        '_ga_2B071QW08K': 'GS1.1.1691222847.1.1.1691222885.0.0.0',
-        '_ga': 'GA1.1.594218207.1691222848',
-        '_clsk': 'go9nqt|1691222886248|4|1|o.clarity.ms/collect',
-        'XSRF-TOKEN': 'eyJpdiI6Imt6Sk9KOGpab01wdWJcL3oya3ByNFBnPT0iLCJ2YWx1ZSI6IlA0aVpkV1dXakZ6b1gzenV0SjV3WVM3VllcL1YwYlU3SlgrRjZOZ0hMR2JQN08xQ1pQZzVCM2VEQnpDeGhwZStmIiwibWFjIjoiM2ZjMTA3M2VjMjkxY2FiYzFiMDcwYWRiOGFlZGMyMmRlZWE3N2JkODY3Yzc4YTI3YWI2ZWY4ODNjM2YzOTg2YiJ9',
-        'laravel_session': 'eyJpdiI6Inh1QVBwUmR2NitCOG1kbjFaUitzYmc9PSIsInZhbHVlIjoiM1FiMTFWU05NT3VKb3BnYWZ4MWlHUTVFNW9aY1ZjRHZpQm1UeVJzNkNPR2tINXA2bkFxSjBab0xESWlKY0IzXC8iLCJtYWMiOiIxMzk1MmYyZTJiN2MzNTRmYzVmMjU2NjEyMTA2OGU0MGQ4NjNkYjM1OThiNjAzYzEzMGM1MDkxMTgyMTEwZTM3In0%3D',
-    }
 
-    headers = {
-        'Accept': '*/*',
-        'Accept-Language': 'ru',
-        'Connection': 'keep-alive',
-        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-        # 'Cookie': 'cookiesession1=678A3ED620B6DA870B8CFCCFEC898BD3; _gid=GA1.2.23311358.1691222848; _clck=1d3dezd|2|fdw|0|1312; _fbp=fb.1.1691222848224.1595282608; _ga_2B071QW08K=GS1.1.1691222847.1.1.1691222885.0.0.0; _ga=GA1.1.594218207.1691222848; _clsk=go9nqt|1691222886248|4|1|o.clarity.ms/collect; XSRF-TOKEN=eyJpdiI6Imt6Sk9KOGpab01wdWJcL3oya3ByNFBnPT0iLCJ2YWx1ZSI6IlA0aVpkV1dXakZ6b1gzenV0SjV3WVM3VllcL1YwYlU3SlgrRjZOZ0hMR2JQN08xQ1pQZzVCM2VEQnpDeGhwZStmIiwibWFjIjoiM2ZjMTA3M2VjMjkxY2FiYzFiMDcwYWRiOGFlZGMyMmRlZWE3N2JkODY3Yzc4YTI3YWI2ZWY4ODNjM2YzOTg2YiJ9; laravel_session=eyJpdiI6Inh1QVBwUmR2NitCOG1kbjFaUitzYmc9PSIsInZhbHVlIjoiM1FiMTFWU05NT3VKb3BnYWZ4MWlHUTVFNW9aY1ZjRHZpQm1UeVJzNkNPR2tINXA2bkFxSjBab0xESWlKY0IzXC8iLCJtYWMiOiIxMzk1MmYyZTJiN2MzNTRmYzVmMjU2NjEyMTA2OGU0MGQ4NjNkYjM1OThiNjAzYzEzMGM1MDkxMTgyMTEwZTM3In0%3D',
-        'DNT': '1',
-        'Origin': 'https://www.synevo.ua',
-        'Referer': 'https://www.synevo.ua/ua/tests',
-        'Sec-Fetch-Dest': 'empty',
-        'Sec-Fetch-Mode': 'cors',
-        'Sec-Fetch-Site': 'same-origin',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36',
-        'X-CSRF-TOKEN': 'DRfRsH3OT4QPJzgun6XM6BXItvuFfyFYvTb4BOh4',
-        'X-Requested-With': 'XMLHttpRequest',
-        'sec-ch-ua': '"Not/A)Brand";v="99", "Google Chrome";v="115", "Chromium";v="115"',
-        'sec-ch-ua-mobile': '?0',
-        'sec-ch-ua-platform': '"Windows"',
-    }
+def get_chromedriver():
+    chrome_options = webdriver.ChromeOptions()
+    chrome_options.add_argument(
+        f'--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36')
+    chrome_options.add_argument('--ignore-certificate-errors')
+    chrome_options.add_argument("--proxy-server={0}".format(proxy.proxy))
+    chrome_options.add_argument("--start-maximized")
+    chrome_options.add_argument('--auto-open-devtools-for-tabs=devtools://devtools/bundled/inspector.html')
+
+    s = Service(
+        executable_path="C:\\scrap_tutorial-master\\chromedriver.exe"
+    )
+    driver = webdriver.Chrome(
+        service=s,
+        options=chrome_options
+    )
+
+    return driver
+
+
+def selenium_get_curl():
+    proxy.new_har("synevo", options={'captureHeaders': True, 'captureContent': True})
+
+    url = "https://www.synevo.ua/ua/tests"
+    driver = get_chromedriver()
+    driver.get(url)
+    time.sleep(5)
+    driver.execute_script('''
+        var elements = document.querySelectorAll('[aria-label="Network panel"]');
+        for (var i = 0; i < elements.length; i++) {
+            var element = elements[i];
+            if (element.offsetWidth > 0 && element.offsetHeight > 0) {
+                element.click();
+                break;
+            }
+        }
+    ''')
+    time.sleep(5)
+    # получить все запросы из Network panel
+    requests = driver.execute_script('''
+        var performanceEntries = performance.getEntriesByType("resource");
+        var fetchRequests = [];
+        for (var i = 0; i < performanceEntries.length; i++) {
+            var entry = performanceEntries[i];
+            fetchRequests.push(entry);
+        }
+        return fetchRequests;
+    ''')
+
+    curl_command = "curl "
+    entries = proxy.har['log']['entries']
+    for entry in entries:
+        if entry['request']['url'] == 'https://www.synevo.ua/api/test/tests-by-loc':
+            # Method (GET, POST, etc.)
+            curl_command += "-X {} ".format(entry['request']['method'])
+
+            # URL
+            curl_command += "'{}' \\\n".format(entry['request']['url'])
+
+            # Headers
+            for header in entry['request']['headers']:
+                header_name = header['name']
+                header_value = header['value']
+                curl_command += "  -H '{}: {}' \\\n".format(header_name, header_value)
+
+            if entry['request']['method'] == 'POST' and 'postData' in entry['request']:
+                if 'text' in entry['request']['postData']:
+                    curl_command += "  --data '{}'".format(entry['request']['postData']['text'])
+
+            break
+    # Extracting cookies
+    cookies_match = re.search(r"Cookie:\s(.*?)'", curl_command)
+    if cookies_match:
+        cookies_str = cookies_match.group(1)
+        cookies_list = cookies_str.split('; ')
+        cookies = {cookie.split('=')[0]: cookie.split('=')[1] for cookie in cookies_list}
+
+    # Extracting headers
+    headers_match = re.findall(r"-H '(.*?)'", curl_command)
+    headers = {header.split(': ')[0]: header.split(': ')[1] for header in headers_match}
+
+    return curl_command
+
+
+def get_cookie_header(curl_command):
+    cookies_match = re.search(r"Cookie:\s(.*?)'", curl_command)
+    if cookies_match:
+        cookies_str = cookies_match.group(1)
+        cookies_list = cookies_str.split('; ')
+        cookies = {cookie.split('=')[0]: cookie.split('=')[1] for cookie in cookies_list}
+
+    # Extracting headers
+    headers_match = re.findall(r"-H '(.*?)'", curl_command)
+    headers = {header.split(': ')[0]: header.split(': ')[1] for header in headers_match}
+    return cookies, headers
+def get_synevo(cookies, headers):
+
+    # cookies = {
+    #     'cookiesession1': '678A3ED620B6DA870B8CFCCFEC898BD3',
+    #     '_gid': 'GA1.2.23311358.1691222848',
+    #     '_clck': '1d3dezd|2|fdw|0|1312',
+    #     '_fbp': 'fb.1.1691222848224.1595282608',
+    #     '_ga_2B071QW08K': 'GS1.1.1691222847.1.1.1691222885.0.0.0',
+    #     '_ga': 'GA1.1.594218207.1691222848',
+    #     '_clsk': 'go9nqt|1691222886248|4|1|o.clarity.ms/collect',
+    #     'XSRF-TOKEN': 'eyJpdiI6Imt6Sk9KOGpab01wdWJcL3oya3ByNFBnPT0iLCJ2YWx1ZSI6IlA0aVpkV1dXakZ6b1gzenV0SjV3WVM3VllcL1YwYlU3SlgrRjZOZ0hMR2JQN08xQ1pQZzVCM2VEQnpDeGhwZStmIiwibWFjIjoiM2ZjMTA3M2VjMjkxY2FiYzFiMDcwYWRiOGFlZGMyMmRlZWE3N2JkODY3Yzc4YTI3YWI2ZWY4ODNjM2YzOTg2YiJ9',
+    #     'laravel_session': 'eyJpdiI6Inh1QVBwUmR2NitCOG1kbjFaUitzYmc9PSIsInZhbHVlIjoiM1FiMTFWU05NT3VKb3BnYWZ4MWlHUTVFNW9aY1ZjRHZpQm1UeVJzNkNPR2tINXA2bkFxSjBab0xESWlKY0IzXC8iLCJtYWMiOiIxMzk1MmYyZTJiN2MzNTRmYzVmMjU2NjEyMTA2OGU0MGQ4NjNkYjM1OThiNjAzYzEzMGM1MDkxMTgyMTEwZTM3In0%3D',
+    # }
+    #
+    # headers = {
+    #     'Accept': '*/*',
+    #     'Accept-Language': 'ru',
+    #     'Connection': 'keep-alive',
+    #     'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+    #     # 'Cookie': 'cookiesession1=678A3ED620B6DA870B8CFCCFEC898BD3; _gid=GA1.2.23311358.1691222848; _clck=1d3dezd|2|fdw|0|1312; _fbp=fb.1.1691222848224.1595282608; _ga_2B071QW08K=GS1.1.1691222847.1.1.1691222885.0.0.0; _ga=GA1.1.594218207.1691222848; _clsk=go9nqt|1691222886248|4|1|o.clarity.ms/collect; XSRF-TOKEN=eyJpdiI6Imt6Sk9KOGpab01wdWJcL3oya3ByNFBnPT0iLCJ2YWx1ZSI6IlA0aVpkV1dXakZ6b1gzenV0SjV3WVM3VllcL1YwYlU3SlgrRjZOZ0hMR2JQN08xQ1pQZzVCM2VEQnpDeGhwZStmIiwibWFjIjoiM2ZjMTA3M2VjMjkxY2FiYzFiMDcwYWRiOGFlZGMyMmRlZWE3N2JkODY3Yzc4YTI3YWI2ZWY4ODNjM2YzOTg2YiJ9; laravel_session=eyJpdiI6Inh1QVBwUmR2NitCOG1kbjFaUitzYmc9PSIsInZhbHVlIjoiM1FiMTFWU05NT3VKb3BnYWZ4MWlHUTVFNW9aY1ZjRHZpQm1UeVJzNkNPR2tINXA2bkFxSjBab0xESWlKY0IzXC8iLCJtYWMiOiIxMzk1MmYyZTJiN2MzNTRmYzVmMjU2NjEyMTA2OGU0MGQ4NjNkYjM1OThiNjAzYzEzMGM1MDkxMTgyMTEwZTM3In0%3D',
+    #     'DNT': '1',
+    #     'Origin': 'https://www.synevo.ua',
+    #     'Referer': 'https://www.synevo.ua/ua/tests',
+    #     'Sec-Fetch-Dest': 'empty',
+    #     'Sec-Fetch-Mode': 'cors',
+    #     'Sec-Fetch-Site': 'same-origin',
+    #     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36',
+    #     'X-CSRF-TOKEN': 'DRfRsH3OT4QPJzgun6XM6BXItvuFfyFYvTb4BOh4',
+    #     'X-Requested-With': 'XMLHttpRequest',
+    #     'sec-ch-ua': '"Not/A)Brand";v="99", "Google Chrome";v="115", "Chromium";v="115"',
+    #     'sec-ch-ua-mobile': '?0',
+    #     'sec-ch-ua-platform': '"Windows"',
+    # }
 
     data = {
         'location_id': '26',
@@ -170,7 +275,11 @@ def parsing_onelab():
 
 
 if __name__ == '__main__':
-    get_synevo()
+    curl_result = selenium_get_curl()  # сохраняем результат функции в переменную
+    get_cookie_header(curl_result)
+    server.stop()  # остановка сервера должна быть здесь
+    cookies, headers = get_cookie_header(curl_result)
+    get_synevo(cookies, headers)
     get_esculab()
     get_onelab()
     parsing_synevo()
