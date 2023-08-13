@@ -92,76 +92,72 @@ def parsing_product():
     # data = []
     # with open("output.csv", "w", newline="", encoding='utf-8') as csvfile:
     #     writer = csv.writer(csvfile)
-    for item in files_html:
-        # print(item)
-        filename_csv = os.path.basename(item)  # Получаем только имя файла из пути
-        filename_csv = os.path.splitext(filename_csv)[0].replace("_", " ")  # Удаляем расширение файла
-        # writer.writerow([filename_csv])
-        with open(f"{item}", encoding="utf-8") as file:
-            src = file.read()
-        soup = BeautifulSoup(src, 'lxml')
+    coun = 0
+    with (open("data.csv", "w", newline="", encoding="utf-8") as csvfile):
+        writer = csv.writer(csvfile, delimiter=';')
+        for item in files_html:
+            filename_csv = os.path.basename(item)  # Получаем только имя файла из пути
+            filename_csv = os.path.splitext(filename_csv)[0].replace("_", " ")  # Удаляем расширение файла
+            with open(f"{item}", encoding="utf-8") as file:
+                src = file.read()
+            coun += 1
+            # print(item)
+            print(len(files_html) - coun)
+            soup = BeautifulSoup(src, 'lxml')
 
-        try:
-            name_product = soup.find('span', attrs={'class': 'active_filters_span'}).text.strip()
-        except:
-            name_product = filename_csv
-        try:
-            script_div = soup.find('a', attrs={'data-gc-onclick': 'dyn-gallery'})['data-dyngalposstring']
-        except:
-            script_div = 'Пусто'
-        pattern = re.compile(r"'src': '(.+?)',")
-        result = pattern.findall(script_div)
-        counter = 1
-        filenames = []
-        for img in result:
-
-            """Выкачка фото"""
-            img_dir = "c:\\intercars_img"
-            if len(result) < 4:
-                while counter <= len(result):
-                    filename = f"{name_product}_0{counter}.jpg"
-                    file_path = os.path.join(img_dir, filename)
-
-                    if os.path.exists(file_path):
-                        # Файл уже существует, пропускаем его
-                        # print(f"Файл {filename} уже существует, пропускаем его")
-                        counter += 1
-                        continue
-
-                    img_data = requests.get(img)
-                    with open(file_path, 'wb') as file_img:
-                        file_img.write(img_data.content)
-
-                    counter += 1
-                filenames.append(filename)
-            elif len(result) > 4:
-                while counter <= 4:
-                    filename = f"{name_product}_0{counter}.jpg"
-                    file_path = os.path.join(img_dir, filename)
-
-                    if os.path.exists(file_path):
-                        # Файл уже существует, пропускаем его
-                        # print(f"Файл {filename} уже существует, пропускаем его")
-                        counter += 1
-                        continue
-
-                    img_data = requests.get(img)
-                    with open(file_path, 'wb') as file_img:
-                        file_img.write(img_data.content)
-
-                    counter += 1
-                filenames.append(filename)
-            # print(filenames)
-            """Получение данных"""
             try:
-                full_name = soup.find('div', class_="col-xs-12 p-l-2 p-r-2 f-12 text-center").text
+                name_product = soup.find('span', attrs={'class': 'active_filters_span'}).text.strip()
             except:
-                full_name = ""
+                name_product = filename_csv
+            try:
+                script_div = soup.find('a', attrs={'data-gc-onclick': 'dyn-gallery'})['data-dyngalposstring']
+            except:
+                script_div = None
+            pattern = re.compile(r"'src': '(.+?)',")
+            result = pattern.findall(script_div)
+            filenames = []
+            img_dir = "c:\\intercars_img"
+            filenames = []
+
+            # Ограничиваем количество изображений до 4
+            max_images = min(4, len(result))
+
+            for idx, img in enumerate(result[:max_images]):
+                filename = f"{name_product}_{idx + 1:02}.jpg"
+                file_path = os.path.join(img_dir, filename)
+                filenames.append(filename)
+                # Если файл уже существует, пропустить эту итерацию
+                if os.path.exists(file_path):
+                    continue
+
+                img_data = requests.get(img)
+                with open(file_path, 'wb') as file_img:
+                    file_img.write(img_data.content)
+
+
+            """Получение данных"""
+            """Проверка нескольких условий"""
+            selectors = [
+                ('div', {"class": "col-xs-12 p-l-2 p-r-2 f-12 text-center"}),
+                ('span', {"id": "name_30"}),
+                ('h1', {"class": "item-title word-break-anywhere hidden-xs"})
+            ]
+
+            full_name = None
+
+            for tag, attributes in selectors:
+                try:
+                    full_name = soup.find(tag, attributes).text
+                    break  # Если нашли совпадение, выходим из цикла
+                except:
+                    continue  # Если не нашли, продолжаем проверку следующего селектора
+
+            # Если full_name остался None, значит ни одно из условий не сработало
             details_card_div = soup.find("div", {"id": "details_card"})
             try:
                 divs = details_card_div.find_all("div", class_="clearfix flexcard p-l-2 p-r-2")
             except:
-                continue
+                pass
             pattern = re.compile(r"Штрих-ко.*?(\d{13})")
             barcode = ''
             for div in divs:
@@ -170,14 +166,23 @@ def parsing_product():
                     barcode = match.group(1)
                     barcode = re.sub(r"\D", "", barcode)  # Удаляем все символы, кроме цифр
                     break
-            # print(details_card_div)
-            manufacture = soup.find('span', attrs = {'id': 'manufacture_30'}).text
-            manufacture_code = soup.find('a', class_="article_index_link").text
-            manufacture_name = soup.find('span', attrs = {'id': 'name_30'}).text
-            with open("data.csv", "a", newline="", encoding="utf-8") as csvfile:
-                writer = csv.writer(csvfile, delimiter=';')
-                writer.writerow([full_name, manufacture, manufacture_code, manufacture_name, barcode] + filenames)
-            # print(f"{full_name} | {manufacture} | {manufacture_code} | {manufacture_name} | {barcode}")
+            try:
+                manufacture = soup.find('span', attrs={'id': 'manufacture_30'}).text
+            except:
+                manufacture = None
+            try:
+                manufacture_code = soup.find('a', class_="article_index_link").text
+            except:
+                manufacture_code = None
+
+            try:
+                manufacture_name = soup.find('span', attrs={'id': 'name_30'}).text
+            except:
+                manufacture_name = None
+            writer.writerow([full_name, manufacture, manufacture_code, manufacture_name, barcode, filenames])
+
+
+
 if __name__ == '__main__':
     # # Собираем все ссылки на категории товаров
     # url = "https://webshop-ua.intercars.eu/zapchasti/"
