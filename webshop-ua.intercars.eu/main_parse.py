@@ -9,9 +9,6 @@ import csv
 def parsing_product():
     targetPattern = r"c:\intercars_html\*.html"
     files_html = glob.glob(targetPattern)
-    # data = []
-    # with open("output.csv", "w", newline="", encoding='utf-8') as csvfile:
-    #     writer = csv.writer(csvfile)
     coun = 0
     with (open("data.csv", "w", newline="", encoding="utf-8") as csvfile):
         writer = csv.writer(csvfile, delimiter=';')
@@ -22,7 +19,7 @@ def parsing_product():
                 src = file.read()
             coun += 1
             # print(item)
-            print(len(files_html) - coun)
+            print(coun)
             soup = BeautifulSoup(src, 'lxml')
 
             try:
@@ -55,24 +52,7 @@ def parsing_product():
             else:
                 result = []
             # print(result)
-            filenames = []
-            img_dir = "c:\\intercars_img"
-            filenames = []
 
-            # Ограничиваем количество изображений до 4
-            max_images = min(4, len(result))
-
-            for idx, img in enumerate(result[:max_images]):
-                filename = f"{name_product}_{idx + 1:02}.jpg"
-                file_path = os.path.join(img_dir, filename)
-                filenames.append(filename)
-                # Если файл уже существует, пропустить эту итерацию
-                if os.path.exists(file_path):
-                    continue
-
-                img_data = requests.get(img)
-                with open(file_path, 'wb') as file_img:
-                    file_img.write(img_data.content)
 
             """Получение данных"""
             """Проверка нескольких условий"""
@@ -86,8 +66,10 @@ def parsing_product():
 
             for tag, attributes in selectors:
                 try:
-                    full_name = soup.find(tag, attributes).text
-                    break  # Если нашли совпадение, выходим из цикла
+                    element = soup.find(tag, attributes)
+                    if element and element.text.strip():  # проверяем, что текст присутствует и он не пустой
+                        full_name = element.text.replace("\n", "").strip()
+                        break  # Если нашли совпадение, выходим из цикла
                 except:
                     continue  # Если не нашли, продолжаем проверку следующего селектора
 
@@ -109,18 +91,40 @@ def parsing_product():
 
             try:
                 manufacture = soup.find('span', attrs={'id': 'manufacture_30'}).text
+                manufacture = re.sub(r'[\n/*,-/"+\\]', '_', manufacture).strip()
             except:
                 manufacture = None
             try:
                 manufacture_code = soup.find('a', class_="article_index_link").text
+                manufacture_code = re.sub(r'[\n/*,-/"+\\]', '_', manufacture_code).strip()
             except:
                 manufacture_code = None
 
             try:
-                manufacture_name = soup.find('span', attrs={'id': 'name_30'}).text
+                manufacture_name = soup.find('span', attrs={'id': 'name_30'}).text.replace("\n", "").strip()
             except:
                 manufacture_name = None
-            writer.writerow([full_name, manufacture, manufacture_code, manufacture_name, barcode, filenames])
+            filenames = []
+            img_dir = "c:\\intercars_img"
+            filenames = []
+
+            # Ограничиваем количество изображений до 4
+            max_images = min(4, len(result))
+
+            for idx, img in enumerate(result[:max_images]):
+                filename = f"{manufacture_code}_{manufacture}_{idx + 1:02}.jpg"
+                file_path = os.path.join(img_dir, filename)
+                filenames.append(filename)
+                # Если файл уже существует, пропустить эту итерацию
+                if os.path.exists(file_path):
+                    continue
+
+                img_data = requests.get(img)
+                with open(file_path, 'wb') as file_img:
+                    file_img.write(img_data.content)
+            datas = [full_name, manufacture, manufacture_code, manufacture_name, barcode, filenames]
+            # print(datas)
+            writer.writerow(datas)
 
 
 if __name__ == '__main__':
