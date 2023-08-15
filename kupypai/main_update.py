@@ -21,22 +21,20 @@ def get_url_ad():
     cookies = {
         'current_currency': 'UAH',
         '_ga': 'GA1.2.905147567.1689674622',
-        'csrftoken': 'K5uPBwwPeP67R82c5M5y2OTFiKChd4hKBCxR7b5PIUyYBNAXMveyjTHptqaimZiO',
-        'sessionid': 'nz041h2nmtl03vyfdjuf3jvgwzyvky3m',
-        '_gid': 'GA1.2.1888910465.1690273079',
+        '_gid': 'GA1.2.1056786092.1691388451',
         '_gat_UA-200319004-1': '1',
-        '_ga_MD7LGRXX6R': 'GS1.2.1690372363.28.1.1690372740.60.0.0',
+        'csrftoken': 'FTwLPf2vduqGdNqbHoiDTFthNB4SywehE36ztNFB0ebi28tqWBG3g9OB5ExXsopw',
+        'sessionid': '5j0jcf85uxfplsn7wlw55u73bu5gp0ze',
+        '_ga_MD7LGRXX6R': 'GS1.2.1691388451.36.1.1691388460.51.0.0',
     }
 
     headers = {
         'authority': 'kupypai.com',
         'accept': '*/*',
         'accept-language': 'uk',
-        'cache-control': 'no-cache',
         'content-type': 'application/json',
-        # 'cookie': 'current_currency=UAH; _ga=GA1.2.905147567.1689674622; csrftoken=K5uPBwwPeP67R82c5M5y2OTFiKChd4hKBCxR7b5PIUyYBNAXMveyjTHptqaimZiO; sessionid=nz041h2nmtl03vyfdjuf3jvgwzyvky3m; _gid=GA1.2.1888910465.1690273079; _gat_UA-200319004-1=1; _ga_MD7LGRXX6R=GS1.2.1690372363.28.1.1690372740.60.0.0',
+        # 'cookie': 'current_currency=UAH; _ga=GA1.2.905147567.1689674622; _gid=GA1.2.1056786092.1691388451; _gat_UA-200319004-1=1; csrftoken=FTwLPf2vduqGdNqbHoiDTFthNB4SywehE36ztNFB0ebi28tqWBG3g9OB5ExXsopw; sessionid=5j0jcf85uxfplsn7wlw55u73bu5gp0ze; _ga_MD7LGRXX6R=GS1.2.1691388451.36.1.1691388460.51.0.0',
         'dnt': '1',
-        'pragma': 'no-cache',
         'referer': 'https://kupypai.com/profile/announcement/list/client',
         'sec-ch-ua': '"Not/A)Brand";v="99", "Google Chrome";v="115", "Chromium";v="115"',
         'sec-ch-ua-mobile': '?0',
@@ -45,7 +43,7 @@ def get_url_ad():
         'sec-fetch-mode': 'same-origin',
         'sec-fetch-site': 'same-origin',
         'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36',
-        'x-csrftoken': 'K5uPBwwPeP67R82c5M5y2OTFiKChd4hKBCxR7b5PIUyYBNAXMveyjTHptqaimZiO',
+        'x-csrftoken': 'FTwLPf2vduqGdNqbHoiDTFthNB4SywehE36ztNFB0ebi28tqWBG3g9OB5ExXsopw',
         'x-requested-with': 'XMLHttpRequest',
     }
     params = {
@@ -66,22 +64,20 @@ def get_url_ad():
             cookies = {
                 'current_currency': 'UAH',
                 '_ga': 'GA1.2.905147567.1689674622',
-                'csrftoken': 'K5uPBwwPeP67R82c5M5y2OTFiKChd4hKBCxR7b5PIUyYBNAXMveyjTHptqaimZiO',
-                'sessionid': 'nz041h2nmtl03vyfdjuf3jvgwzyvky3m',
-                '_gid': 'GA1.2.1888910465.1690273079',
+                '_gid': 'GA1.2.1056786092.1691388451',
                 '_gat_UA-200319004-1': '1',
-                '_ga_MD7LGRXX6R': 'GS1.2.1690372363.28.1.1690372740.60.0.0',
+                'csrftoken': 'FTwLPf2vduqGdNqbHoiDTFthNB4SywehE36ztNFB0ebi28tqWBG3g9OB5ExXsopw',
+                'sessionid': '5j0jcf85uxfplsn7wlw55u73bu5gp0ze',
+                '_ga_MD7LGRXX6R': 'GS1.2.1691388451.36.1.1691388460.51.0.0',
             }
 
             headers = {
                 'authority': 'kupypai.com',
                 'accept': '*/*',
                 'accept-language': 'uk',
-                'cache-control': 'no-cache',
                 'content-type': 'application/json',
-                # 'cookie': 'current_currency=UAH; _ga=GA1.2.905147567.1689674622; csrftoken=K5uPBwwPeP67R82c5M5y2OTFiKChd4hKBCxR7b5PIUyYBNAXMveyjTHptqaimZiO; sessionid=nz041h2nmtl03vyfdjuf3jvgwzyvky3m; _gid=GA1.2.1888910465.1690273079; _gat_UA-200319004-1=1; _ga_MD7LGRXX6R=GS1.2.1690372363.28.1.1690372740.60.0.0',
+                # 'cookie': 'current_currency=UAH; _ga=GA1.2.905147567.1689674622; _gid=GA1.2.1056786092.1691388451; _gat_UA-200319004-1=1; csrftoken=FTwLPf2vduqGdNqbHoiDTFthNB4SywehE36ztNFB0ebi28tqWBG3g9OB5ExXsopw; sessionid=5j0jcf85uxfplsn7wlw55u73bu5gp0ze; _ga_MD7LGRXX6R=GS1.2.1691388451.36.1.1691388460.51.0.0',
                 'dnt': '1',
-                'pragma': 'no-cache',
                 'referer': 'https://kupypai.com/profile/announcement/list/client',
                 'sec-ch-ua': '"Not/A)Brand";v="99", "Google Chrome";v="115", "Chromium";v="115"',
                 'sec-ch-ua-mobile': '?0',
@@ -90,7 +86,7 @@ def get_url_ad():
                 'sec-fetch-mode': 'same-origin',
                 'sec-fetch-site': 'same-origin',
                 'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36',
-                'x-csrftoken': 'K5uPBwwPeP67R82c5M5y2OTFiKChd4hKBCxR7b5PIUyYBNAXMveyjTHptqaimZiO',
+                'x-csrftoken': 'FTwLPf2vduqGdNqbHoiDTFthNB4SywehE36ztNFB0ebi28tqWBG3g9OB5ExXsopw',
                 'x-requested-with': 'XMLHttpRequest',
             }
             params = {
@@ -159,22 +155,20 @@ def main():
                     cookies = {
                         'current_currency': 'UAH',
                         '_ga': 'GA1.2.905147567.1689674622',
-                        'csrftoken': 'K5uPBwwPeP67R82c5M5y2OTFiKChd4hKBCxR7b5PIUyYBNAXMveyjTHptqaimZiO',
-                        'sessionid': 'nz041h2nmtl03vyfdjuf3jvgwzyvky3m',
-                        '_gid': 'GA1.2.1888910465.1690273079',
+                        '_gid': 'GA1.2.1056786092.1691388451',
                         '_gat_UA-200319004-1': '1',
-                        '_ga_MD7LGRXX6R': 'GS1.2.1690372363.28.1.1690372740.60.0.0',
+                        'csrftoken': 'FTwLPf2vduqGdNqbHoiDTFthNB4SywehE36ztNFB0ebi28tqWBG3g9OB5ExXsopw',
+                        'sessionid': '5j0jcf85uxfplsn7wlw55u73bu5gp0ze',
+                        '_ga_MD7LGRXX6R': 'GS1.2.1691388451.36.1.1691388460.51.0.0',
                     }
 
                     headers = {
                         'authority': 'kupypai.com',
                         'accept': '*/*',
                         'accept-language': 'uk',
-                        'cache-control': 'no-cache',
                         'content-type': 'application/json',
-                        # 'cookie': 'current_currency=UAH; _ga=GA1.2.905147567.1689674622; csrftoken=K5uPBwwPeP67R82c5M5y2OTFiKChd4hKBCxR7b5PIUyYBNAXMveyjTHptqaimZiO; sessionid=nz041h2nmtl03vyfdjuf3jvgwzyvky3m; _gid=GA1.2.1888910465.1690273079; _gat_UA-200319004-1=1; _ga_MD7LGRXX6R=GS1.2.1690372363.28.1.1690372740.60.0.0',
+                        # 'cookie': 'current_currency=UAH; _ga=GA1.2.905147567.1689674622; _gid=GA1.2.1056786092.1691388451; _gat_UA-200319004-1=1; csrftoken=FTwLPf2vduqGdNqbHoiDTFthNB4SywehE36ztNFB0ebi28tqWBG3g9OB5ExXsopw; sessionid=5j0jcf85uxfplsn7wlw55u73bu5gp0ze; _ga_MD7LGRXX6R=GS1.2.1691388451.36.1.1691388460.51.0.0',
                         'dnt': '1',
-                        'pragma': 'no-cache',
                         'referer': 'https://kupypai.com/profile/announcement/list/client',
                         'sec-ch-ua': '"Not/A)Brand";v="99", "Google Chrome";v="115", "Chromium";v="115"',
                         'sec-ch-ua-mobile': '?0',
@@ -183,7 +177,7 @@ def main():
                         'sec-fetch-mode': 'same-origin',
                         'sec-fetch-site': 'same-origin',
                         'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36',
-                        'x-csrftoken': 'K5uPBwwPeP67R82c5M5y2OTFiKChd4hKBCxR7b5PIUyYBNAXMveyjTHptqaimZiO',
+                        'x-csrftoken': 'FTwLPf2vduqGdNqbHoiDTFthNB4SywehE36ztNFB0ebi28tqWBG3g9OB5ExXsopw',
                         'x-requested-with': 'XMLHttpRequest',
                     }
                     response = requests.get(f'https://kupypai.com/api/v1/announcement/{id_ad}/retrieve-update/',
