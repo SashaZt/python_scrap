@@ -1,29 +1,61 @@
-from pathlib import Path
-from bs4 import BeautifulSoup
-import random
+import csv
 import glob
-import re
-import requests
-import json
-import cloudscraper
 import os
-from playwright.sync_api import sync_playwright
-from cf_clearance import sync_cf_retry, sync_stealth
+import random
 import time
+
+import requests
+from bs4 import BeautifulSoup
+
+from proxi import proxies
+import re
+import glob
+import json
+import os
+from bs4 import BeautifulSoup
 import shutil
+import pickle
 import tempfile
-# import undetected_chromedriver as webdriver
-
-
-from selenium.webdriver.chrome.service import Service as ChromeService
-from selenium.common.exceptions import TimeoutException
+import zipfile
+import time
+import random
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.keys import Keys
 from selenium import webdriver
+from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
 from concurrent.futures import ThreadPoolExecutor
 import csv
-from proxi import proxies
+
+# import undetected_chromedriver as webdriver
+def get_chromedriver():
+    chrome_options = webdriver.ChromeOptions()
+
+    chrome_options.add_argument('--disable-blink-features=AutomationControlled')
+    chrome_options.add_argument("--disable-gpu")
+    # chrome_options.add_experimental_option("excludeSwitches", ['enable-automation'])
+    # chrome_options.add_argument('--disable-infobars')
+    chrome_options.add_argument("--start-maximized")
+    chrome_options.add_argument('--ignore-certificate-errors')
+    chrome_options.add_argument('--ignore-ssl-errors')
+    # chrome_options.add_argument('--disable-extensions') # Отключает использование расширений
+    # chrome_options.add_argument('--disable-dev-shm-usage')
+    # chrome_options.add_argument('--no-sandbox')
+    # chrome_options.add_argument('--disable-setuid-sandbox')
+    chrome_options.add_argument(
+        '--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36')
+    s = Service(executable_path="C:\\scrap_tutorial-master\\chromedriver.exe")
+    driver = webdriver.Chrome(service=s, options=chrome_options)
+    driver.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {
+        'source': '''
+            delete window.cdc_adoQpoasnfa76pfcZLmcfl_Array;
+            delete window.cdc_adoQpoasnfa76pfcZLmcfl_Promise;
+            delete window.cdc_adoQpoasnfa76pfcZLmcfl_Symbol;
+      '''
+    })
+    return driver
 
 def load_proxies(file_path):
     with open(file_path, 'r') as file:
@@ -109,10 +141,36 @@ def parsing_url():
             writer.writerow([url])
 
 
+def get_selenium():
+    name_files = r'C:\scrap_tutorial-master\avtoradosti\url_ru.csv'
+    with open(name_files, newline='', encoding='utf-8') as files:
+        urls = list(csv.reader(files, delimiter=' ', quotechar='|'))
+        con = 0
+        driver = get_chromedriver()
+        driver.maximize_window()
+        for row in urls:
+            con +=1
+            filename = fr"c:\DATA\avtoradosti\pages\ru\data_0{con}.html"
+            if os.path.exists(filename):
+                continue
+            url = row[0]
+
+            driver.get(url)
+            wait = WebDriverWait(driver, 60)
+            time.sleep(1)
+            url_ru = driver.find_element(By.XPATH, '//div[@class="ht-lang"]//a').click()
+            # print()
+            # driver.get(url_ru)
+            time.sleep(1)
+            with open(filename, "w", encoding='utf-8') as fl:
+                fl.write(driver.page_source)
+            # wait_email = wait.until(
+            #     EC.presence_of_element_located((By.XPATH, '//input[@name="user[email]"]')))
+
 def parsin_product():
-    folder = r'c:\DATA\avtoradosti\pages\ru\*.html'
+    folder = r'c:\DATA\avtoradosti\pages\ua\*.html'
     files_html = glob.glob(folder)
-    with open('data_ru.csv', 'w', newline='', encoding="utf-8") as csvfile:
+    with open('data_ua.csv', 'w', newline='', encoding="utf-8") as csvfile:
         writer = csv.writer(csvfile)
         for item in files_html:
             proxy = random.choice(proxies)
@@ -133,15 +191,18 @@ def parsin_product():
             except:
                 sku = None
 
-            coun = 0
-
             table_char = soup.find('table', attrs={'class': 'cc-tech'})
             try:
                 rows = table_char.select("table.cc-tech tr:not(:first-child)")  # исключаем первую строку с заголовком
             except:
                 rows = None
-                continue
-            characteristics = []
+            desired_order = ["Бренд", "Тип ламп", "Цоколь", "Тип цоколя ЕСЕ", "Напряжение", "Цветовая температура",
+                             "Световой поток, lm", "Серия", "Срок службы, часов", "Количество"]
+            desired_order = ["Бренд", "Тип", "Цоколь", "Тип цоколя ЕСЕ", "Напруга", "Колірна температура",
+                             "Світловий потік, lm", "Серія", "Термін служби, годин", "Кількість"]
+
+
+            characteristics_dict = {}
             for row in rows:
                 key_element = row.select_one("td.cc-pn")
                 value_element = row.select_one("td:nth-child(2)")
@@ -149,8 +210,14 @@ def parsin_product():
                 key = key_element.text if key_element else None
                 value = value_element.text if value_element else None
 
-                if key and value:  # Проверяем, что и ключ, и значение не None
-                    characteristics.extend([key, value])
+                if key and value:
+                    characteristics_dict[key] = value
+
+            # Создаем список характеристик на основе желаемого порядка
+            ordered_characteristics = []
+            for key in desired_order:
+                ordered_characteristics.append(key)
+                ordered_characteristics.append(characteristics_dict.get(key, ''))
 
             brand_row = table_char.find('td', string='Бренд')
             brand_value = None
@@ -163,26 +230,43 @@ def parsin_product():
             try:
                 all_img = soup.find('div', attrs={'class': 'slider-thumbs'}).find_all('a')
             except:
-                all_img=None
+                all_img = None
                 continue
+            coun = 0
+            unique_urls = set()
+
             for i in all_img:
-                coun +=1
                 url_img = i.find('img').get('data-btnpic')
+                unique_urls.add(url_img)
+
+            downloaded_files_count = 0
+
+            for url_img in unique_urls:
+                coun += 1
                 filename = f"{brand_value}_{sku}_{coun}.jpg"
                 file_path = os.path.join(img_dir, filename)
-
                 filenames.append(filename)
-                if os.path.exists(file_path):
-                    continue  # Если файл уже существует, то завершаем выполнение функции
-                img_data = requests.get(url_img)
-                with open(file_path, 'wb') as file_img:
-                    file_img.write(img_data.content)
-                time.sleep(1)
-            writer.writerow([title, sku,filenames] + characteristics)
 
+                if os.path.exists(file_path):
+                    downloaded_files_count += 1
+                    continue
+
+                try:
+                    img_data = requests.get(url_img)
+                    with open(file_path, 'wb') as file_img:
+                        file_img.write(img_data.content)
+                    time.sleep(1)
+                except Exception as e:
+                    print(f"Error when downloading {url_img}. Error: {e}")
+                    exit()
+
+            # if downloaded_files_count == len(unique_urls):
+            #     print("All images are already downloaded.")
+            writer.writerow([sku, title, filenames] + ordered_characteristics)
 
 
 if __name__ == '__main__':
     # get_requests()
     # parsing_url()
+    # get_selenium()
     parsin_product()
