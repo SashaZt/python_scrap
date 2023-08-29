@@ -1,79 +1,20 @@
-import re
-from bs4 import BeautifulSoup
-import random
+import csv
 import glob
 import re
-from pathlib import Path
-import requests
-import json
-import cloudscraper
-import os
-from playwright.sync_api import sync_playwright
-from cf_clearance import sync_cf_retry, sync_stealth
-import time
-import shutil
-import tempfile
+
+from bs4 import BeautifulSoup
+
 # import undetected_chromedriver as webdriver
-
-
-from selenium.webdriver.chrome.service import Service as ChromeService
-from selenium.common.exceptions import TimeoutException
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.support.wait import WebDriverWait
-from concurrent.futures import ThreadPoolExecutor
-import csv
 delta = '''
-avtomobilnaya-aptechka
-avtomobilnye-kliuchi
-buksirovochnyy-tros
-distillirovannaya-voda
-fm-modulyatory
-gruzovye-boksy
-gubki-mochalki
-kamery-zadnego-vida
-klemmi_akkumuliatora
-kompressory_avtomobilnye
-kreplenie_dlya_velosipeda_na_avto
-krepleniya-dlya-lyzh-i-snoubordov
-motornoe-maslo-dlya-mototekhniki
-nabor-avtomobilista
-nabor-instrumentov
-nozhi-montazhnye
-nozhnicy-po-metallu
-ochistiteli_dvigatelya_naruzhnye
-ochistiteli_kondicionera
-ochistiteli_ruk
-ochistiteli_tormoznoy_sistemy
-ochistiteli-karbiuratora
-ochistiteli-salona
-ochki-zashchitnye
-perekhodnye-ramki-dlya-magnitol
-poliroli-dlya-salona
-polirol-dlya-avto
-provoda-prikurivaniya
-pusko-zaryadnye-ustroystva
-restavracionnye-karandashi
-schetki-skrebki-vodosgony
-siemniki-izolyatsii
-signalizatsii-na-avto
-sredstva-dlya-ochistki-kuzova-avto
-styazhki-dlya-gruza
-tormoznaya-zhidkost
-tortsevye-golovki
-transmissionnoe-maslo
-usb-kabeli
-videoregistrator-zerkalo
-yashchiki-dlya-instrumentov
-zhilety-signalnyye
-znaki_avarijnoj_ostanovki
+akkumuliator
 '''
 delta_list = delta.strip().split("\n")
+
+
 def parsing():
     for folders in delta_list:
-        print(folders)
-    # folder = 'kreplenie_dlya_velosipeda_na_avto'
+
+        # folder = 'kreplenie_dlya_velosipeda_na_avto'
         name_files_ua = folders.replace('-', '_')
         try:
             file_name_ua = f"C:\\scrap_tutorial-master\\archive\\dok.ua\\heandler\\{name_files_ua}.html"
@@ -84,8 +25,9 @@ def parsing():
         file_name_rus = f"C:\\scrap_tutorial-master\\archive\\dok.ua\\heandler\\{name_files_rus}.html"
         try:
             with open(file_name_ua, encoding="utf-8") as file:
-                 src = file.read()
+                src = file.read()
         except:
+            print(folders)
             continue
         soup = BeautifulSoup(src, 'lxml')
         row_id = 1
@@ -99,7 +41,7 @@ def parsing():
                 break
         hedler_ua = [re.sub(r',.*$', '', element) for element in hedler_ua]
         with open(file_name_rus, encoding="utf-8") as file:
-             src = file.read()
+            src = file.read()
         soup = BeautifulSoup(src, 'lxml')
         row_id = 1
         hedler_rus = []
@@ -130,25 +72,32 @@ def parsing():
         heandler.extend(hedler_rus)
         add = ['link_product', 'name_product_ua', 'name_product_rus', 'link_img', 'price_product', 'delivery_product']
         heandler = add + heandler
+        """Если в ручную делаем heandler, тогда закоментировать все что сверху, оставить только ручной вариант"""
+        # heandler = ['link_product', 'name_product_ua', 'name_product_rus', 'link_img', 'price_product',
+        #             'delivery_product', 'Серія', 'Модель', 'Артикул', 'Тип', 'Призначення', 'Напруга',
+        #             'Ступінь обслуговуваності', 'Тип кріплення', 'Ємність, (Агод)', 'Клеми', 'Плюсова клема',
+        #             'Пусковий струм', 'Виконання корпуса', 'Днищеве кріплення', 'Довжина', 'Ширина', 'Висота',
+        #             'Довжина x Ширина x Висота', 'Країна бренду', 'Місце виробництва', 'Гарантія', 'Серия', 'Модель',
+        #             'Артикул', 'Тип', 'Назначение', 'Напряжение', 'Степень обслуживаемости', 'Тип крепления',
+        #             'Емкость, Ач', 'Клеммы', 'Плюсовая клемма', 'Пусковой ток', 'Исполнение корпуса',
+        #             'Днищевое крепление', 'Длина', 'Ширина', 'Высота', 'Длина x Ширина x Высота', 'Страна бренда',
+        #             'Место производства', 'Гарантия']
 
-        # Выводим исходные и объединенные списки для проверки
-        # print("hedler_ua:", hedler_ua)
-        # print("hedler_rus:", hedler_rus)
         yield folders, heandler
-        # return folders, heandler
+
 
 # folders = 'bokorezy'
 def main():
     for folders, heandler in parsing():
         folders = folders.replace('-', '_')
 
-
         folder_ua = fr'c:\DATA\dok_ua\products\{folders}\ua\*.html'
         folder_rus = fr'c:\DATA\dok_ua\products\{folders}\rus\*.html'
         files_html_ua = glob.glob(folder_ua)
         files_html_rus = glob.glob(folder_rus)
-        # heandler = ['link_product','name_product_ua','name_product_rus','link_img','price_product','delivery_product','Артикул', 'Серія', 'Довжина', 'Виробник', 'Тип товару', 'Особливості конструкції', 'Артикул', 'Серия', 'Длина', 'Производитель', 'Тип товара', 'Особенности конструкции']
-        with open(f'C:\\scrap_tutorial-master\\archive\\dok.ua\\data\\{folders}.csv', 'w', newline='', encoding='utf-8') as file:
+
+        with open(f'C:\\scrap_tutorial-master\\archive\\dok.ua\\data\\{folders}.csv', 'w', newline='',
+                  encoding='utf-8') as file:
             writer = csv.DictWriter(file, fieldnames=heandler, delimiter=";")
             writer.writeheader()  # Записываем заголовки только один раз
             for item_ua, item_rus in zip(files_html_ua, files_html_rus):
@@ -157,7 +106,8 @@ def main():
                     src = file.read()
                 soup = BeautifulSoup(src, 'lxml')
                 try:
-                    name_product_ua = soup.find('div', attrs={'class': 'card-title-box'}).find('h1').text.replace("\n", " ")
+                    name_product_ua = soup.find('div', attrs={'class': 'card-title-box'}).find('h1').text.replace("\n",
+                                                                                                                  " ")
                 except:
                     name_product_ua = None
                 try:
@@ -166,7 +116,7 @@ def main():
                     link_product = None
                 all_link_img = []
                 try:
-                    images  = soup.select('div.card-gallery-big__item img')
+                    images = soup.select('div.card-gallery-big__item img')
                     for img in images:
                         all_link_img.append(img['data-big-image'])
                 except:
@@ -208,7 +158,8 @@ def main():
                     src = file.read()
                 soup = BeautifulSoup(src, 'lxml')
                 try:
-                    name_product_rus = soup.find('div', attrs={'class': 'card-title-box'}).find('h1').text.replace("\n", " ")
+                    name_product_rus = soup.find('div', attrs={'class': 'card-title-box'}).find('h1').text.replace("\n",
+                                                                                                                   " ")
                 except:
                     name_product_rus = None
 
@@ -228,8 +179,6 @@ def main():
                     print("Ошибка в разборе RUS файла")
 
                 writer.writerow(row_dict)
-
-
 
 
 if __name__ == '__main__':
