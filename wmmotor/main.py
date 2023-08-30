@@ -1,14 +1,15 @@
-from bs4 import BeautifulSoup
 import csv
-import os
 import glob
+import os
 import random
-from proxi import proxies
-from headers_cookies import cookies, headers
-import requests
-import re
-from pathlib import Path
 import time
+from pathlib import Path
+
+import requests
+from bs4 import BeautifulSoup
+
+from headers_cookies import cookies, headers
+from proxi import proxies
 
 
 def get_categories_to_html_file():
