@@ -1,3 +1,5 @@
+import schedule
+import time
 import re
 import glob
 import json
@@ -47,7 +49,9 @@ def get_chromedriver():
     })
     return driver
 
-
+def job():
+    print("Запускаю get_selenium...")
+    get_selenium()
 def get_selenium():
     url = 'https://tripoli.land/users/sign_in?sign_in_source=%2Ffarmers'
 
@@ -65,14 +69,14 @@ def get_selenium():
     passwords.send_keys(Keys.RETURN)
     time.sleep(1)
     coun = 0
-    with open('ХМ.csv', 'a', newline='', encoding='utf-8') as file_data:
+    with open('Херсон.csv', 'a', newline='', encoding='utf-8') as file_data:
         writer = csv.writer(file_data, delimiter=';')
         writer.writerow(['', '', '', '', '', '', '', ''])
-        for i in range(39, 49): #Будет 48 страниц
+        for i in range(1, 13): # все настроенно на 04.09
 
             pause_time = random.randint(1, 3)
             driver.get(
-                f'https://tripoli.land/farmers/proizvoditeli-zerna/hmelnitskaya?page={i}&q%5Bcategories_id_eq%5D=2&q%5Bdistrict_region_id_eq%5D=24')
+                f'https://tripoli.land/farmers/proizvoditeli-zerna/hersonskaya?page={i}&q%5Bcategories_id_eq%5D=2&q%5Bdistrict_region_id_eq%5D=23')
             wait_company = wait.until(
                 EC.presence_of_element_located((By.XPATH, '//span[@class="call-popup"]')))
             company = driver.find_element(By.XPATH, '//span[@class="call-popup"]')
@@ -140,34 +144,13 @@ def get_selenium():
                             # Извлекаем текст из каждого 'span' и добавляем в список
                             contacts_email.append(span.text)
 
-                #
-                # for i in range(0, len(email_company)):
-                #     regex_one = re.compile('same-phone-widt.*')
-                #     try:
-                #
-                #         email = email_company[i].find('span', attrs={'class': 'ng-binding'}).text
-                #     except AttributeError:
-                #         email = ""
-                #     # try:
-                #     #     names = email_company[i].find('span', attrs={
-                #     #         'class': 'phone-comment phone-comment-edit-pencil tablink-correct tablink-correct hide-hover tips-tooltip ng-binding ng-scope'}).text.strip()
-                #     # except AttributeError:
-                #     #     names = ""
-                #     # try:
-                #     #     job = email_company[i].find('span', attrs={
-                #     #         'class': 'dropdown-toggle position-title tips-tooltip ng-binding'}).text.strip()
-                #     # except AttributeError:
-                #     #     job = ""
-                #     if not email == "":
-                #         contacts_email.append(email)
-                    # if not names == "":
-                    #     contacts.append(names)
-                    # if not job == "":
-                    #     contacts.append(job)
-                # print(contacts_email)
 
-                edrpo = soup.find('div', attrs={'ng-if': 'org.erdpou'}).find('div',
-                                                                             attrs={'class': 'ng-binding'}).text
+                try:
+                    edrpo = soup.find('div', attrs={'ng-if': 'org.erdpou'}).find('div',
+                                                                                 attrs={'class': 'ng-binding'}).text
+                except:
+                    edrpo = None
+
                 address = soup.find('div', attrs={'ng-bind': 'org.address_label'}).text.split(',')
                 try:
                     address_company_01 = address[0]
