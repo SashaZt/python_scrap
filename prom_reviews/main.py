@@ -113,7 +113,8 @@ def analis_product():
     # Получаем уникальные года и сортируем их
     unique_years = sorted({date.split('.')[-1] for date, _, _ in data}, reverse=True)
 
-    total_count = 0  # Итого по всем позициям и всем годам
+    total_by_year = defaultdict(int)  # Итого по каждому году
+    grand_total = 0  # Общий итог по всем продуктам и всем годам
 
     # Пишем в новый CSV файл
     with open('products_.csv', 'w', newline='', encoding='utf-8') as f:
@@ -135,12 +136,14 @@ def analis_product():
                 count_for_year = stats.get(year, 0)
                 row.append(count_for_year)
                 total_for_product += count_for_year
+                total_by_year[year] += count_for_year  # обновляем итоговую сумму по каждому году
+
             row.append(total_for_product)  # добавляем колонку "Итого" в каждую строку
-            total_count += total_for_product  # обновляем итоговую сумму по всем позициям и всем годам
+            grand_total += total_for_product  # суммируем все отзывы для общего итога
             writer.writerow(row)
 
-        # Добавляем строку с итоговой суммой
-        writer.writerow(['', '', ] + ['' for _ in unique_years] + [total_count])
+        # Добавляем строку с итоговой суммой по каждому году
+        writer.writerow(['', ''] + [total_by_year[year] for year in unique_years] + [grand_total])
 
 
 if __name__ == '__main__':
