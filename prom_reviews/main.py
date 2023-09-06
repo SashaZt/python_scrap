@@ -74,6 +74,7 @@ def get_requests(url, use_proxy=True):
         response = requests.get(url, cookies=cookies, headers=headers, proxies=proxy_dict)
     else:
         response = requests.get(url, cookies=cookies, headers=headers)
+
     src = response.text
     soup = BeautifulSoup(src, 'lxml')
     pagin_old = int(soup.find('div', attrs={'class': 'b-pager'}).find('div', {'data-pagination-pages-count': True})[
@@ -85,11 +86,16 @@ def get_requests(url, use_proxy=True):
             writer.writerow([page])
 
 
-def pars():
+def pars(site):
     user_profile = os.environ.get('USERPROFILE')
     new_folder_path = os.path.join(user_profile, 'prom')
     files_html = glob.glob(os.path.join(new_folder_path, '*.html'))
-    with open('products.csv', 'w', newline='', encoding='windows-1251') as csvfile:
+    file_csv = 'products.csv'
+
+    if os.path.exists(file_csv):
+        # Если существует, удаляем
+        os.remove(file_csv)
+    with open(file_csv, 'w', newline='', encoding='windows-1251') as csvfile:
     # with open('products.csv', 'w', newline='', encoding='utf-8') as csvfile:
         writer = csv.writer(csvfile, delimiter=';')
         for item_html in files_html:
@@ -97,8 +103,8 @@ def pars():
             # with open(item_html, encoding="windows-1251") as file:
                 src = file.read()
             soup = BeautifulSoup(src, 'lxml')
-            url_site = soup.find('link', attrs={'hreflang': 'uk'}).get('href')
-            url_site = url_site.replace("teplowest.com.ua/ua/", "teplowest.com.ua")
+            url_site = site
+            url_site = url_site.replace("/ua/", "")
 
             regex_comments = re.compile('.*-comments__item')
             comments = soup.find_all('li', attrs={'class': regex_comments})
@@ -106,7 +112,7 @@ def pars():
                 regex_data_comments = re.compile('.*date')
                 data_comments = c.find('time', attrs={'class': regex_data_comments}).get('datetime')
                 dt_object = datetime.strptime(data_comments, "%Y-%m-%dT%H:%M:%S")
-                formatted_date = dt_object.strftime("%d.%m.%Y")
+                formatted_date = dt_object.year
                 regex_product_comments = re.compile('.*comments__answer')
                 try:
                     product_comments = c.find('div', attrs={'class': regex_product_comments}).get(
@@ -118,6 +124,9 @@ def pars():
                     name_no_category = 'Без названия товара'
                     product.append(url_no_category)
                     product.append(name_no_category)
+                    product = [formatted_date, url_no_category.encode('windows-1251', 'ignore').decode('windows-1251'),
+                               name_no_category.encode('windows-1251', 'ignore').decode('windows-1251')]
+
                     writer.writerow(product)
                 if product_comments is not None:
                     decoded_str = html.unescape(product_comments)
@@ -130,7 +139,12 @@ def pars():
                             url = 'Нет url'
                         product.append(formatted_date)
                         product.append(url)
-                        product.append(item['name'])
+                        names = item['name']
+                        product.append(names)
+                        product = [formatted_date,
+                                   url,  # Добавляем URL сюда
+                                   names.encode('windows-1251', 'ignore').decode('windows-1251'),
+                                   ]
                         writer.writerow(product)
                 else:
                     product = []
@@ -158,18 +172,22 @@ def analis_product(site):
         for row in reader:
             data.append(row)
     stats_by_year_and_product = defaultdict(lambda: defaultdict(int))
+
     product_urls = {}  # для хранения URL каждого продукта
     unique_years = sorted({date.split('.')[-1] for date, _, _ in data}, reverse=True)
+
+    # unique_years = sorted({date.split('.')[-1] for date, _, _ in data}, reverse=True)
     total_by_year = defaultdict(int)  # Итого по каждому году
     grand_total = 0  # Общий итог по всем продуктам и всем годам
     with open(f'{subdomain}.csv', 'w', newline='', encoding='windows-1251') as f:
     # with open('products_.csv', 'w', newline='', encoding='utf-8') as f:
         writer = csv.writer(f, delimiter=';')
+        # writer.writerow(['Название продукта', 'url', 'unique_years','Итого'])
         writer.writerow(['Название продукта', 'url'] + unique_years + ['Итого'])
         for row in data:
             date, url, product_name = row
-            year = date.split('.')[-1]
-            stats_by_year_and_product[product_name][year] += 1
+            years = date
+            stats_by_year_and_product[product_name][years] += 1
             product_urls[product_name] = url  # сохраняем URL продукта
         for product_name, stats in stats_by_year_and_product.items():
             row = [product_name, product_urls.get(product_name, 'No URL')]  # извлекаем URL из словаря product_urls
@@ -280,7 +298,7 @@ def asyncio_run():
                         tasks.append(fetch(session, url, coun, new_folder_path))
                     await asyncio.gather(*tasks)
                     print(f'Completed {coun} requests')
-                    await asyncio.sleep(1)  # Пауза на 10 секунд после каждых 100 URL
+                    await asyncio.sleep(30)  # Пауза на 10 секунд после каждых 100 URL
     asyncio.run(main())
 
 
@@ -288,7 +306,8 @@ def asyncio_run():
 if __name__ == '__main__':
     print("Вставьте ссылку на сайт!")
     site = input()
+    # site = "https://radiovolt.in.ua/ua/"
     get_requests(site)
     asyncio_run()
-    pars()
+    pars(site)
     analis_product(site)
