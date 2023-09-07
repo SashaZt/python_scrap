@@ -95,8 +95,8 @@ def pars(site):
     if os.path.exists(file_csv):
         # Если существует, удаляем
         os.remove(file_csv)
-    with open(file_csv, 'w', newline='', encoding='windows-1251') as csvfile:
-    # with open('products.csv', 'w', newline='', encoding='utf-8') as csvfile:
+    # with open(file_csv, 'w', newline='', encoding='windows-1251') as csvfile:
+    with open('products.csv', 'w', newline='', encoding='utf-8') as csvfile:
         writer = csv.writer(csvfile, delimiter=';')
         for item_html in files_html:
             with open(item_html, encoding="utf-8") as file:
@@ -124,8 +124,8 @@ def pars(site):
                     name_no_category = 'Без названия товара'
                     product.append(url_no_category)
                     product.append(name_no_category)
-                    product = [formatted_date, url_no_category.encode('windows-1251', 'ignore').decode('windows-1251'),
-                               name_no_category.encode('windows-1251', 'ignore').decode('windows-1251')]
+                    # product = [formatted_date, url_no_category.encode('windows-1251', 'ignore').decode('windows-1251'),
+                    #            name_no_category.encode('windows-1251', 'ignore').decode('windows-1251')]
 
                     writer.writerow(product)
                 if product_comments is not None:
@@ -141,10 +141,10 @@ def pars(site):
                         product.append(url)
                         names = item['name']
                         product.append(names)
-                        product = [formatted_date,
-                                   url,  # Добавляем URL сюда
-                                   names.encode('windows-1251', 'ignore').decode('windows-1251'),
-                                   ]
+                        # product = [formatted_date,
+                        #            url,  # Добавляем URL сюда
+                        #            names.encode('windows-1251', 'ignore').decode('windows-1251'),
+                        #            ]
                         writer.writerow(product)
                 else:
                     product = []
@@ -166,8 +166,8 @@ def analis_product(site):
     user_profile = os.environ.get('USERPROFILE')
     new_folder_path = os.path.join(user_profile, 'prom')
     data = []
-    with open('products.csv', 'r', encoding='windows-1251') as f:
-    # with open('products.csv', 'r', encoding='utf-8') as f:
+    # with open('products.csv', 'r', encoding='windows-1251') as f:
+    with open('products.csv', 'r', encoding='utf-8') as f:
         reader = csv.reader(f, delimiter=';')
         for row in reader:
             data.append(row)
@@ -179,8 +179,8 @@ def analis_product(site):
     # unique_years = sorted({date.split('.')[-1] for date, _, _ in data}, reverse=True)
     total_by_year = defaultdict(int)  # Итого по каждому году
     grand_total = 0  # Общий итог по всем продуктам и всем годам
-    with open(f'{subdomain}.csv', 'w', newline='', encoding='windows-1251') as f:
-    # with open('products_.csv', 'w', newline='', encoding='utf-8') as f:
+    # with open(f'{subdomain}.csv', 'w', newline='', encoding='windows-1251') as f:
+    with open(f'{subdomain}.csv', 'w', newline='', encoding='utf-8') as f:
         writer = csv.writer(f, delimiter=';')
         # writer.writerow(['Название продукта', 'url', 'unique_years','Итого'])
         writer.writerow(['Название продукта', 'url'] + unique_years + ['Итого'])
@@ -202,8 +202,8 @@ def analis_product(site):
             writer.writerow(row)
         writer.writerow(['', ''] + [total_by_year[year] for year in unique_years] + [grand_total])
     """На финале раскомментировать"""
-    # if os.path.exists(new_folder_path):
-    #     shutil.rmtree(new_folder_path)
+    if os.path.exists(new_folder_path):
+        shutil.rmtree(new_folder_path)
     print("Все удачно выполнено")
 
 
@@ -306,7 +306,6 @@ def asyncio_run():
 if __name__ == '__main__':
     print("Вставьте ссылку на сайт!")
     site = input()
-    # site = "https://radiovolt.in.ua/ua/"
     get_requests(site)
     asyncio_run()
     pars(site)
