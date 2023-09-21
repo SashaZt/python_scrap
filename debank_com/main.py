@@ -106,7 +106,10 @@ def par_json():
     folder = fr'{data_json_path}\*.json'
     files_html = glob.glob(folder)
     if not files_html:
-        sys.exit("Новых данных нету")
+        print("Новых данных нету")
+        time.sleep(10)  # Подождать 10 секунд
+        sys.exit()
+
 
     with open("wallet.csv", "w", errors='ignore', newline='', encoding="utf-8") as wallet_csv:
         wallet_writer = csv.writer(wallet_csv, delimiter=",")
@@ -208,5 +211,5 @@ def par_json():
 
 
 if __name__ == '__main__':
-    # get_api()
+    get_api()
     par_json()
