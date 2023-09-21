@@ -112,7 +112,7 @@ def par_json():
         wallet_writer = csv.writer(wallet_csv, delimiter=",")
         # wallet_writer.writerow(['first_operation', 'wallet'])  # Заголовок
 
-        with open("wallet_transactions.csv", "w", errors='ignore', newline='', encoding="utf-8") as result_csv:
+        with open("wallet_transactions.csv", "a", errors='ignore', newline='', encoding="utf-8") as result_csv:
             result_writer = csv.writer(result_csv, delimiter=",")
             result_writer.writerow(
                 (
@@ -132,9 +132,12 @@ def par_json():
                 with open(item, 'r', encoding="utf-8") as f:
                     data_json = json.load(f)
                     if '_0' in file_name:
-                        first_operation = int(data_json['history_list'][:1][0]['time_at'])
-                        # Записать данные в wallet.csv
-                        wallet_writer.writerow([wallet, first_operation])
+                        try:
+                            first_operation = int(data_json['history_list'][:1][0]['time_at'])
+                            # Записать данные в wallet.csv
+                            wallet_writer.writerow([wallet, first_operation])
+                        except:
+                            continue
 
                     for j in data_json['history_list']:
                         cate_id = j['cate_id']
@@ -197,6 +200,7 @@ def par_json():
     for f in files:
         if os.path.isfile(f):
             os.remove(f)
+            print(f'Удаляю {f}')
 
     print("Все удачно выполнено")
     time.sleep(5)
@@ -204,5 +208,5 @@ def par_json():
 
 
 if __name__ == '__main__':
-    get_api()
+    # get_api()
     par_json()
