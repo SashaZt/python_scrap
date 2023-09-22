@@ -2,8 +2,9 @@ import csv
 import glob
 import json
 import os
-import time
 import sys
+import time
+
 import requests
 
 
@@ -110,7 +111,6 @@ def par_json():
         time.sleep(10)  # Подождать 10 секунд
         sys.exit()
 
-
     with open("wallet.csv", "w", errors='ignore', newline='', encoding="utf-8") as wallet_csv:
         wallet_writer = csv.writer(wallet_csv, delimiter=",")
         # wallet_writer.writerow(['first_operation', 'wallet'])  # Заголовок
@@ -124,10 +124,11 @@ def par_json():
                     'sends_token_id', 'time_at', 'token_approve_spender', 'token_approve_token_id',
                     'token_approve_value',
                     'tx_from_eth_gas_fee', 'tx_from_addr', 'tx_message',
-                    'tx_name', 'tx_selector', 'tx_status', 'tx_to_addr', 'tx_usd_gas_fee', 'tx_value'
+                    'tx_name', 'tx_selector', 'tx_status', 'tx_to_addr', 'tx_usd_gas_fee', 'tx_value', 'price', 'symbol'
                 ))
 
             for item in files_html:
+                # print(item)
                 file_name = os.path.splitext(os.path.basename(item))[0]
                 parts = file_name.split('_')
                 wallet = parts[0]
@@ -141,7 +142,7 @@ def par_json():
                             wallet_writer.writerow([wallet, first_operation])
                         except:
                             continue
-
+                    token_dict = data_json['token_dict']
                     for j in data_json['history_list']:
                         cate_id = j['cate_id']
                         cex_id = j['cex_id']
@@ -188,12 +189,21 @@ def par_json():
                         tx_usd_gas_fee = tx_data.get('usd_gas_fee') if tx_data and 'usd_gas_fee' in tx_data else None
                         tx_value = tx_data.get('value') if tx_data and 'value' in tx_data else None
 
+                        token_id_to_lookup = receives_token_id or sends_token_id  # Предпочитайте receives_token_id перед sends_token_id
+                        price = None
+                        symbol = None
+                        if token_id_to_lookup and token_id_to_lookup in token_dict:
+                            token_info = token_dict[token_id_to_lookup]
+                            price = token_info.get('price')
+                            symbol = token_info.get('symbol')
+
                         # Записать данные в result.csv
                         datas = [wallet, cate_id, cex_id, chain, j_id, is_scam, other_addr, project_id, cate_id,
                                  receives_amount, receives_from_addr, receives_token_id, sends_amount,
                                  sends_to_addr, sends_token_id, time_at, token_approve_spender, token_approve_token_id,
                                  token_approve_value, tx_from_eth_gas_fee, tx_from_addr,
-                                 tx_message, tx_name, tx_selector, tx_status, tx_to_addr, tx_usd_gas_fee, tx_value]
+                                 tx_message, tx_name, tx_selector, tx_status, tx_to_addr, tx_usd_gas_fee, tx_value,
+                                 price, symbol]
                         result_writer.writerow(datas)
 
     # Получаем список всех файлов в папке
@@ -207,7 +217,6 @@ def par_json():
 
     print("Все удачно выполнено")
     time.sleep(5)
-
 
 
 if __name__ == '__main__':
