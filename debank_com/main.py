@@ -61,7 +61,10 @@ def get_api():
             }
             response = requests.get('https://pro-openapi.debank.com/v1/user/all_history_list', params=params,
                                     headers=headers)
-            json_data = response.json()
+            try:
+                json_data = response.json()
+            except:
+                continue
             try:
                 first_operation = int(json_data['history_list'][:1][0]['time_at'])
             except (IndexError, KeyError, TypeError):
@@ -122,9 +125,9 @@ def par_json():
                     'wallet', 'cate_id', 'cex_id', 'chain', 'id', 'is_scam', 'other_addr', 'project_id', 'cate_id',
                     'receives_amount', 'receives_from_addr', 'receives_token_id', 'sends_amount', 'sends_to_addr',
                     'sends_token_id', 'time_at', 'token_approve_spender', 'token_approve_token_id',
-                    'token_approve_value',
-                    'tx_from_eth_gas_fee', 'tx_from_addr', 'tx_message',
-                    'tx_name', 'tx_selector', 'tx_status', 'tx_to_addr', 'tx_usd_gas_fee', 'tx_value', 'price', 'symbol'
+                    'token_approve_value', 'tx_from_eth_gas_fee', 'tx_from_addr', 'tx_message',
+                    'tx_name', 'tx_selector', 'tx_status', 'tx_to_addr', 'tx_usd_gas_fee', 'tx_value', 'price_r',
+                    'symbol_r', 'price_s', 'symbol_s', 'sends_amount_2', 'sends_to_addr_2', 'sends_token_id_2', 'price_s_2', 'symbol_s_2'
                 ))
 
             for item in files_html:
@@ -159,14 +162,40 @@ def par_json():
                                                                                   receives_data[0] else None
                         receives_token_id = receives_data[0].get('token_id') if receives_data and 'token_id' in \
                                                                                 receives_data[0] else None
+                        sends_token_id = None
+                        sends_amount = None
+                        sends_to_addr = None
+                        sends_token_id_2 = None
+                        sends_amount_2 = None
+                        sends_to_addr_2 = None
 
                         sends_data = j.get("sends", [])
-                        sends_amount = sends_data[0].get('amount') if sends_data and 'amount' in sends_data[0] else None
-                        sends_price = sends_data[0].get('price') if sends_data and 'price' in sends_data[0] else None
-                        sends_to_addr = sends_data[0].get('to_addr') if sends_data and 'to_addr' in sends_data[
-                            0] else None
-                        sends_token_id = sends_data[0].get('token_id') if sends_data and 'token_id' in sends_data[
-                            0] else None
+                        if len(sends_data) == 1:
+                            sends_amount = sends_data[0].get('amount') if sends_data and 'amount' in sends_data[
+                                0] else None
+                            sends_price = sends_data[0].get('price') if sends_data and 'price' in sends_data[
+                                0] else None
+                            sends_to_addr = sends_data[0].get('to_addr') if sends_data and 'to_addr' in sends_data[
+                                0] else None
+                            sends_token_id = sends_data[0].get('token_id') if sends_data and 'token_id' in sends_data[
+                                0] else None
+                        if len(sends_data) == 2:
+                            sends_amount = sends_data[0].get('amount') if sends_data and 'amount' in sends_data[
+                                0] else None
+                            sends_price = sends_data[0].get('price') if sends_data and 'price' in sends_data[
+                                0] else None
+                            sends_to_addr = sends_data[0].get('to_addr') if sends_data and 'to_addr' in sends_data[
+                                0] else None
+                            sends_token_id = sends_data[0].get('token_id') if sends_data and 'token_id' in sends_data[
+                                0] else None
+                            sends_amount_2 = sends_data[1].get('amount') if sends_data and 'amount' in sends_data[
+                                1] else None
+                            sends_price = sends_data[1].get('price') if sends_data and 'price' in sends_data[
+                                1] else None
+                            sends_to_addr_2 = sends_data[1].get('to_addr') if sends_data and 'to_addr' in sends_data[
+                                1] else None
+                            sends_token_id_2 = sends_data[1].get('token_id') if sends_data and 'token_id' in sends_data[
+                                1] else None
 
                         time_at = int(j['time_at'])
                         token_approve_data = j.get("token_approve", [])
@@ -190,20 +219,35 @@ def par_json():
                         tx_value = tx_data.get('value') if tx_data and 'value' in tx_data else None
 
                         token_id_to_lookup = receives_token_id or sends_token_id  # Предпочитайте receives_token_id перед sends_token_id
-                        price = None
-                        symbol = None
-                        if token_id_to_lookup and token_id_to_lookup in token_dict:
-                            token_info = token_dict[token_id_to_lookup]
-                            price = token_info.get('price')
-                            symbol = token_info.get('symbol')
+                        price_r = None
+                        symbol_r = None
+                        price_s = None
+                        symbol_s = None
+                        price_s_2 = None
+                        symbol_s_2 = None
+                        if receives_token_id in token_dict:
+
+                            token_info = token_dict[receives_token_id]
+                            price_r = token_info.get('price')
+                            symbol_r = token_info.get('symbol')
+
+                        if sends_token_id in token_dict:
+                            token_info = token_dict[sends_token_id]
+                            price_s = token_info.get('price')
+                            symbol_s = token_info.get('symbol')
+
+                        if sends_token_id_2 in token_dict:
+                            token_info = token_dict[sends_token_id_2]
+                            price_s_2 = token_info.get('price')
+                            symbol_s_2 = token_info.get('symbol')
 
                         # Записать данные в result.csv
                         datas = [wallet, cate_id, cex_id, chain, j_id, is_scam, other_addr, project_id, cate_id,
-                                 receives_amount, receives_from_addr, receives_token_id, sends_amount,
-                                 sends_to_addr, sends_token_id, time_at, token_approve_spender, token_approve_token_id,
-                                 token_approve_value, tx_from_eth_gas_fee, tx_from_addr,
-                                 tx_message, tx_name, tx_selector, tx_status, tx_to_addr, tx_usd_gas_fee, tx_value,
-                                 price, symbol]
+                                 receives_amount, receives_from_addr, receives_token_id, sends_amount, sends_to_addr,
+                                 sends_token_id, time_at, token_approve_spender, token_approve_token_id,
+                                 token_approve_value, tx_from_eth_gas_fee, tx_from_addr, tx_message, tx_name,
+                                 tx_selector, tx_status, tx_to_addr, tx_usd_gas_fee, tx_value, price_r, symbol_r,
+                                 price_s, symbol_s, sends_amount_2, sends_to_addr_2, sends_token_id_2, price_s_2, symbol_s_2]
                         result_writer.writerow(datas)
 
     # Получаем список всех файлов в папке
