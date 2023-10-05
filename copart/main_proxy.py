@@ -388,8 +388,14 @@ def parsin():
         except:
             urls_high = None
 
-        name_lot = data_json['data']['lotDetails']['ld']
-        lotNumberStr = data_json['data']['lotDetails']['lotNumberStr']
+        try:
+            name_lot = data_json['data']['lotDetails']['ld']
+        except:
+            name_lot = None
+        try:
+            lotNumberStr = data_json['data']['lotDetails']['lotNumberStr']
+        except:
+            lotNumberStr = None
         try:
             td = data_json['data']['lotDetails']['td']
         except:
@@ -399,9 +405,18 @@ def parsin():
         except:
             ts = None
         td_ts = f"{td}-{ts}"
-        hk = data_json['data']['lotDetails']['hk']
-        la = data_json['data']['lotDetails']['la']
-        dd = data_json['data']['lotDetails']['dd']
+        try:
+            hk = data_json['data']['lotDetails']['hk']
+        except:
+            hk = None
+        try:
+            la = data_json['data']['lotDetails']['la']
+        except:
+            la = None
+        try:
+            dd = data_json['data']['lotDetails']['dd']
+        except:
+            dd = None
         try:
             cy = data_json['data']['lotDetails']['cy']
         except:
@@ -438,9 +453,14 @@ def parsin():
             ess = data_json['data']['lotDetails']['ess']
         except:
             ess = None
-
-        currentBid = data_json['data']['lotDetails']['dynamicLotDetails']['currentBid']
-        odometer_lot = data_json['data']['lotDetails']['orr']
+        try:
+            currentBid = data_json['data']['lotDetails']['dynamicLotDetails']['currentBid']
+        except:
+            currentBid = None
+        try:
+            odometer_lot = data_json['data']['lotDetails']['orr']
+        except:
+            odometer_lot = None
 
         try:
             highlights_lot = data_json['data']['lotDetails']['lcd']
