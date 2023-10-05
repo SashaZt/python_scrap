@@ -368,7 +368,7 @@ def parsin():
     folders_html = r"c:\DATA\copart\product\*.json"
     files_html = glob.glob(folders_html)
     for i in files_html:
-        with open(i, 'r') as f:
+        with open(i, 'r', encoding='utf-8') as f:
             # Загрузить JSON из файла
             data_json = json.load(f)
 
