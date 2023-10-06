@@ -9,15 +9,15 @@ import time
 from concurrent.futures import ProcessPoolExecutor
 from datetime import datetime
 from urllib.parse import urlparse, parse_qs
-
+import schedule
 import mysql.connector
 import requests
 from browsermobproxy import Server
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 
-import config
-from config import db_config
+# import config
+from config import db_config, url, use_bd, use_table, start_time
 # from headers_cookies import cookies, headers
 
 # Определите текущую директорию, где находится скрипт
@@ -29,8 +29,9 @@ list_path = os.path.join(temp_path, 'list')
 product_path = os.path.join(temp_path, 'product')
 
 # Доступ к другим переменным
-url = config.url
-use_bd = config.use_bd
+# url = config.url
+# use_bd = config.use_bd
+# use_table = config.use_table
 def delete_old_data():
     # Убедитесь, что папки существуют или создайте их
     for folder in [temp_path, list_path, product_path]:
@@ -176,7 +177,8 @@ def get_cookie_header(curl_command):
     if url_match:
         url = url_match.group(1)
 
-    return url, params, cookies, headers
+    # return url, params, cookies, headers
+    return params, cookies, headers
 
 
 """Получаем общее количество объявлений"""
@@ -239,6 +241,17 @@ def get_totalElements(cookies, headers):
 
 """Получаем все объявления"""
 
+
+def get_data_mysql():
+    cnx = mysql.connector.connect(**db_config)
+    cursor = cnx.cursor()
+    cursor.execute(f"SELECT lot_number FROM {use_bd}.{use_table};")
+    lot_numbers_set = set()
+    for row in cursor:
+        lot_numbers_set.add(int(row[0]))
+    cursor.close()
+    cnx.close()
+    return lot_numbers_set
 
 # def get_request(totalElements):
 #
@@ -350,11 +363,10 @@ def multi_threaded_get_request(totalElements, thread_count,cookies, headers):
 """Собираем все ссылки"""
 
 
-def get_id_ad_and_url():
-
+def get_id_ad_and_url(lot_numbers_set):
     folders_html = f"{list_path}/*.json"
     files_html = glob.glob(folders_html)
-    file_csv = f"url.csv"
+    file_csv = "url.csv"  # Поправил, чтобы указать строку напрямую
     with open(file_csv, 'w', newline='', encoding='utf-8') as csvfile:
         writer = csv.writer(csvfile)
         for i in files_html:
@@ -362,11 +374,14 @@ def get_id_ad_and_url():
                 json_data = json.load(f)
             content = json_data['data']['results']['content']
             for c in content:
-                url_ad = f'https://www.copart.com/public/data/lotdetails/solr/lotImages/{c["ln"]}/USA'
-                writer.writerow([url_ad])
-    now = datetime.now()
-    print(f'Получили список всех url в {now}')
+                ln = int(c["ln"])
+                if ln not in lot_numbers_set:
+                    url_ad = f'https://www.copart.com/public/data/lotdetails/solr/lotImages/{ln}/USA'
+                    writer.writerow([url_ad])
+    with open('url.csv', 'r') as file:
+        count = sum(1 for line in file)
 
+    print(f"Новых объявлений {count}")
 
 def get_product(cookies, headers):
 
@@ -401,12 +416,25 @@ def get_product(cookies, headers):
 """Следующие 3 функции для работы с Selenium"""
 
 
+# def split_urls(urls, n):
+#     """Делит список URL-адресов на n равных частей."""
+#     avg = len(urls) // n
+#     urls_split = [urls[i:i + avg] for i in range(0, len(urls), avg)]
+#     return urls_split
 def split_urls(urls, n):
     """Делит список URL-адресов на n равных частей."""
-    avg = len(urls) // n
-    urls_split = [urls[i:i + avg] for i in range(0, len(urls), avg)]
-    return urls_split
+    total_urls = len(urls)
+    if total_urls < n:  # если количество URL-ов меньше желаемого количества потоков
+        n = total_urls  # установите количество потоков равным количеству URL-ов
 
+    avg = total_urls // n
+    urls_split = [urls[i:i + avg] for i in range(0, total_urls, avg)]
+
+    # Если остались нераспределенные URL-ы из-за деления, добавляем их к последней группе
+    if total_urls % n != 0:
+        urls_split[-1].extend(urls[-(total_urls % n):])
+
+    return urls_split
 
 def worker(sub_urls, start_counter):
     driver = get_chromedriver()
@@ -445,7 +473,8 @@ def get_product_s():
 
 
 def parsin():
-    print('Передаем данные в Mysql')
+    now = datetime.now()
+    print(f'Передача данных в Mysql началась в {now}')
     cnx = mysql.connector.connect(**db_config)
     # Создаем объект курсора, чтобы выполнять SQL-запросы
     cursor = cnx.cursor()
@@ -453,8 +482,19 @@ def parsin():
     files_html = glob.glob(folders_html)
     for i in files_html:
         with open(i, 'r', encoding='utf-8') as f:
+            # content = f.read()
+
+            # Удаляем нежелательную строку
+            # content_cleaned = content.replace(
+            #     '<html><head><meta name="color-scheme" content="light dark"></head><body><pre style="word-wrap: break-word; white-space: pre-wrap;">',
+            #     '')
+
             try:
-                # Загрузить JSON из файла
+                # Загрузить JSON из очищенного содержимого
+                # data_json = json.loads(content_cleaned)
+                """Разкоментировать после загрузки на сайт"""
+                # try:
+                    # Загрузить JSON из файла
                 data_json = json.load(f)
             except json.decoder.JSONDecodeError:
                 print(f"Ошибка при чтении файла: {i}")
@@ -559,30 +599,25 @@ def parsin():
         except:
             sale_location = None
         try:
-            sale_date = data_json['data']['lotDetails']['ad']
-            timestamp_seconds_sale_date = sale_date / 1000.0
-            sale_date = datetime.datetime.utcfromtimestamp(timestamp_seconds_sale_date)
+            sale_date_row = data_json['data']['lotDetails']['ad']
+            timestamp_seconds_sale_date = sale_date_row / 1000.0
+            sale_date = datetime.utcfromtimestamp(timestamp_seconds_sale_date)
+            sale_date = sale_date.date()
         except:
             sale_date = None
+
         try:
-            last_updated = data_json['data']['lotDetails']['lu']
-            timestamp_seconds_last_updated = last_updated / 1000.0
-            last_updated = datetime.datetime.utcfromtimestamp(timestamp_seconds_last_updated)
+            last_updated_row = data_json['data']['lotDetails']['lu']
+            timestamp_seconds_last_updated = last_updated_row / 1000.0
+            last_updated = datetime.utcfromtimestamp(timestamp_seconds_last_updated)
+            last_updated = last_updated.date()
         except:
             last_updated = None
         now = datetime.now()
         current_date = now.date()
         parsing_date =current_date
-
-
-
-
-
-
-
         datas = [url_lot, urls_full, urls_high, name_lot, lotNumberStr, td_ts, odometer_lot, hk, tmtp, la, dd, cy, bstl,
                  drv, egn, vehTypDesc, ft, clr, highlights_lot, ess, currentBid, sale_location,sale_date, last_updated, parsing_date]
-
         insert_query = """
        INSERT INTO copart
         (url_lot, url_img_full, url_img_high, name_lot, lot_number, title_code, odometer, `keys`, transmission, price, primary_damage, cylinders,body_style,
@@ -648,18 +683,47 @@ def create_sql():
     cnx.close()
 
 
-if __name__ == '__main__':
-    """Создание таблицы"""
-    # create_sql()
-    # print("Вставьте ссылку")
-    # delete_old_data()
-    # curl_result = selenium_get_curl(url)  # сохраняем результат функции в переменную
-    # get_cookie_header(curl_result)
-    # server.stop()  # остановка сервера должна быть здесь
+
+
+def job():
+    delete_old_data()
+    lot_numbers_set = get_data_mysql()
+
+    curl_result = selenium_get_curl(url)  # сохраняем результат функции в переменную
+    get_cookie_header(curl_result)
+    server.stop()  # остановка сервера должна быть здесь
     # url, params, cookies, headers = get_cookie_header(curl_result)
-    # totalElements = get_totalElements(cookies, headers)
-    # multi_threaded_get_request(totalElements, 10,cookies, headers)
-    # # # get_request(totalElements)
-    # get_id_ad_and_url()
-    # get_product_s()
+    params, cookies, headers = get_cookie_header(curl_result)
+    totalElements = get_totalElements(cookies, headers)
+    multi_threaded_get_request(totalElements, 10, cookies, headers)
+    # # get_request(totalElements)
+    get_id_ad_and_url(lot_numbers_set)
+    get_product_s()
     parsin()
+
+# schedule.every().day.at("08:40").do(job)
+schedule.every().day.at(start_time).do(job)
+
+while True:
+    schedule.run_pending()
+    time.sleep(1)
+
+
+
+# if __name__ == '__main__':
+#     # """Создание таблицы"""
+#     # create_sql()
+#
+#     delete_old_data()
+#     lot_numbers_set = get_data_mysql()
+#
+#     curl_result = selenium_get_curl(url)  # сохраняем результат функции в переменную
+#     get_cookie_header(curl_result)
+#     server.stop()  # остановка сервера должна быть здесь
+#     params, cookies, headers = get_cookie_header(curl_result)
+#     totalElements = get_totalElements(cookies, headers)
+#     multi_threaded_get_request(totalElements, 10,cookies, headers)
+#     # # get_request(totalElements)
+#     get_id_ad_and_url(lot_numbers_set)
+#     get_product_s()
+#     parsin()
