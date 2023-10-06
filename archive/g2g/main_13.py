@@ -27,7 +27,8 @@ def get_chromedriver():
     # chrome_options.add_argument('--ignore-ssl-errors')
     chrome_options.add_argument(
         '--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36')
-    s = Service(executable_path="C:\\scrap_tutorial-master\\chromedriver.exe")
+    # s = Service(executable_path="C:\\scrap_tutorial-master\\chromedriver.exe")
+    s = Service(executable_path="chromedriver.exe")
     driver = webdriver.Chrome(service=s, options=chrome_options)
     # driver.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {
     #     'source': '''
