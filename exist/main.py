@@ -339,20 +339,51 @@ def get_product_s():
 """Следующие 3 функции для работы с Selenium"""
 
 def parsin():
-    heandler_set = set()
+    # Отображение оригинальных названий на алиасы
+    key_aliases = {
+        'upc': 'Номер товару',
+        'trademark': 'Бренд',
+        'name': 'Имя',
+        'price': 'Прайс',
+        'quantity': 'Количевство'
+    }
+
+    # Набор заголовков для CSV будет состоять из алиасов
+    heandler_set = set(key_aliases.values())
+
+    # Сначала соберем все уникальные названия из JSON файла
     with open('amortyzatory.json', 'r', encoding="utf-8") as f:
         data_json = json.load(f)
-    dict_results = data_json['data']['results']
-    for i in dict_results:
-        upc = i['upc'] # Номер товару
-        trademark = i['trademark']['description'] # Бренд
-        name = i['description']
-        price = i['price']['price']
-        quantity = i['price']['quantity']
-        attributes = i['attributes']
-        for item in attributes:
-            heandler_set.add(item['name'])
-        result_dict = {item['name']: item['value'] for item in attributes}
+        dict_results = data_json['data']['results']
+        for i in dict_results:
+            attributes = i['attributes']
+            for item in attributes:
+                heandler_set.add(item['name'])
+
+    # Создаем CSV файл
+    with open('amortyzatory.csv', 'w', newline='', encoding='utf-8') as file:
+        writer = csv.DictWriter(file, fieldnames=heandler_set, delimiter=";")
+        writer.writeheader()  # записываем заголовки
+
+        # Записываем данные в CSV
+        for i in dict_results:
+            result_dict = {
+                key_aliases['upc']: i['upc'],
+                key_aliases['trademark']: i['trademark']['description'],
+                key_aliases['name']: i['description'],
+                key_aliases['price']: i['price']['price'],
+                key_aliases['quantity']: i['price']['quantity']
+            }
+
+            for item in i['attributes']:
+                # Если название столбца есть в нашем наборе, записываем значение
+                if item['name'] in heandler_set:
+                    result_dict[item['name']] = item['value']
+
+            writer.writerow(result_dict)
+
+
+
 
 
 if __name__ == '__main__':
