@@ -78,10 +78,11 @@ def selenium_get_curl(url):
 
     curl_command = "curl "
     entries = proxy.har['log']['entries']
+    print(entries)
     for entry in entries:
         # print(entry)
         """Указываем тут url который нужно отслеживать"""
-        if entry['request']['url'].startswith('https://exist.ua/api/v1/catalogue/product-index'):
+        if entry['request']['url'].startswith('https://exist.ua/api/v1/catalogue/product-index/'):
             # Method (GET, POST, etc.)
             curl_command += "-X {} ".format(entry['request']['method'])
 
@@ -94,7 +95,7 @@ def selenium_get_curl(url):
                 header_value = header['value']
                 curl_command += "  -H '{}: {}' \\\n".format(header_name, header_value)
 
-            if entry['request']['method'] == 'POST' and 'postData' in entry['request']:
+            if entry['request']['method'] == 'GET' and 'postData' in entry['request']:
                 if 'text' in entry['request']['postData']:
                     curl_command += "  --data '{}'".format(entry['request']['postData']['text'])
 
@@ -144,7 +145,7 @@ def get_cookie_header(curl_command):
     if url_match:
         url = url_match.group(1)
 
-    return url, params, cookies, headers
+    return params, cookies, headers
 # def save_to_file(url, params, cookies, headers):
 #     with open("headers_cookies.py", "w") as f:
 #         f.write("url = '{}'\n\n".format(url))
@@ -338,6 +339,58 @@ def get_product_s():
                 executor.submit(worker, sub_urls, idx * len(sub_urls))
 """Следующие 3 функции для работы с Selenium"""
 
+
+def get_requests():
+    total = 83067
+    pages = (total // 50) +2
+    for i in range(1, pages):
+        filename = f"data_{i}.json"
+        if not os.path.exists(filename):
+
+            cookies = {
+                'catalog_page_size': '50',
+                'sessionid': 'e9p6sduf4r9vlnjmpwtgg6poulns1ibh',
+                'cf_clearance': 'c7fFGka1cNttA.77DJqF0F9A.aBQXDxAX9TR7bM5cCU-1696687749-0-1-d29a0353.48b345ac.859b5cb3-0.2.1696687749',
+                'crisp-client%2Fsession%2F980759c4-00d9-4b4b-85e6-c48036807fc0': 'session_b94fd2dc-888d-49ea-81bf-e6c6d8f0207d',
+                'crisp-client%2Fsocket%2F980759c4-00d9-4b4b-85e6-c48036807fc0': '0',
+            }
+
+            headers = {
+                'authority': 'exist.ua',
+                'accept': 'application/json, text/plain, */*',
+                'accept-language': 'uk',
+                'baggage': 'sentry-environment=production,sentry-release=v2023.38.4,sentry-public_key=6541b6a63473425d99519d634760bb1a,sentry-trace_id=86da2d1aad624b28835999e416350318',
+                'client-render': '1',
+                # 'cookie': 'catalog_page_size=50; sessionid=e9p6sduf4r9vlnjmpwtgg6poulns1ibh; cf_clearance=c7fFGka1cNttA.77DJqF0F9A.aBQXDxAX9TR7bM5cCU-1696687749-0-1-d29a0353.48b345ac.859b5cb3-0.2.1696687749; crisp-client%2Fsession%2F980759c4-00d9-4b4b-85e6-c48036807fc0=session_b94fd2dc-888d-49ea-81bf-e6c6d8f0207d; crisp-client%2Fsocket%2F980759c4-00d9-4b4b-85e6-c48036807fc0=0',
+                'dnt': '1',
+                'old-session-enabled': '0',
+                'page-url': '/uk/amortyzatory-stijky-pidvisky/',
+                'referer': 'https://exist.ua/uk/amortyzatory-stijky-pidvisky/',
+                'sec-ch-ua': '"Google Chrome";v="117", "Not;A=Brand";v="8", "Chromium";v="117"',
+                'sec-ch-ua-mobile': '?0',
+                'sec-ch-ua-platform': '"Windows"',
+                'sec-fetch-dest': 'empty',
+                'sec-fetch-mode': 'cors',
+                'sec-fetch-site': 'same-origin',
+                'sentry-trace': '86da2d1aad624b28835999e416350318-bc99ca082e4bad06-0',
+                'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36',
+            }
+
+            params = {
+                'page': i,
+                'slug': 'amortyzatory-stijky-pidvisky',
+            }
+
+            response = requests.get('https://exist.ua/api/v1/catalogue/product-index/', params=params, cookies=cookies,
+                                    headers=headers)
+
+            # src = response.text
+            json_data = response.json()
+            with open(filename, 'w', encoding='utf-8') as f:
+                json.dump(json_data, f, ensure_ascii=False, indent=4)  # Записываем в файл
+            time.sleep(10)
+
+
 def parsin():
     # Отображение оригинальных названий на алиасы
     key_aliases = {
@@ -345,57 +398,65 @@ def parsin():
         'trademark': 'Бренд',
         'name': 'Имя',
         'price': 'Прайс',
-        'quantity': 'Количевство'
+        'quantity': 'Количевство',
+        'image':'Изображение'
     }
+    folder = r'c:\DATA\exist\amortyzatory\*.json'
+    files_json = glob.glob(folder)
 
     # Набор заголовков для CSV будет состоять из алиасов
     heandler_set = set(key_aliases.values())
 
-    # Сначала соберем все уникальные названия из JSON файла
-    with open('amortyzatory.json', 'r', encoding="utf-8") as f:
-        data_json = json.load(f)
-        dict_results = data_json['data']['results']
-        for i in dict_results:
-            attributes = i['attributes']
-            for item in attributes:
-                heandler_set.add(item['name'])
+    # Сначала соберем все уникальные названия из всех JSON файлов
+    for file_path in files_json:
+        with open(file_path, 'r', encoding="utf-8") as f:
+            data_json = json.load(f)
+            dict_results = data_json['data']['results']
+            for i in dict_results:
+                attributes = i['attributes']
+                for attr_item in attributes:
+                    heandler_set.add(attr_item['name'])
 
-    # Создаем CSV файл
+    # Создаем CSV файл и записываем данные
     with open('amortyzatory.csv', 'w', newline='', encoding='utf-8') as file:
         writer = csv.DictWriter(file, fieldnames=heandler_set, delimiter=";")
         writer.writeheader()  # записываем заголовки
 
-        # Записываем данные в CSV
-        for i in dict_results:
-            result_dict = {
-                key_aliases['upc']: i['upc'],
-                key_aliases['trademark']: i['trademark']['description'],
-                key_aliases['name']: i['description'],
-                key_aliases['price']: i['price']['price'],
-                key_aliases['quantity']: i['price']['quantity']
-            }
+        for file_path in files_json:
+            with open(file_path, 'r', encoding="utf-8") as f:
+                data_json = json.load(f)
+                dict_results = data_json['data']['results']
 
-            for item in i['attributes']:
-                # Если название столбца есть в нашем наборе, записываем значение
-                if item['name'] in heandler_set:
-                    result_dict[item['name']] = item['value']
+                # Записываем данные в CSV
+                for i in dict_results:
+                    result_dict = {
+                        key_aliases['upc']: i.get('upc', None),
+                        key_aliases['trademark']: i.get('trademark', {}).get('description', None),
+                        key_aliases['name']: i.get('description', None),
+                        key_aliases['price']: i.get('price', {}).get('price', None),
+                        key_aliases['quantity']: i.get('price', {}).get('quantity', None),
+                        key_aliases['image']: i.get('image', None)
+                    }
 
-            writer.writerow(result_dict)
+                    for attr_item in i['attributes']:
+                        # Если название столбца есть в нашем наборе, записываем значение
+                        if attr_item['name'] in heandler_set:
+                            result_dict[attr_item['name']] = attr_item['value']
 
-
-
+                    writer.writerow(result_dict)
 
 
 if __name__ == '__main__':
     # print("Вставьте ссылку")
-    # url = 'https://exist.ua/api/v1/catalogue/product-index/?page=1&slug=amortyzatory-stijky-pidvisky'
+    # url = 'https://exist.ua/uk/amortyzatory-stijky-pidvisky/'
     # curl_result = selenium_get_curl(url)  # сохраняем результат функции в переменную
     # get_cookie_header(curl_result)
     # server.stop()  # остановка сервера должна быть здесь
-    # url, params, cookies, headers = get_cookie_header(curl_result)
+    # params, cookies, headers = get_cookie_header(curl_result)
     # # # save_to_file(url, params, cookies, headers)
     # totalElements = get_totalElements()
     # get_request(totalElements)
     # get_id_ad_and_url()
     # get_product_s()
+    # get_requests()
     parsin()
