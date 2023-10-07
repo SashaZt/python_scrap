@@ -684,46 +684,46 @@ def create_sql():
 
 
 
-
-def job():
-    delete_old_data()
-    lot_numbers_set = get_data_mysql()
-
-    curl_result = selenium_get_curl(url)  # сохраняем результат функции в переменную
-    get_cookie_header(curl_result)
-    server.stop()  # остановка сервера должна быть здесь
-    # url, params, cookies, headers = get_cookie_header(curl_result)
-    params, cookies, headers = get_cookie_header(curl_result)
-    totalElements = get_totalElements(cookies, headers)
-    multi_threaded_get_request(totalElements, 10, cookies, headers)
-    # # get_request(totalElements)
-    get_id_ad_and_url(lot_numbers_set)
-    get_product_s()
-    parsin()
-
-# schedule.every().day.at("08:40").do(job)
-schedule.every().day.at(start_time).do(job)
-
-while True:
-    schedule.run_pending()
-    time.sleep(1)
-
-
-
-# if __name__ == '__main__':
-#     # """Создание таблицы"""
-#     # create_sql()
 #
+# def job():
 #     delete_old_data()
 #     lot_numbers_set = get_data_mysql()
 #
 #     curl_result = selenium_get_curl(url)  # сохраняем результат функции в переменную
 #     get_cookie_header(curl_result)
 #     server.stop()  # остановка сервера должна быть здесь
+#     # url, params, cookies, headers = get_cookie_header(curl_result)
 #     params, cookies, headers = get_cookie_header(curl_result)
 #     totalElements = get_totalElements(cookies, headers)
-#     multi_threaded_get_request(totalElements, 10,cookies, headers)
+#     multi_threaded_get_request(totalElements, 10, cookies, headers)
 #     # # get_request(totalElements)
 #     get_id_ad_and_url(lot_numbers_set)
 #     get_product_s()
 #     parsin()
+#
+# # schedule.every().day.at("08:40").do(job)
+# schedule.every().day.at(start_time).do(job)
+#
+# while True:
+#     schedule.run_pending()
+#     time.sleep(1)
+
+
+
+if __name__ == '__main__':
+    # """Создание таблицы"""
+    # create_sql()
+
+    delete_old_data()
+    lot_numbers_set = get_data_mysql()
+
+    curl_result = selenium_get_curl(url)  # сохраняем результат функции в переменную
+    # get_cookie_header(curl_result)
+    server.stop()  # остановка сервера должна быть здесь
+    params, cookies, headers = get_cookie_header(curl_result)
+    totalElements = get_totalElements(cookies, headers)
+    multi_threaded_get_request(totalElements, 10,cookies, headers)
+    # # get_request(totalElements)
+    get_id_ad_and_url(lot_numbers_set)
+    get_product_s()
+    parsin()
