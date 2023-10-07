@@ -13,6 +13,7 @@ import re
 import os
 import csv
 import json
+import pickle
 import glob
 import time
 
@@ -40,9 +41,7 @@ def get_chromedriver():
     return driver
 
 
-cookies = {
-    'g2g_regional': '%7B%22country%22%3A%22UA%22%2C%22currency%22%3A%22USD%22%2C%22language%22%3A%22en%22%7D',
-}
+
 
 
 def get_url_category(url):
@@ -61,6 +60,10 @@ def get_url_category(url):
     driver = get_chromedriver()
     driver.get(url)
     driver.maximize_window()
+    # time.sleep(30)
+    # with open('cookies.pkl', 'wb') as file:
+    #     pickle.dump(driver.get_cookies(), file)
+    # exit()
     try:
         counter_wait_url = WebDriverWait(driver, 20).until(
             EC.element_to_be_clickable((By.XPATH, '//div[@class="text-secondary"]')))
@@ -69,9 +72,10 @@ def get_url_category(url):
         return
     driver.delete_all_cookies()
     driver.refresh()
-    for cookie_name, cookie_value in cookies.items():
-        cookie_dict = {'name': cookie_name, 'value': cookie_value}
-        driver.add_cookie(cookie_dict)
+    with open('cookies.pkl', 'rb') as file:
+        cookies = pickle.load(file)
+        for cookie in cookies:
+            driver.add_cookie(cookie)
     try:
         counter_wait_url = WebDriverWait(driver, 20).until(
             EC.element_to_be_clickable((By.XPATH, '//div[@class="text-secondary"]')))
@@ -141,13 +145,14 @@ def get_url_product(url):
         driver.get(url)
         driver.delete_all_cookies()
         driver.refresh()
-        for cookie_name, cookie_value in cookies.items():
-            cookie_dict = {'name': cookie_name, 'value': cookie_value}
-            driver.add_cookie(cookie_dict)
+        with open('cookies.pkl', 'rb') as file:
+            cookies = pickle.load(file)
+            for cookie in cookies:
+                driver.add_cookie(cookie)
         driver.refresh()
         time.sleep(7)
         cout = 0
-        for u in urls[:5]:
+        for u in urls:
             products_all = []
             driver.get(u[0])
             cout += 1
@@ -250,7 +255,7 @@ def get_url_product(url):
 def parse_content():
     print("Вставьте ссылку")
     url = input()
-    # url = 'https://www.g2g.com/categories/wow-boosting-service?seller=AMELIBOOST'
+    # url = 'https://www.g2g.com/categories/dota-2-boosting-service?seller=AMELIBOOST'
     get_url_category(url)
     get_url_product(url)
 
