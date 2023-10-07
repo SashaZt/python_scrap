@@ -6,7 +6,7 @@ from bs4 import BeautifulSoup
 
 # import undetected_chromedriver as webdriver
 delta = '''
-akkumuliator
+avtolampa
 '''
 delta_list = delta.strip().split("\n")
 
@@ -180,6 +180,42 @@ def main():
 
                 writer.writerow(row_dict)
 
+def link():
+    folders = 'avtolampa'
+    folder = fr'c:\DATA\dok_ua\products\{folders}\rus\*.html'
+    files_html = glob.glob(folder)
+
+    heandler = ['link_product', 'Цоколь', 'Количество в упаковке']
+    with open('output.csv', 'w', newline='', encoding='utf-8') as file:
+        writer = csv.writer(file, delimiter=",")
+        writer.writerow(heandler)  # Записываем заголовки только один раз
+        for item in files_html:
+            with open(item, encoding="utf-8") as file:
+                src = file.read()
+            soup = BeautifulSoup(src, 'lxml')
+            link_product = soup.find('link', attrs={'hreflang': 'ru'}).get('href')
+
+            # Инициализируем переменные для колонок "Цоколь" и "Количество в упаковке"
+            socket_value = ''
+            packaging_value = ''
+
+            rows_rus = soup.select('tr.card-characts-list-item')
+            for row in rows_rus:
+                title_cell = row.select_one('td.card-characts-list-item__title span.mistake-char-title')
+                text_cell = row.select_one('td.card-characts-list-item__text')
+                if title_cell and text_cell:
+                    title_text_rus = title_cell.get_text().strip()
+                    text_value_rus = text_cell.get_text().strip()
+
+                    # Проверяем, соответствует ли "title_text_rus" вашим условиям
+                    if title_text_rus == 'Цоколь':
+                        socket_value = text_value_rus
+                    elif title_text_rus == 'Количество в упаковке':
+                        packaging_value = text_value_rus
+
+            # Записываем данные в CSV файл
+            writer.writerow([link_product, socket_value, packaging_value])
 
 if __name__ == '__main__':
-    main()
+    # main()
+    link()
