@@ -11,6 +11,7 @@ from proxi import proxies
 from selenium.webdriver.chrome.service import Service
 from selenium import webdriver
 
+
 def get_request():
     cookies = {
         'visid_incap_242093': '/HD7mKKsQ6G7gDsklJSPfCiNpWQAAAAAQUIPAAAAAABX+/wq/GldPxN2hTzvXtI9',
@@ -77,12 +78,11 @@ def get_request():
         'x-xsrf-token': '1ebf6baf-d0db-4be9-95b4-7aa52967e6cf',
     }
 
-
     ad = 19209
     page_ad = ad // 100
     start = 0
     page = 0
-    for i in range(0,3):
+    for i in range(page_ad + 1):
         filename = f"c:\\DATA\\copart\\list\\data_{page}.json"
         if not os.path.exists(filename):
             # Создаем сессию
@@ -130,9 +130,10 @@ def get_request():
             }
 
             try:
-                response = requests.post('https://www.copart.com/public/lots/search-results', cookies=cookies, headers=headers,
-                                         json=json_data, proxies=proxi)
+                response = requests.post('https://www.copart.com/public/lots/search-results', cookies=cookies,
+                                         headers=headers, json=json_data)
             except:
+                print(response.status_code)
                 continue
             data = response.json()
 
@@ -141,7 +142,6 @@ def get_request():
             time.sleep(pause_time)
         page += 1
         start += 20
-
 
 
 def get_id_ad_and_url():
@@ -269,7 +269,7 @@ def get_product():
                     'https': f'http://{proxy_user}:{proxy_pass}@{proxy_host}:{proxy_port}'
                 }
                 try:
-                    response = requests.get(url[0], cookies=cookies, headers=headers) #, proxies=proxi
+                    response = requests.get(url[0], cookies=cookies, headers=headers)  # , proxies=proxi
                 except:
                     continue
                 data = response.json()
@@ -319,13 +319,13 @@ def parsin():
                 highlights_lot = None
             sale_location = data_json['data']['lotDetails']['yn']
             datas = [url_lot, url_img, name_lot, price_bnp, odometer_lot, drive_lot, engine_type_lot, vehicle_type_lot,
-                    highlights_lot, sale_location]
+                     highlights_lot, sale_location]
             writer.writerow(datas)
 
 
 if __name__ == '__main__':
     # get_selenium()
-    get_request()
+    # get_request()
     get_id_ad_and_url()
     get_product()
     parsin()

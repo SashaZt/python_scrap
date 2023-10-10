@@ -1,6 +1,8 @@
 import schedule
 import time
 from datetime import datetime
+
+from datetime import datetime
 import asyncio
 import aiohttp
 from bs4 import BeautifulSoup
@@ -30,8 +32,7 @@ async def send_message(bot_token, chat_id, text):
     async with aiohttp.ClientSession() as session:
         await session.post(url, data=data)
 
-
-def process_urls_and_send_messages(bot_token, chat_id, list_urls):
+def get_cookies_sf():
     url_pl = 'https://www.vaurioajoneuvo.fi'
     # res = requests.get(url_pl)
     # if '<title>Just a moment...</title>' in res.text:
@@ -56,28 +57,33 @@ def process_urls_and_send_messages(bot_token, chat_id, list_urls):
             print("cf challenge fail")
 
         browser.close()
-        # return ua, cf_clearance_value  # Возвращаем значения
+        # print(url)
+    headers = {"user-agent": ua}
+    cookies = {"cf_clearance": cf_clearance_value}
+    return headers, cookies
+
+
+def process_urls_and_send_messages(bot_token, chat_id, list_urls):
+    headers, cookies = get_cookies_sf()
     while True:
         for url in list_urls:
-            # print(url)
-            headers = {"user-agent": ua}
-            cookies = {"cf_clearance": cf_clearance_value}
-            # parsed_url = urlparse(url)
-            # params = parse_qs(parsed_url.query)
-            # params = {k: v[0] for k, v in params.items()}
             scraper = cloudscraper.create_scraper(browser={
                 'browser': 'chrome',
                 'platform': 'windows',
                 'desktop': True,
                 'mobile': False})
             # response = scraper.get(url, cookies=cookies, headers=headers)  # , proxies=proxies
-            response = requests.get(url, cookies=cookies, headers=headers)
+            try:
+                response = requests.get(url, cookies=cookies, headers=headers)
+            except:
+                continue
+            if response.status_code != 200:
+                now = datetime.now()
+                formatted_now = now.strftime("%H:%M_%d.%m.%Y")
+                # print(formatted_now)
+                headers, cookies = get_cookies_sf()
+                response = requests.get(url, cookies=cookies, headers=headers)
             src = response.text
-            print(response.status_code)
-            # html = response.content
-            # filename = f"amazon_.html"
-            # with open(filename, "w", encoding='utf-8') as f:
-            #     f.write(html.decode('utf-8'))
             soup = BeautifulSoup(src, 'lxml')
             table_row = soup.find('div', attrs={'class': 'cars-list'})
             regex_containr = re.compile('.*(?=item-lift-container)')
@@ -94,15 +100,16 @@ def process_urls_and_send_messages(bot_token, chat_id, list_urls):
                 except:
                     with open(file_name, 'a', encoding='utf-8') as csvfile:
                         reader = csv.reader(csvfile)
-                i = item_lift_container[0]  # Получение первого элемента списка
+                i = item_lift_container[0]
                 id_avto = i.find('div', {'class': 'item-lift'}).get('data-auction-id')
-                # print(id_avto)
+                # print(id_avto, url)
                 if id_avto in id_list:
                     continue
-                # time.sleep(1)
                 else:
-                    print(f"Новый id {id_avto}_____________________________________________________")
-                    print(url)
+                    now = datetime.now()
+                    formatted_now = now.strftime("%H:%M_%d.%m.%Y")
+                    print(f"Новый id {id_avto}_____________{formatted_now}_____________________________")
+                    # print(url)
                     with open(file_name, 'a', newline='', encoding='utf-8') as csvfile:
                         writer = csv.writer(csvfile)
                         writer.writerow([id_avto])

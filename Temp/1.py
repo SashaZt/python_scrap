@@ -14,3 +14,5 @@ exif_bytes = piexif.dump(exif_dict)
 
 # Записать обратно в изображение
 piexif.insert(exif_bytes, image_path, output_image_path)
+
+

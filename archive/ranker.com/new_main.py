@@ -56,7 +56,7 @@ def save_link_all_product(url):
             driver.execute_script("window.scrollBy(0,200)", "")
             time.sleep(1)
             button_load_more = driver.find_element(By.XPATH,
-                                                   '//button[@class="sc-81a1fbb4-0 copewu button_main__b1K6d button_large__mns0w button_tertiary__jtYJm button_isFullWidth__bQMs4 paginationButton_paginationButton__gTe3k"]').click()
+                                                   '//button[@class="button_main__b1K6d button_large__mns0w button_secondary__1ZG1U NextList_main__39AJ4"]').click()
             driver.execute_script("window.scrollBy(0,500)", "")
 
         except:
@@ -140,6 +140,6 @@ def get_items(file_path):
 
 if __name__ == '__main__':
     print("Вставьте ссылку")
-    url = input()
+    url = 'https://www.ranker.com/list/hot-male-kpop-idols/taylor-park?ref=all_in_one&rlf=GRID'
     save_link_all_product(url)
     get_items('data_new.html')

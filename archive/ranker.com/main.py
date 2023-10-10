@@ -44,7 +44,7 @@ def get_chromedriver(use_proxy=False, user_agent=None):
 
 def save_link_all_product(url):
     driver = get_chromedriver(use_proxy=False,
-                              user_agent=f"{useragent.random}")
+                              user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36")
     driver.get(url=url)
     driver.maximize_window()
     time.sleep(1)
@@ -152,6 +152,21 @@ def get_items(file_path):
                 )
             )
 
+def parsing_json():
+    with open('data.html', 'r', encoding='utf-8') as f:
+        html = f.read()
+
+    # Create a BeautifulSoup object from the HTML
+    soup = BeautifulSoup(html, 'lxml')
+    # Ищем скрипт с id="__NEXT_DATA__"
+    script_tag = soup.find('script', {'id': '__NEXT_DATA__'})
+
+    # Извлекаем содержимое скрипта
+    json_data = json.loads(script_tag.contents[0])
+    with open(f'dict.json', 'w', encoding='utf-8') as f:
+        json.dump(json_data, f, indent=4, ensure_ascii=False)
+    # Выводим JSON данные
+
 
 if __name__ == '__main__':
     # print("Вставьте ссылку")
@@ -159,7 +174,8 @@ if __name__ == '__main__':
     # # # # # ##Сайт на который переходим
     # # # # # # url = "https://www.ranker.com/list/favorite-male-singers-of-all-time/music-lover?ref=browse_rerank&l=1"
     # # # # # # Запускаем первую функцию для сбора всех url на всех страницах
-    save_link_all_product(
-        'https://www.ranker.com/list/most-famous-singers-right-now/celebrity-lists?ref=collections_top&l=2719003&collectionId=2609')
+    # save_link_all_product(
+    #     'https://www.ranker.com/list/best-current-singers-under-25/ranker-music')
     # get_items('data.html')
     # parsing_product()
+    parsing_json()

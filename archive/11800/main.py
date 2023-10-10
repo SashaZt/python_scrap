@@ -135,7 +135,7 @@ def save_link_all_product(url):
                 driver.add_cookie(cookie)
             driver.refresh()
             field_find = driver.find_element(By.XPATH, '//*[@id="form-search-and-find"]/div/search-part[1]/div/input')
-            field_find.send_keys(i)
+            field_find
             field_button = driver.find_element(By.XPATH, '//*[@id="form-search-and-find"]/div/div[1]/button')
             field_button.click()
 

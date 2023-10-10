@@ -49,19 +49,34 @@ def get_chromedriver():
     return driver
 
 
-def get_selenium():
-    driver = get_chromedriver()
+def get_creation_folders():
     name_files = Path('C:/scrap_tutorial-master/archive/dok.ua') / 'url.csv'
     with open(name_files, newline='', encoding='utf-8') as files:
         urls = list(csv.reader(files, delimiter=' ', quotechar='|'))
         for row in urls:
             url = row[0]
             # Создание папки, если её нет
-            folder_path = f"c:/DATA/dok_ua/list/{url.split('/')[-1].replace('-', '_')}/"
-            os.makedirs(folder_path, exist_ok=True)
+            folder_path_list = f"c:/DATA/dok_ua/list/{url.split('/')[-1].replace('-', '_')}/"
+            folder_path_products = f"c:/DATA/dok_ua/products/{url.split('/')[-1].replace('-', '_')}/"
+            folder_path_products_ua = f"c:/DATA/dok_ua/products/{url.split('/')[-1].replace('-', '_')}/ua/"
+            folder_path_products_rus = f"c:/DATA/dok_ua/products/{url.split('/')[-1].replace('-', '_')}/rus/"
+
+            os.makedirs(folder_path_list, exist_ok=True)
+            os.makedirs(folder_path_products, exist_ok=True)
+            os.makedirs(folder_path_products_ua, exist_ok=True)
+            os.makedirs(folder_path_products_rus, exist_ok=True)
 
 
-            # driver.maximize_window()
+
+
+def get_selenium_list():
+    driver = get_chromedriver()
+    name_files = Path('C:/scrap_tutorial-master/archive/dok.ua') / 'url.csv'
+    with open(name_files, newline='', encoding='utf-8') as files:
+        urls = list(csv.reader(files, delimiter=' ', quotechar='|'))
+        for row in urls:
+            url = row[0]
+            folder_path_list = f"c:/DATA/dok_ua/list/{url.split('/')[-1].replace('-', '_')}/"
             driver.get(url)
             time.sleep(1)
             last_page = None
@@ -78,7 +93,7 @@ def get_selenium():
                 new_url = f'{url}?page={p}'
                 driver.get(new_url)
                 time.sleep(1)
-                file_name = f"{folder_path}data_0{count}.html"
+                file_name = f"{folder_path_list}data_0{count}.html"
                 with open(file_name, "w", encoding='utf-8') as fl:
                     fl.write(driver.page_source)
     driver.close()
@@ -93,7 +108,7 @@ def get_url_ua():
     subfolders = [f for f in os.listdir(folder_path) if os.path.isdir(os.path.join(folder_path, f))]
 
     # Проходимся по каждой подпапке
-    for subfolder in subfolders[1:2]:
+    for subfolder in subfolders:
         full_path = os.path.join(folder_path, subfolder)
         # Используем glob для выбора всех HTML-файлов в подпапке
         files_html = glob.glob(f"{full_path}/*.html")
@@ -147,6 +162,7 @@ def get_url_rus():
         print(f"Обработан файл {filename}, сохранён как {new_filename}")
 
 if __name__ == '__main__':
-    # get_selenium()
+    # get_creation_folders()
+    # get_selenium_list()
     # get_url_ua()
     get_url_rus()

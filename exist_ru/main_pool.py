@@ -1,35 +1,25 @@
-from concurrent.futures import ProcessPoolExecutor
-from threading import Lock
 import csv
-from selenium.webdriver.chrome.service import Service
-import os
 import json
+import os
 import re
-from pathlib import Path
-import html
-from datetime import datetime
-import random
 import shutil
 import tempfile
-import os
-from bs4 import BeautifulSoup
-from proxi import proxies
-import concurrent.futures
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.common.action_chains import ActionChains
-import zipfile
 import time
-# import undetected_chromedriver as webdriver
-from selenium import webdriver
-import undetected_chromedriver
-from selenium.common.exceptions import TimeoutException
+from concurrent.futures import ProcessPoolExecutor
+from datetime import datetime
+from threading import Lock
+from seleniumwire import webdriver
+# from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+# from seleniumwire import webdriver
 from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
-from concurrent.futures import ThreadPoolExecutor
-import csv
 
 lock = Lock()
+
+
 # proxy = random.choice(proxies)
 
 
@@ -104,6 +94,9 @@ class ProxyExtension:
         shutil.rmtree(self._dir)
 
 
+
+
+
 # def get_chromedriver():
 def get_chromedriver(proxy):
     chrome_options = webdriver.ChromeOptions()
@@ -133,6 +126,8 @@ def get_chromedriver(proxy):
       '''
     })
     return driver
+
+
 def extract_data_from_csv():
     csv_filename = 'data.csv'
     columns_to_extract = ['price', 'Numer katalogowy części', 'Producent części']
@@ -152,114 +147,115 @@ def extract_data_from_csv():
 
 def process_data(part_data):
     # создаем экземпляр драйвера для каждого процесса
+    API_KEY = '30bc2b5ab5eb9691ebbbfacfd939797f'
+    proxy_options = {
+        'proxy': {
+            f'http://scraperapi:{API_KEY}@proxy-server.scraperapi.com:8001',
+            # 'https': f'http://scraperapi:{API_KEY}@proxy-server.scraperapi.com:8001',
+            # 'no_proxy': 'localhost,127.0.0.1'
+        }
+    }
+    driver = webdriver.Chrome(seleniumwire_options=proxy_options)
+
     now = datetime.now().date()
 
     with lock:  # межпроцессная блокировка
         with open('output.csv', 'a', newline='', encoding='utf-8') as file:
             writer = csv.writer(file, delimiter=";")
             quantity = 50
+            for item in part_data:  # используем part_data
+                driver.get('https://exist.ru/')
+                price_old = item['price']
+                sku = item['Numer katalogowy części']
+                brend = item['Producent części'].capitalize()
 
-            driver = None  # изначально драйвер не задан
-            for index, item in enumerate(part_data):
-                # Если индекс делится на 10 без остатка или это первая итерация (индекс = 0)
-                if index % 3 == 0 or driver is None:
-                    if driver:  # если драйвер уже был создан ранее
-                        driver.quit()  # закрыть текущий экземпляр драйвера
-                    proxy = random.choice(proxies)
-                    driver = get_chromedriver(proxy)
-                    driver.get('https://exist.ru/')
-                    price_old = item['price']
-                    sku = item['Numer katalogowy części']
-                    brend = item['Producent części'].capitalize()
+                try:
+                    element_to_click = WebDriverWait(driver, 5).until(
+                        EC.element_to_be_clickable((By.XPATH, '//input[@id="pcode"]')))
+                except:
+                    continue
+                element_to_click.send_keys(sku)
+                element_to_click.send_keys(Keys.RETURN)
+                try:
+                    find_catalogs = WebDriverWait(driver, 3).until(
+                        EC.element_to_be_clickable((By.XPATH, '//ul[@class="catalogs"]/li/a')))
+                except:
+                    values = [brend, sku, '-', quantity, '-', price_old, now]
+                    writer.writerow(values)
+                    continue
+                elements_catalogs = driver.find_elements(By.XPATH, '//ul[@class="catalogs"]/li/a')
 
+                base_url = "https://exist.ru"
+                brands_links = {}
+
+                for elem in elements_catalogs:
+                    link = elem.get_attribute('href')
+                    if not link.startswith("https://exist.ru"):
+                        link = base_url + link
+                    brand_name = elem.find_element(By.XPATH, './/span/b').text
+                    brands_links[brand_name] = link
+                if brend in brands_links:
+                    # Забираем значение ссылки для этого brend
+                    link = brands_links[brend]
+                    # Переходим по ссылке
+                    driver.get(link)
+                    time.sleep(1)
                     try:
-                        element_to_click = WebDriverWait(driver, 5).until(
-                            EC.element_to_be_clickable((By.XPATH, '//input[@id="pcode"]')))
+                        find_prices = WebDriverWait(driver, 2).until(
+                            EC.element_to_be_clickable((By.XPATH, '//div[@id="price-wrapper"]')))
                     except:
+                        print('Не загрузилась')
                         continue
-                    element_to_click.send_keys(sku)
-                    element_to_click.send_keys(Keys.RETURN)
-                    try:
-                        find_catalogs = WebDriverWait(driver, 3).until(
-                            EC.element_to_be_clickable((By.XPATH, '//ul[@class="catalogs"]/li/a')))
-                    except:
-                        values = [brend, sku, '-', quantity, '-', price_old, now]
-                        writer.writerow(values)
-                        continue
-                    elements_catalogs = driver.find_elements(By.XPATH, '//ul[@class="catalogs"]/li/a')
 
-                    base_url = "https://exist.ru"
-                    brands_links = {}
+                    time.sleep(1)
+                    scripts = driver.find_elements(By.TAG_NAME, 'script')
 
-                    for elem in elements_catalogs:
-                        link = elem.get_attribute('href')
-                        if not link.startswith("https://exist.ru"):
-                            link = base_url + link
-                        brand_name = elem.find_element(By.XPATH, './/span/b').text
-                        brands_links[brand_name] = link
-                    if brend in brands_links:
-                        # Забираем значение ссылки для этого brend
-                        link = brands_links[brend]
-                        # Переходим по ссылке
-                        driver.get(link)
-                        time.sleep(1)
-                        try:
-                            find_prices = WebDriverWait(driver, 2).until(
-                                EC.element_to_be_clickable((By.XPATH, '//div[@id="price-wrapper"]')))
-                        except:
-                            print('Не загрузилась')
-                            continue
+                    for script in scripts:
+                        script_content = script.get_attribute("outerHTML")  # Изменение на outerHTML
+                        if "//<![CDATA[" in script_content:
+                            match = re.search(r'var _data = (.*); var _favs',
+                                              script_content)  # Изменение регулярного выражения
 
-                        time.sleep(1)
-                        scripts = driver.find_elements(By.TAG_NAME, 'script')
+                            if match:
+                                json_str = match.group(1)
+                                json_str = json_str.replace("\\u0027", "'").replace("\\u003e", ">").replace("\\u003c",
+                                                                                                            "<")
+                                try:
+                                    json_data = json.loads(json_str)
+                                except json.JSONDecodeError as e:
+                                    print("Ошибка при попытке декодирования JSON:", e)
 
-                        for script in scripts:
-                            script_content = script.get_attribute("outerHTML")  # Изменение на outerHTML
-                            if "//<![CDATA[" in script_content:
-                                match = re.search(r'var _data = (.*); var _favs',
-                                                  script_content)  # Изменение регулярного выражения
+                                # Извлекаем необходимую информацию
+                                brand = json_data[0].get('CatalogName', None)
+                                part_number = json_data[0].get('PartNumber', None)
 
-                                if match:
-                                    json_str = match.group(1)
-                                    json_str = json_str.replace("\\u0027", "'").replace("\\u003e", ">").replace("\\u003c",
-                                                                                                                "<")
-                                    try:
-                                        json_data = json.loads(json_str)
-                                    except json.JSONDecodeError as e:
-                                        print("Ошибка при попытке декодирования JSON:", e)
+                                description = json_data[0].get('Description', None)
+                                date = None
 
-                                    # Извлекаем необходимую информацию
-                                    brand = json_data[0].get('CatalogName', None)
-                                    part_number = json_data[0].get('PartNumber', None)
+                                aggregated_parts = json_data[0].get('AggregatedParts', [])
+                                if aggregated_parts:
+                                    statistic_html = aggregated_parts[0].get('StatisticHTML', None)
+                                    # Если значение есть, примените к нему регулярное выражение
+                                    if statistic_html:
+                                        match = re.search(r'(\d+\.\d+\.\d+)', statistic_html)
+                                        date = match.group(1) if match else None
 
-                                    description = json_data[0].get('Description', None)
-                                    date = None
+                                aggregated_parts = json_data[0].get('AggregatedParts', [])
+                                if aggregated_parts:
+                                    price_new = aggregated_parts[0].get('priceString', None)
+                                else:
+                                    price_new = None
 
-                                    aggregated_parts = json_data[0].get('AggregatedParts', [])
-                                    if aggregated_parts:
-                                        statistic_html = aggregated_parts[0].get('StatisticHTML', None)
-                                        # Если значение есть, примените к нему регулярное выражение
-                                        if statistic_html:
-                                            match = re.search(r'(\d+\.\d+\.\d+)', statistic_html)
-                                            date = match.group(1) if match else None
+                                values = [brand, part_number, description, quantity, price_new, price_old, now]
+                                # print(values)
+                                writer.writerow(values)  #
 
-                                    aggregated_parts = json_data[0].get('AggregatedParts', [])
-                                    if aggregated_parts:
-                                        price_new = aggregated_parts[0].get('priceString', None)
-                                    else:
-                                        price_new = None
-
-                                    values = [brand, part_number, description, quantity, price_new, price_old, now]
-                                    # print(values)
-                                    writer.writerow(values)  #
-            if driver:  # после завершения цикла закрыть драйвер
-                driver.quit()
 
 def main():
     data_csv = extract_data_from_csv()
 
     # Разбиваем data_csv на части (например, на 4 части)
-    num_parts = 4
+    num_parts = 5
     size_per_part = len(data_csv) // num_parts
     parts = [data_csv[i:i + size_per_part] for i in range(0, len(data_csv), size_per_part)]
 
