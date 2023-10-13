@@ -116,50 +116,48 @@ def get_undetected_chromedriver():
 def get_requests():
     import requests
 
-    cookies = {
-        'catalog_page_size': '50',
-        'sessionid': 'e9p6sduf4r9vlnjmpwtgg6poulns1ibh',
-        'cf_clearance': 'c7fFGka1cNttA.77DJqF0F9A.aBQXDxAX9TR7bM5cCU-1696687749-0-1-d29a0353.48b345ac.859b5cb3-0.2.1696687749',
-        'crisp-client%2Fsession%2F980759c4-00d9-4b4b-85e6-c48036807fc0': 'session_b94fd2dc-888d-49ea-81bf-e6c6d8f0207d',
-        'crisp-client%2Fsocket%2F980759c4-00d9-4b4b-85e6-c48036807fc0': '0',
-    }
+    # cookies = {
+    #     'sessionid': 'mrqjw8vnilh44diz8aryq5jrodokxq2f',
+    #     'cf_clearance': 'V4_Zy99exclmqrs8.cC4ve77WHggd.XueZk2zXkN5Wc-1697135038-0-1-d29a0353.7d7311cd.859b5cb3-0.2.1697135038',
+    #     'csrftoken': 'WSZtemNOAzSQPwzxwR5wyfn7flUj4wj3RSTiNoo3A4hohELJtB9WKEZW62v78dRY',
+    #     'crisp-client%2Fsession%2F980759c4-00d9-4b4b-85e6-c48036807fc0': 'session_1b713c7a-4fba-4d1f-a801-b184ce903e57',
+    #     'catalog_page_size': '50',
+    #     'crisp-client%2Fsocket%2F980759c4-00d9-4b4b-85e6-c48036807fc0': '0',
+    # }
 
     headers = {
         'authority': 'exist.ua',
-        'accept': 'application/json, text/plain, */*',
-        'accept-language': 'uk',
-        'baggage': 'sentry-environment=production,sentry-release=v2023.38.4,sentry-public_key=6541b6a63473425d99519d634760bb1a,sentry-trace_id=86da2d1aad624b28835999e416350318',
-        'client-render': '1',
-        # 'cookie': 'catalog_page_size=50; sessionid=e9p6sduf4r9vlnjmpwtgg6poulns1ibh; cf_clearance=c7fFGka1cNttA.77DJqF0F9A.aBQXDxAX9TR7bM5cCU-1696687749-0-1-d29a0353.48b345ac.859b5cb3-0.2.1696687749; crisp-client%2Fsession%2F980759c4-00d9-4b4b-85e6-c48036807fc0=session_b94fd2dc-888d-49ea-81bf-e6c6d8f0207d; crisp-client%2Fsocket%2F980759c4-00d9-4b4b-85e6-c48036807fc0=0',
+        'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+        'accept-language': 'ru,en-US;q=0.9,en;q=0.8,uk;q=0.7,de;q=0.6',
+        'cache-control': 'no-cache',
+        # 'cookie': 'sessionid=mrqjw8vnilh44diz8aryq5jrodokxq2f; cf_clearance=V4_Zy99exclmqrs8.cC4ve77WHggd.XueZk2zXkN5Wc-1697135038-0-1-d29a0353.7d7311cd.859b5cb3-0.2.1697135038; csrftoken=WSZtemNOAzSQPwzxwR5wyfn7flUj4wj3RSTiNoo3A4hohELJtB9WKEZW62v78dRY; crisp-client%2Fsession%2F980759c4-00d9-4b4b-85e6-c48036807fc0=session_1b713c7a-4fba-4d1f-a801-b184ce903e57; catalog_page_size=50; crisp-client%2Fsocket%2F980759c4-00d9-4b4b-85e6-c48036807fc0=0',
         'dnt': '1',
-        'old-session-enabled': '0',
-        'page-url': '/uk/amortyzatory-stijky-pidvisky/',
-        'referer': 'https://exist.ua/uk/amortyzatory-stijky-pidvisky/',
+        'pragma': 'no-cache',
         'sec-ch-ua': '"Google Chrome";v="117", "Not;A=Brand";v="8", "Chromium";v="117"',
         'sec-ch-ua-mobile': '?0',
         'sec-ch-ua-platform': '"Windows"',
-        'sec-fetch-dest': 'empty',
-        'sec-fetch-mode': 'cors',
+        'sec-fetch-dest': 'document',
+        'sec-fetch-mode': 'navigate',
         'sec-fetch-site': 'same-origin',
-        'sentry-trace': '86da2d1aad624b28835999e416350318-bc99ca082e4bad06-0',
+        'sec-fetch-user': '?1',
+        'upgrade-insecure-requests': '1',
         'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36',
     }
 
-    params = {
-        'page': '1',
-        'slug': 'amortyzatory-stijky-pidvisky',
-    }
+    response = requests.get(
+        'https://exist.ua/uk/kyb-kayaba-brand/amortyzator-pidvisky-perednoji-gazomasljanyj-kyb-excel-g-335808-14866668/',
+        # cookies=cookies,
+        headers=headers,
+    )
 
-    response = requests.get('https://exist.ua/api/v1/catalogue/product-index/', params=params, cookies=cookies,
-                            headers=headers)
 
-    # src = response.text
-    json_data = response.json()
-    with open(f'test.json', 'w', encoding='utf-8') as f:
-        json.dump(json_data, f, ensure_ascii=False, indent=4)  # Записываем в файл
-    # filename = f"amazon.html"
-    # with open(filename, "w", encoding='utf-8') as file:
-    #     file.write(src)
+    # json_data = response.json()
+    # with open(f'test.json', 'w', encoding='utf-8') as f:
+    #     json.dump(json_data, f, ensure_ascii=False, indent=4)  # Записываем в файл
+    src = response.text
+    filename = f"amazon.html"
+    with open(filename, "w", encoding='utf-8') as file:
+        file.write(src)
 
 
 def parsing():
