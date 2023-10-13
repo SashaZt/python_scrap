@@ -45,9 +45,12 @@ def get_requests():
         # proxi = f'http://{proxy_user}:{proxy_pass}@{proxy_host}:{proxy_port}'
         name_files = Path('c:/DATA/exist/product/') / f'data_{coun}.html'
         if not os.path.exists(name_files):
+            await asyncio.sleep(5)
             async with session.get(url, headers=headers) as response: #, proxy=proxi
                     with open(name_files, "w", encoding='utf-8') as file:
                         file.write(await response.text())
+        else:
+            pass
 
     async def main():
         name_files = Path(f'c:/scrap_tutorial-master/exist/') / 'url_amortyzatory.csv'
@@ -63,7 +66,7 @@ def get_requests():
                         tasks.append(fetch(session, url, coun))
                     await asyncio.gather(*tasks)
                     print(f'Completed {coun} requests')
-                    await asyncio.sleep(5)
+                    # await asyncio.sleep(5)
 
     asyncio.run(main())
 
