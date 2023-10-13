@@ -418,9 +418,35 @@ def parsin():
                     heandler_set.add(attr_item['name'])
 
     # Создаем CSV файл и записываем данные
-    with open('amortyzatory.csv', 'w', newline='', encoding='utf-8') as file:
-        writer = csv.DictWriter(file, fieldnames=heandler_set, delimiter=";")
-        writer.writeheader()  # записываем заголовки
+    # with open('amortyzatory.csv', 'w', newline='', encoding='utf-8') as file:
+    #     writer = csv.DictWriter(file, fieldnames=heandler_set, delimiter=";")
+    #     writer.writeheader()  # записываем заголовки
+    #
+    #     for file_path in files_json:
+    #         with open(file_path, 'r', encoding="utf-8") as f:
+    #             data_json = json.load(f)
+    #             dict_results = data_json['data']['results']
+    #
+    #             # Записываем данные в CSV
+    #             for i in dict_results:
+    #                 result_dict = {
+    #                     key_aliases['upc']: i.get('upc', None),
+    #                     key_aliases['trademark']: i.get('trademark', {}).get('description', None),
+    #                     key_aliases['name']: i.get('description', None),
+    #                     key_aliases['price']: i.get('price', {}).get('price', None),
+    #                     key_aliases['quantity']: i.get('price', {}).get('quantity', None),
+    #                     key_aliases['image']: i.get('image', None)
+    #                 }
+    #
+    #                 for attr_item in i['attributes']:
+    #                     # Если название столбца есть в нашем наборе, записываем значение
+    #                     if attr_item['name'] in heandler_set:
+    #                         result_dict[attr_item['name']] = attr_item['value']
+    #
+    #                 writer.writerow(result_dict)
+    with open('url_amortyzatory.csv', 'w', newline='', encoding='utf-8') as file:
+        writer = csv.writer(file, delimiter=";")
+          # записываем заголовки
 
         for file_path in files_json:
             with open(file_path, 'r', encoding="utf-8") as f:
@@ -429,21 +455,12 @@ def parsin():
 
                 # Записываем данные в CSV
                 for i in dict_results:
-                    result_dict = {
-                        key_aliases['upc']: i.get('upc', None),
-                        key_aliases['trademark']: i.get('trademark', {}).get('description', None),
-                        key_aliases['name']: i.get('description', None),
-                        key_aliases['price']: i.get('price', {}).get('price', None),
-                        key_aliases['quantity']: i.get('price', {}).get('quantity', None),
-                        key_aliases['image']: i.get('image', None)
-                    }
+                    base_url = 'https://exist.ua/uk/'
+                    slug_brand = i['trademark']['slug']
+                    skug_product = i['slug']
+                    urls = f'{base_url}{slug_brand}-brand/{skug_product}'
 
-                    for attr_item in i['attributes']:
-                        # Если название столбца есть в нашем наборе, записываем значение
-                        if attr_item['name'] in heandler_set:
-                            result_dict[attr_item['name']] = attr_item['value']
-
-                    writer.writerow(result_dict)
+                    writer.writerow([urls])
 
 
 if __name__ == '__main__':

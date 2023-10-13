@@ -17,7 +17,7 @@ temp_directory = 'temp'
 temp_path = os.path.join(current_directory, temp_directory)
 list_path = os.path.join(temp_path, 'list')
 product_path = os.path.join(temp_path, 'product')
-
+from config_lal import name_files
 
 def delete_old_data():
     # Убедитесь, что папки существуют или создайте их
@@ -136,14 +136,14 @@ def parsing():
     now = datetime.now().date()
     data_csv = extract_data_from_csv()  # Вызываем функцию extract_data_from_csv
     # print(data_csv)
+    # exit()
     quantity = 50
     site = 'L'
     heandler = ['brand', 'part_number', 'description', 'quantity', 'lowest_price', 'price_old', 'data_transport',
                               'price_update', 'site', 'now']
-    with open('output_lal_auto.csv', 'w', newline='', encoding='utf-8') as file, open('exist_data.csv', 'w', newline='',
-                                                                             encoding='utf-8') as exist_file:
-        writer = csv.writer(file, delimiter=";")
-        exist_writer = csv.writer(exist_file, delimiter=";")  # Создаем writer для exist.csv
+    with open(f'{name_files}_lal.csv', 'w', newline='', encoding='utf-16') as file, open('exist_data.csv', 'w', newline='', encoding='utf-16') as exist_file:
+        writer = csv.writer(file, delimiter='\t')
+        exist_writer = csv.writer(exist_file, delimiter='\t')  # Создаем writer для exist.csv
         # exist_writer.writerow(['brand', 'sku', 'price'])  # Записываем заголовок для exist.csv
         exist_writer.writerow(['price', 'Numer katalogowy części', 'Producent części'])  # Записываем заголовок для exist.csv
 
@@ -192,8 +192,12 @@ def parsing():
                     brand = min_price_row.iloc[0]
                     part_number = min_price_row.iloc[1]
                     description = min_price_row.iloc[2]
-                    description = "".join(re.findall(r'[а-яА-ЯёЁ\s]+', description)).strip()
-                    description = " ".join(description.split())
+                    if isinstance(description, str):  # проверка, что description является строкой
+                        description = "".join(re.findall(r'[а-яА-ЯёЁ\s]+', description)).strip()
+                        description = " ".join(description.split())
+                    else:
+                        description = ""  # или любое другое действие в случае, если description не является строкой
+
                     try:
                         data_transport = min_price_row.iloc[3].replace(' - ', ' _ ')
                     except:
@@ -216,6 +220,6 @@ def parsing():
 
 
 if __name__ == '__main__':
-    # delete_old_data()
+    delete_old_data()
     get_requests()
     parsing()

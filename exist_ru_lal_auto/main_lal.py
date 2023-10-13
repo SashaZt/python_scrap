@@ -17,7 +17,7 @@ temp_directory = 'temp'
 temp_path = os.path.join(current_directory, temp_directory)
 list_path = os.path.join(temp_path, 'list')
 product_path = os.path.join(temp_path, 'product')
-
+from config import name_files
 
 def delete_old_data():
     # Убедитесь, что папки существуют или создайте их
@@ -140,7 +140,7 @@ def parsing():
     site = 'L'
     heandler = ['brand', 'part_number', 'description', 'quantity', 'lowest_price', 'price_old', 'data_transport',
                               'price_update', 'site', 'now']
-    with open('output_lal_auto.csv', 'w', newline='', encoding='utf-8') as file, open('exist_data.csv', 'w', newline='',
+    with open(name_files, 'w', newline='', encoding='utf-8') as file, open('exist_data.csv', 'w', newline='',
                                                                              encoding='utf-8') as exist_file:
         writer = csv.writer(file, delimiter=";")
         exist_writer = csv.writer(exist_file, delimiter=";")  # Создаем writer для exist.csv
@@ -216,6 +216,6 @@ def parsing():
 
 
 if __name__ == '__main__':
-    # delete_old_data()
+    delete_old_data()
     get_requests()
     parsing()

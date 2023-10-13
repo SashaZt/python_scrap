@@ -28,8 +28,8 @@ def get_chromedriver():
     # chrome_options.add_argument('--ignore-ssl-errors')
     chrome_options.add_argument(
         '--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36')
-    s = Service(executable_path="C:\\scrap_tutorial-master\\chromedriver.exe")
-    # s = Service(executable_path="chromedriver.exe")
+    # s = Service(executable_path="C:\\scrap_tutorial-master\\chromedriver.exe")
+    s = Service(executable_path="chromedriver.exe")
     driver = webdriver.Chrome(service=s, options=chrome_options)
     # driver.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {
     #     'source': '''
@@ -45,8 +45,8 @@ def get_chromedriver():
 
 
 def get_url_category(url):
-    folder_path = "c:/Temp/g2g/"
-    # folder_path = 'C:/Users/msi/Desktop/g2g/temp/'
+    # folder_path = "c:/Temp/g2g/"
+    folder_path = 'C:/Users/msi/Desktop/g2g/temp/'
 
     # Получаем список всех .html файлов в папке
     files = glob.glob(folder_path + "*.html")
@@ -114,8 +114,8 @@ def get_url_category(url):
             with open(name_files, "w", encoding='utf-8') as file:
                 file.write(driver.page_source)
 
-    # folders_html = [r"C:\Users\msi\Desktop\g2g\temp\*.html"]
-    folders_html = [r"c:\Temp\g2g\*.html"]
+    folders_html = [r"C:\Users\msi\Desktop\g2g\temp\*.html"]
+    # folders_html = [r"c:\Temp\g2g\*.html"]
     for file in folders_html:
         files_json = glob.glob(file)
         for item in files_json:
@@ -157,14 +157,14 @@ def get_url_product(url):
             driver.get(u[0])
             cout += 1
 
-            # time.sleep(1)
-            try:
-                counter_wait_url = WebDriverWait(driver, 10).until(
-                    EC.element_to_be_clickable(
-                        (By.XPATH, '//div[@class="precheckout__title precheckout__offer-title"]')))
-            except:
-                print(f'ошибка на странице, мы ее пропустили и идем дальше {u[0]}')
-                continue
+            time.sleep(2)
+            # try:
+            #     counter_wait_url = WebDriverWait(driver, 10).until(
+            #         EC.element_to_be_clickable(
+            #             (By.XPATH, '//div[@class="precheckout__title precheckout__offer-title"]')))
+            # except:
+            #     print(f'ошибка на странице, мы ее пропустили и идем дальше {u[0]}')
+            #     continue
             try:
                 if driver.find_element(By.XPATH, '//div[@class="precheckout__title precheckout__offer-title"]'):
                     counter_wait_url = WebDriverWait(driver, 60).until(
@@ -235,6 +235,7 @@ def get_url_product(url):
                         }
                     )
             except:
+                print(u[0])
                 continue
 
             # Создание DataFrame и запись в файл на каждой итерации

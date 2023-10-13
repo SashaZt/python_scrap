@@ -1,26 +1,36 @@
+from concurrent.futures import ProcessPoolExecutor
+from threading import Lock
 import csv
-import json
+from selenium.webdriver.chrome.service import Service
 import os
+import json
 import re
+from pathlib import Path
+import html
+from datetime import datetime
+import random
 import shutil
 import tempfile
-import time
-from concurrent.futures import ProcessPoolExecutor
-from datetime import datetime
-from threading import Lock
-from seleniumwire import webdriver
-# from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-# from seleniumwire import webdriver
-from selenium.webdriver.common.by import By
+import os
+from bs4 import BeautifulSoup
+from proxi import proxies
+import concurrent.futures
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.common.action_chains import ActionChains
+import zipfile
+import time
+# import undetected_chromedriver as webdriver
+from selenium import webdriver
+import undetected_chromedriver
+from selenium.common.exceptions import TimeoutException
+from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
+from concurrent.futures import ThreadPoolExecutor
+import csv
 
 lock = Lock()
-
-
-# proxy = random.choice(proxies)
+proxy = random.choice(proxies)
 
 
 class ProxyExtension:
@@ -94,9 +104,7 @@ class ProxyExtension:
         shutil.rmtree(self._dir)
 
 
-
-
-
+# def get_chromedriver():
 # def get_chromedriver():
 def get_chromedriver(proxy):
     chrome_options = webdriver.ChromeOptions()
@@ -116,7 +124,7 @@ def get_chromedriver(proxy):
         '--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36')
     proxy_extension = ProxyExtension(*proxy)
     chrome_options.add_argument(f"--load-extension={proxy_extension.directory}")
-    s = Service(executable_path="C:\\scrap_tutorial-master\\chromedriver.exe")
+    s = Service(executable_path="./chromedriver.exe")
     driver = webdriver.Chrome(service=s, options=chrome_options)
     driver.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {
         'source': '''
@@ -126,10 +134,8 @@ def get_chromedriver(proxy):
       '''
     })
     return driver
-
-
 def extract_data_from_csv():
-    csv_filename = 'data.csv'
+    csv_filename = 'exist_data.csv'
     columns_to_extract = ['price', 'Numer katalogowy części', 'Producent części']
 
     data = []  # Создаем пустой список для хранения данных
@@ -147,23 +153,16 @@ def extract_data_from_csv():
 
 def process_data(part_data):
     # создаем экземпляр драйвера для каждого процесса
-    API_KEY = '30bc2b5ab5eb9691ebbbfacfd939797f'
-    proxy_options = {
-        'proxy': {
-            f'http://scraperapi:{API_KEY}@proxy-server.scraperapi.com:8001',
-            # 'https': f'http://scraperapi:{API_KEY}@proxy-server.scraperapi.com:8001',
-            # 'no_proxy': 'localhost,127.0.0.1'
-        }
-    }
-    driver = webdriver.Chrome(seleniumwire_options=proxy_options)
-
+    driver = get_chromedriver(proxy)
+    site = 'E'
     now = datetime.now().date()
-
+    heandler = ['brand', 'part_number', 'description', 'quantity', 'price_new', 'price_old', 'now','site']
     with lock:  # межпроцессная блокировка
-        with open('output.csv', 'a', newline='', encoding='utf-8') as file:
+        with open('output_exist.csv', 'a', newline='', encoding='utf-8') as file:
             writer = csv.writer(file, delimiter=";")
+
             quantity = 50
-            for item in part_data:  # используем part_data
+            for item in part_data[:5]:  # используем part_data
                 driver.get('https://exist.ru/')
                 price_old = item['price']
                 sku = item['Numer katalogowy części']
@@ -180,8 +179,8 @@ def process_data(part_data):
                     find_catalogs = WebDriverWait(driver, 3).until(
                         EC.element_to_be_clickable((By.XPATH, '//ul[@class="catalogs"]/li/a')))
                 except:
-                    values = [brend, sku, '-', quantity, '-', price_old, now]
-                    writer.writerow(values)
+                    # values = [brend, sku, '-', quantity, '-', price_old, now]
+                    # writer.writerow(values)
                     continue
                 elements_catalogs = driver.find_elements(By.XPATH, '//ul[@class="catalogs"]/li/a')
 
@@ -246,22 +245,21 @@ def process_data(part_data):
                                 else:
                                     price_new = None
 
-                                values = [brand, part_number, description, quantity, price_new, price_old, now]
+                                values = [brand, part_number, description, quantity, price_new, price_old, now,site]
                                 # print(values)
                                 writer.writerow(values)  #
 
 
 def main():
     data_csv = extract_data_from_csv()
-
     # Разбиваем data_csv на части (например, на 4 части)
     num_parts = 5
     size_per_part = len(data_csv) // num_parts
     parts = [data_csv[i:i + size_per_part] for i in range(0, len(data_csv), size_per_part)]
 
     # Создаём output.csv и записываем заголовок
-    header = ['brand', 'part_number', 'description', 'quantity', 'price_new', 'price_old', 'data_parsing']
-    with open('output.csv', 'w', newline='', encoding='utf-8') as file:
+    header = ['brand', 'part_number', 'description', 'quantity', 'price_new', 'price_old', 'now','site']
+    with open('output_exist.csv', 'w', newline='', encoding='utf-8') as file:
         writer = csv.writer(file, delimiter=";")
         writer.writerow(header)
 

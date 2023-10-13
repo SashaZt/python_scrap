@@ -169,7 +169,17 @@ def extract_data_from_csv():
 
 
 def get_selenium():
-    driver = get_chromedriver(proxy)
+    from seleniumwire import webdriver
+    # driver = get_chromedriver(proxy)
+    API_KEY = '08ed3288dfca36359e9d28ddbe833829'
+    proxy_options = {
+        'proxy': {
+            'http': f'http://scraperapi:{API_KEY}@proxy-server.scraperapi.com:8001',
+            'https': f'http://scraperapi:{API_KEY}@proxy-server.scraperapi.com:8001',
+            'no_proxy': 'localhost,127.0.0.1'
+        }
+    }
+    driver = webdriver.Chrome(seleniumwire_options=proxy_options)
     now = datetime.now().date()
     data_csv = extract_data_from_csv()  # Вызываем функцию extract_data_from_csv
     heandler = ['brand', 'part_number', 'description', 'quantity', 'price_new','price_old', 'data_parsing']

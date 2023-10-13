@@ -57,14 +57,14 @@ def get_selenium():
     passwords.send_keys(Keys.RETURN)
     time.sleep(1)
     coun = 0
-    with open('Миколаїв.csv', 'a', newline='', encoding='utf-8') as file_data:
+    with open('Запоріжжя.csv', 'a', newline='', encoding='utf-8') as file_data:
         writer = csv.writer(file_data, delimiter=';')
         writer.writerow(['', '', '', '', '', '', '', ''])
-        for i in range(134, 147):  # 152
+        for i in range(13, 26):  # 114
 
             pause_time = random.randint(1, 3)
             driver.get(
-                f'https://tripoli.land/farmers/proizvoditeli-zerna/nikolaevskaya?page={i}&q%5Bcategories_id_eq%5D=2&q%5Bdistrict_region_id_eq%5D=15')
+                f'https://tripoli.land/farmers/proizvoditeli-zerna/zaporozhie?page={i}&q%5Bcategories_id_eq%5D=2&q%5Bdistrict_region_id_eq%5D=8')
             wait_company = wait.until(
                 EC.presence_of_element_located((By.XPATH, '//span[@class="call-popup"]')))
             company = driver.find_element(By.XPATH, '//span[@class="call-popup"]')
@@ -189,7 +189,7 @@ def get_selenium():
 
 
 # schedule.every().day.at("08:40").do(job)
-schedule.every().day.at("20:45").do(job)
+schedule.every().day.at("22:00").do(job)
 
 while True:
     schedule.run_pending()
