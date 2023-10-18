@@ -159,36 +159,6 @@ def get_urls_product():
                 time.sleep(pause_time)
 
 
-# def folders():
-#     filename = os.path.join(list_path, 'data.csv')
-#     coun = 0
-#     with open(filename, newline='', encoding='utf-8') as files:
-#         urls = list(csv.reader(files, delimiter=' ', quotechar='|'))
-#         for row in urls:
-#             pause_time = random.randint(1, 3)
-#             coun += 1
-#             """Настройка прокси серверов случайных"""
-#             proxy = random.choice(proxies)
-#             proxy_host = proxy[0]
-#             proxy_port = proxy[1]
-#             proxy_user = proxy[2]
-#             proxy_pass = proxy[3]
-#
-#             proxi = {
-#                 'http': f'http://{proxy_user}:{proxy_pass}@{proxy_host}:{proxy_port}',
-#                 'https': f'http://{proxy_user}:{proxy_pass}@{proxy_host}:{proxy_port}'
-#             }
-#             # Предполагается, что URL это первый элемент строки
-#             url = row[0]
-#
-#             # Отправляем запрос
-#             filename = os.path.join(product_path, f'0{coun}.html')
-#             name_files = Path('c:/data_wmmotor/products/') / f'data_{coun}.html'
-#             if not os.path.exists(name_files):
-#                 response = requests.get(url, headers=headers, cookies=cookies, proxies=proxi)
-#                 with open(name_files, "w", encoding='utf-8') as file:
-#                     file.write(response.text)
-#                 print(f'Осталось {len(urls) - coun}')
 
 def get_asio():
     import aiohttp
