@@ -1,157 +1,252 @@
 import csv
 import glob
-import requests
+import json
 import os
-from pathlib import Path
-from multiprocessing import Pool
+import re
+import time
 
-
+import requests
+from bs4 import BeautifulSoup
+from openpyxl import Workbook
+from config import api_key
 current_directory = os.getcwd()
 temp_directory = 'temp'
 # Создайте полный путь к папке temp
 temp_path = os.path.join(current_directory, temp_directory)
 list_path = os.path.join(temp_path, 'list')
 product_path = os.path.join(temp_path, 'product')
+img_path = os.path.join(temp_path, 'img')
 
-api_key = 'a818a4bc04f177c7ae82bb950ccf95ac'
 
 
 def delete_old_data():
     # Убедитесь, что папки существуют или создайте их
-    for folder in [temp_path, list_path, product_path]:
+    for folder in [temp_path, list_path, product_path, img_path]:
         if not os.path.exists(folder):
             os.makedirs(folder)
 
     # Удалите файлы из папок list и product
-    for folder in [list_path, product_path]:
+    for folder in [list_path, product_path, img_path]:
         files = glob.glob(os.path.join(folder, '*'))
         for f in files:
             if os.path.isfile(f):
                 os.remove(f)
-        # print(f'Очистил папку {os.path.basename(folder)}')
-# Функция для скачивания и сохранения данных по URL
-def download_url(url, index):
-    headers = {
-        # Вставьте ваш заголовок сюда
-    }
-    filename = os.path.join(product_path, f'data_{index}.html')
-    if not os.path.exists(filename):
-        try:
-            # response = requests.get(url, headers=headers)
-            response = requests.get(f'http://api.scraperapi.com?api_key={api_key}&url={url}')
+
+
+def get_total_company():
+    url = 'https://dealstream.com/search?topic=businessforsale&q='
+    response = requests.get(f'http://api.scraperapi.com?api_key={api_key}&url={url}')
+    src = response.text
+    soup = BeautifulSoup(src, 'lxml')
+    text = soup.find('div', class_='text-muted text-center').em.string
+
+    # Используем регулярное выражение для извлечения числа
+    match = re.search(r'of ([\d,]+) results', text)
+    if match:
+        number_str = match.group(1).replace(',', '')  # Удалить запятые
+        number = int(number_str)  # Преобразовать строку в число
+        return number
+
+
+"""Рабочий код"""
+
+
+def get_requests():
+    all_product = get_total_company()
+    coun = 1
+    pages = (all_product // 20) + 2
+    for i in range(1, pages):
+        filename = os.path.join(product_path, f'0{coun}.html')
+        urls = f'https://dealstream.com/search?page={i}&topic=businessforsale&q='
+        if not os.path.exists(filename):
+            response = requests.get(f'http://api.scraperapi.com?api_key={api_key}&url={urls}')
             src = response.text
             with open(filename, "w", encoding='utf-8') as file:
                 file.write(src)
-        except Exception as e:
-            print(f"Ошибка при скачивании URL {url}: {str(e)}")
+            time.sleep(10)
+        coun += 1
+        print(coun)
 
-# Функция для обработки одного процесса
-def process_chunk(chunk, start_index):
-    for index, url in enumerate(chunk, start=start_index):
-        download_url(url, index)
 
-def get_requests():
-    if __name__ == "__main__":
-        # Загрузите список URL из файла csv
-        csv_file = Path('c:/scrap_tutorial-master/exist/') / 'url_amortyzatory.csv'
-        with open(csv_file, 'r') as file:
-            url_list = [line.strip() for line in file]
+def fetch_and_save_page(page_number, api_key, product_path, pages_per_thread):
+    start_page = page_number * pages_per_thread + 1
+    end_page = (page_number + 1) * pages_per_thread + 1
 
-        # Разделите список URL на части для каждого процесса
-        num_processes = 5  # Укажите количество желаемых процессов
-        chunk_size = len(url_list) // num_processes
-        chunks = [url_list[i:i + chunk_size] for i in range(0, len(url_list), chunk_size)]
+    for i in range(start_page, end_page):
+        filename = os.path.join(product_path, f'0{i}.html')
+        urls = f'https://dealstream.com/search?page={i}&topic=businessforsale&q='
 
-        # Создайте пул процессов и выполните обработку URL
-        with Pool(processes=num_processes) as pool:
-            pool.starmap(process_chunk, [(chunk, i * chunk_size) for i, chunk in enumerate(chunks)])
+        if not os.path.exists(filename):
+            response = requests.get(f'http://api.scraperapi.com?api_key={api_key}&url={urls}')
+            src = response.text
 
-if __name__ == "__main__":
+            with open(filename, "w", encoding='utf-8') as file:
+                file.write(src)
+
+            time.sleep(10)
+
+
+def parsing_online():
+    productid_list = get_csv_productid()
+    heandler = ['name', 'description', 'url', 'productid', 'image', 'logo', 'price', 'priceCurrency', 'addressCountry',
+                'addressLocality', 'addressRegion', 'industry', 'category']
+    with open('output.csv', 'w', newline='', encoding='utf-8') as file:
+        writer = csv.writer(file, delimiter=";")
+        writer.writerow(heandler)
+        all_product = get_total_company()
+        coun = 0
+        pages = (all_product // 20) + 2
+        for i in range(1, pages):
+            coun += 1
+            print(f'Страница {coun}')
+            if stop_processing:  # Если флаг установлен, прекращаем обработку следующих страниц
+                break
+            filename = os.path.join(product_path, f'0{coun}.html')
+            urls = f'https://dealstream.com/search?page={i}&topic=businessforsale&q='
+            if not os.path.exists(filename):
+                while True:
+                    response = requests.get(f'http://api.scraperapi.com?api_key={api_key}&url={urls}')
+                    src = response.text
+                    soup = BeautifulSoup(src, 'lxml')
+                    scripts = soup.find_all('script', type="application/ld+json")
+                    if scripts:
+                        script = scripts[0]
+                        data_json = json.loads(script.string)
+                        break
+                    else:
+                        print(f'Пауза 10сек, делаем повтор')
+                        time.sleep(10)
+                rows = soup.find_all('div', attrs={"class": "list-group-item post"})
+
+                stop_processing = False  # Переменная для прекращения обработки
+
+                for j, r in zip(data_json['about'], rows):
+                    productid = j.get('item', {}).get('productid', None)
+
+                    name = j.get('item', {}).get('name', None)
+                    description = j.get('item', {}).get('description', None)
+                    url = j.get('item', {}).get('url', None)
+                    image = j.get('item', {}).get('image', None)
+                    logo = j.get('item', {}).get('logo', None)
+                    price = j.get('item', {}).get('offers', {}).get('price', None)
+                    priceCurrency = j.get('item', {}).get('offers', {}).get('priceCurrency', None)
+                    addressCountry = j.get('item', {}).get('offers', {}).get('availableAtOrFrom', {}).get('address',
+                                                                                                          {}).get(
+                        'addressCountry', None)
+                    addressLocality = j.get('item', {}).get('offers', {}).get('availableAtOrFrom', {}).get('address',
+                                                                                                           {}).get(
+                        'addressLocality', None)
+                    addressRegion = j.get('item', {}).get('offers', {}).get('availableAtOrFrom', {}).get('address',
+                                                                                                         {}).get(
+                        'addressRegion', None)
+                    try:
+                        industry = r.find('span', attrs={"title": "Industry"}).text
+                    except:
+                        industry = None
+                    try:
+                        category = r.find('span', attrs={"title": "Category"}).text
+                    except:
+                        category = None
+
+                    values = [name, description, url, productid, image, logo, price, priceCurrency, addressCountry,
+                              addressLocality, addressRegion, industry, category]
+
+                    writer.writerow(values)
+                    if productid in productid_list:
+                        stop_processing = True  # Устанавливаем флаг остановки обработки
+                        break  # Прекращаем выполнение текущего цикла for
+
+                if stop_processing:  # Если флаг установлен, прекращаем обработку страниц
+                    break
+
+
+def parsing():
+    folder = os.path.join(product_path, '*.html')
+
+    files_html = glob.glob(folder)
+    heandler = ['name', 'description', 'url', 'productid', 'image', 'logo', 'price', 'priceCurrency', 'addressCountry',
+                'addressLocality', 'addressRegion', 'industry', 'category']
+    with open('output.csv', 'w', newline='', encoding='utf-8') as file:
+        writer = csv.writer(file, delimiter=";")
+        writer.writerow(heandler)
+        for item in files_html:
+            with open(item, encoding="utf-8") as file:
+                src = file.read()
+            soup = BeautifulSoup(src, 'lxml')
+            script = soup.find_all('script', type="application/ld+json")[0]
+            data_json = json.loads(script.string)
+            rows = soup.find_all('div', attrs={"class": "list-group-item post"})
+
+            for j, r in zip(data_json['about'], rows):
+                name = j.get('item', {}).get('name', None)
+                description = j.get('item', {}).get('description', None)
+                url = j.get('item', {}).get('url', None)
+                productid = j.get('item', {}).get('productid', None)
+                image = j.get('item', {}).get('image', None)
+                logo = j.get('item', {}).get('logo', None)
+                price = j.get('item', {}).get('offers', {}).get('price', None)
+                priceCurrency = j.get('item', {}).get('offers', {}).get('priceCurrency', None)
+                addressCountry = j.get('item', {}).get('offers', {}).get('availableAtOrFrom', {}).get('address',
+                                                                                                      {}).get(
+                    'addressCountry', None)
+                addressLocality = j.get('item', {}).get('offers', {}).get('availableAtOrFrom', {}).get('address',
+                                                                                                       {}).get(
+                    'addressLocality', None)
+                addressRegion = j.get('item', {}).get('offers', {}).get('availableAtOrFrom', {}).get('address', {}).get(
+                    'addressRegion', None)
+                try:
+                    industry = r.find('span', attrs={"title": "Industry"}).text
+                except:
+                    industry = None
+                try:
+                    category = r.find('span', attrs={"title": "Category"}).text
+                except:
+                    category = None
+
+                values = [name, description, url, productid, image, logo, price, priceCurrency, addressCountry,
+                          addressLocality, addressRegion, industry, category]
+
+                writer.writerow(values)
+
+
+def get_csv_productid():
+    csv_filename = 'output.csv'
+    productid_list = []
+
+    with open(csv_filename, 'r', newline='', encoding='utf-8') as csvfile:
+        reader = csv.DictReader(csvfile, delimiter=";")
+
+        for row in reader:
+            productid = row.get('productid')
+            if productid:
+                productid_list.append(productid)
+    return productid_list
+
+
+def save_xslx():
+    # Определите регулярное выражение для фильтрации недопустимых символов
+    pattern = re.compile(r'[\x00-\x08\x0B-\x0C\x0E-\x1F\x7F]')
+
+    # Открываем CSV файл для чтения
+    with open('output.csv', 'r', newline='', encoding='utf-8') as csvfile:
+        reader = csv.reader(csvfile, delimiter=";")
+        # next(reader)  # Пропускаем первую строку с заголовками
+
+        # Создаем новую книгу Excel и выбираем активный лист
+        workbook = Workbook()
+        sheet = workbook.active
+
+        # Заполняем лист данными из CSV файла, фильтруя недопустимые символы
+        for row in reader:
+            filtered_row = [re.sub(pattern, '', cell) if cell else cell for cell in row]
+            sheet.append(filtered_row)
+
+        # Сохраняем книгу в файле XLSX
+        workbook.save('output.xlsx')
+
+
+if __name__ == '__main__':
     delete_old_data()
-    # get_requests()
+    parsing_online()
+    save_xslx()
 
-
-
-# """Рабочий код"""
-# from bs4 import BeautifulSoup
-# import csv
-# import glob
-# import re
-# import requests
-# import json
-# import cloudscraper
-# import os
-# import time
-# import undetected_chromedriver as webdriver
-# from selenium.common.exceptions import TimeoutException
-# # from selenium import webdriver
-# from selenium.webdriver.common.by import By
-# from selenium.webdriver.support import expected_conditions as EC
-# from selenium.webdriver.support.wait import WebDriverWait
-# from concurrent.futures import ThreadPoolExecutor
-# import csv
-#
-# from selenium.webdriver.chrome.service import Service
-# from selenium import webdriver
-# from selenium.common.exceptions import TimeoutException
-# from selenium.webdriver.common.by import By
-# from selenium.webdriver.support import expected_conditions as EC
-# from selenium.webdriver.support.wait import WebDriverWait
-# from concurrent.futures import ThreadPoolExecutor
-# import requests
-#
-# api_key = 'a818a4bc04f177c7ae82bb950ccf95ac'
-# url = 'https://exist.ru/Price/?pid=6D6023C3'
-#
-#
-# def get_requests():
-#     response = requests.get(f'http://api.scraperapi.com?api_key={api_key}&url={url}')
-#     src = response.text
-#     filename = f"amazon.html"
-#     with open(filename, "w", encoding='utf-8') as file:
-#         file.write(src)
-#
-#
-# def parsing():
-#     heandler = ['name', 'description', 'url', 'productid', 'image', 'logo', 'price', 'priceCurrency', 'addressCountry',
-#                 'addressLocality', 'addressRegion','industry']
-#     with open('output.csv', 'w', newline='', encoding='utf-8') as file:
-#         writer = csv.writer(file, delimiter=";")
-#         writer.writerow(heandler)
-#
-#         file = f"amazon.html"
-#         with open(file, encoding="utf-8") as file:
-#             src = file.read()
-#         soup = BeautifulSoup(src, 'lxml')
-#         script = soup.find_all('script', type="application/ld+json")[0]
-#         data_json = json.loads(script.string)
-#         rows = soup.find_all('div', attrs={"class": "list-group-item post"})
-#
-#         for j, r in zip(data_json['about'], rows):
-#             name = j.get('item', {}).get('name', None)
-#             description = j.get('item', {}).get('description', None)
-#             url = j.get('item', {}).get('url', None)
-#             productid = j.get('item', {}).get('productid', None)
-#             image = j.get('item', {}).get('image', None)
-#             logo = j.get('item', {}).get('logo', None)
-#             price = j.get('item', {}).get('offers', {}).get('price', None)
-#             priceCurrency = j.get('item', {}).get('offers', {}).get('priceCurrency', None)
-#             addressCountry = j.get('item', {}).get('offers', {}).get('availableAtOrFrom', {}).get('address', {}).get(
-#                 'addressCountry', None)
-#             addressLocality = j.get('item', {}).get('offers', {}).get('availableAtOrFrom', {}).get('address', {}).get(
-#                 'addressLocality', None)
-#             addressRegion = j.get('item', {}).get('offers', {}).get('availableAtOrFrom', {}).get('address', {}).get(
-#                 'addressRegion', None)
-#             industry = r.find('span', attrs={"title": "Industry"}).text
-#
-#             values = [name, description, url, productid, image, logo, price, priceCurrency, addressCountry,
-#                       addressLocality, addressRegion, industry]
-#
-#             writer.writerow(values)
-#
-#
-# if __name__ == '__main__':
-#     # get_requests()
-#     # get_cloudscraper()
-#     # get_selenium()
-#     parsing()
