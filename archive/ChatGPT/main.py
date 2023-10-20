@@ -1,10 +1,13 @@
 import openai
+import time
+from config import API_KEY
 
-API_KEY = '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'
 openai.api_key = API_KEY
-
+start_time = time.time()  # Записываем начальное время
 
 def general_response(text):
+
+
     response = openai.Completion.create(
         prompt=text,
         engine='text-davinci-003',
@@ -28,5 +31,8 @@ The flat entry at the back of the shoe, allows easy entry and prevents pressure 
 try:
     res = general_response(f'я тебе дам текст, {text} переведи его и сделай пожалуйста рерайт на украинском языке')
     print(res)
+    end_time = time.time()  # Записываем конечное время
+    elapsed_time = end_time - start_time  # Вычисляем разницу
+    print(f"Время выполнения кода: {elapsed_time:.2f} секунд.")
 except openai.error.RateLimitError:
     print("Превышен квотный лимит API. Пожалуйста, подождите и попробуйте снова позже.")
