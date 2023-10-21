@@ -1,38 +1,36 @@
 import openai
-import time
 from config import API_KEY
-
+import time
+# Устанавливаем API ключ
 openai.api_key = API_KEY
-start_time = time.time()  # Записываем начальное время
-
-def general_response(text):
 
 
-    response = openai.Completion.create(
-        prompt=text,
-        engine='text-davinci-003',
-        max_tokens=500,
-        temperature=0.7,
-        n=1,
-        stop=None,
-        timeout=15
+def ask_gpt3(prompt):
+    try:
+        # Отправляем запрос к модели
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant."},
+                {"role": "user", "content": prompt}
+            ]
+        )
 
-    )
-    if response and response.choices:
-        return response.choices[0].text.strip()
-    else:
+        # Извлекаем ответ
+        content = response['choices'][0]['message']['content'].strip()
+        return content
+    except openai.error.OpenAIError as e:
+        print(f"Ошибка при выполнении запроса: {e}")
         return None
-text = """Bogotto Tokyo perforated Motorcycle Shoes
 
-The Bogotto Tokyo motorcycle shoes have a short shaft, knitted upper with microfiber elements and are perforated.
-The flat entry at the back of the shoe, allows easy entry and prevents pressure points arise.
 
-"""
-try:
-    res = general_response(f'я тебе дам текст, {text} переведи его и сделай пожалуйста рерайт на украинском языке')
-    print(res)
+# Пример использования функции
+start_time = time.time()  # Записываем начальное время
+response = ask_gpt3("Напиши экспертную статью про автомобиль Audi A6 2016 года для автомобильного блога")
+if response:
+    print(response)
     end_time = time.time()  # Записываем конечное время
     elapsed_time = end_time - start_time  # Вычисляем разницу
     print(f"Время выполнения кода: {elapsed_time:.2f} секунд.")
-except openai.error.RateLimitError:
-    print("Превышен квотный лимит API. Пожалуйста, подождите и попробуйте снова позже.")
+else:
+    print("Не удалось получить ответ.")
