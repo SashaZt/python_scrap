@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import csv
 import glob
 import json
@@ -34,7 +35,7 @@ def delete_old_data():
 
 
 def get_total_company():
-    url = 'https://dealstream.com/search?topic=businessforsale&q='
+    url = 'https://dealstream.com/search/businessforsale?updatecriteria=true&q=&industryID=100&price.min=&price.max=&profit.min=&profit.max='
     response = requests.get(f'http://api.scraperapi.com?api_key={api_key}&url={url}')
     src = response.text
     soup = BeautifulSoup(src, 'lxml')
@@ -48,61 +49,28 @@ def get_total_company():
         return number
 
 
-"""Рабочий код"""
 
-
-def get_requests():
-    all_product = get_total_company()
-    coun = 1
-    pages = (all_product // 20) + 2
-    for i in range(1, pages):
-        filename = os.path.join(product_path, f'0{coun}.html')
-        urls = f'https://dealstream.com/search?page={i}&topic=businessforsale&q='
-        if not os.path.exists(filename):
-            response = requests.get(f'http://api.scraperapi.com?api_key={api_key}&url={urls}')
-            src = response.text
-            with open(filename, "w", encoding='utf-8') as file:
-                file.write(src)
-            time.sleep(10)
-        coun += 1
-        print(coun)
-
-
-def fetch_and_save_page(page_number, api_key, product_path, pages_per_thread):
-    start_page = page_number * pages_per_thread + 1
-    end_page = (page_number + 1) * pages_per_thread + 1
-
-    for i in range(start_page, end_page):
-        filename = os.path.join(product_path, f'0{i}.html')
-        urls = f'https://dealstream.com/search?page={i}&topic=businessforsale&q='
-
-        if not os.path.exists(filename):
-            response = requests.get(f'http://api.scraperapi.com?api_key={api_key}&url={urls}')
-            src = response.text
-
-            with open(filename, "w", encoding='utf-8') as file:
-                file.write(src)
-
-            time.sleep(10)
 
 
 def parsing_online():
     productid_list = get_csv_productid()
     heandler = ['name', 'description', 'url', 'productid', 'image', 'logo', 'price', 'priceCurrency', 'addressCountry',
-                'addressLocality', 'addressRegion', 'industry', 'category']
+                'addressLocality', 'addressRegion', 'industry', 'category','location']
     with open('output.csv', 'w', newline='', encoding='utf-8') as file:
         writer = csv.writer(file, delimiter=";")
         writer.writerow(heandler)
         all_product = get_total_company()
         coun = 0
         pages = (all_product // 20) + 2
+        stop_processing = False
         for i in range(1, pages):
+            filename = os.path.join(product_path, f'data_{coun}.html')
             coun += 1
             print(f'Страница {coun}')
             if stop_processing:  # Если флаг установлен, прекращаем обработку следующих страниц
                 break
             filename = os.path.join(product_path, f'0{coun}.html')
-            urls = f'https://dealstream.com/search?page={i}&topic=businessforsale&q='
+            urls = f'https://dealstream.com/search/businessforsale?page={i}&updatecriteria=true&q=&industryID=100&price.min=&price.max=&profit.min=&profit.max='
             if not os.path.exists(filename):
                 while True:
                     response = requests.get(f'http://api.scraperapi.com?api_key={api_key}&url={urls}')
@@ -112,11 +80,14 @@ def parsing_online():
                     if scripts:
                         script = scripts[0]
                         data_json = json.loads(script.string)
+                        with open(filename, "w", encoding='utf-8') as f:
+                            f.write(src)
                         break
                     else:
                         print(f'Пауза 10сек, делаем повтор')
                         time.sleep(10)
-                rows = soup.find_all('div', attrs={"class": "list-group-item post"})
+                table = soup.find('div', attrs={"class": "panel panel-default"})
+                rows = table.find_all('div', attrs={"class": "list-group-item post"})
 
                 stop_processing = False  # Переменная для прекращения обработки
 
@@ -147,9 +118,13 @@ def parsing_online():
                         category = r.find('span', attrs={"title": "Category"}).text
                     except:
                         category = None
+                    try:
+                        location = r.find('span', attrs={"title": "Location"}).text
+                    except:
+                        location = None
 
                     values = [name, description, url, productid, image, logo, price, priceCurrency, addressCountry,
-                              addressLocality, addressRegion, industry, category]
+                              addressLocality, addressRegion, industry, category, location]
 
                     writer.writerow(values)
                     if productid in productid_list:
@@ -160,66 +135,24 @@ def parsing_online():
                     break
 
 
-def parsing():
-    folder = os.path.join(product_path, '*.html')
-
-    files_html = glob.glob(folder)
-    heandler = ['name', 'description', 'url', 'productid', 'image', 'logo', 'price', 'priceCurrency', 'addressCountry',
-                'addressLocality', 'addressRegion', 'industry', 'category']
-    with open('output.csv', 'w', newline='', encoding='utf-8') as file:
-        writer = csv.writer(file, delimiter=";")
-        writer.writerow(heandler)
-        for item in files_html:
-            with open(item, encoding="utf-8") as file:
-                src = file.read()
-            soup = BeautifulSoup(src, 'lxml')
-            script = soup.find_all('script', type="application/ld+json")[0]
-            data_json = json.loads(script.string)
-            rows = soup.find_all('div', attrs={"class": "list-group-item post"})
-
-            for j, r in zip(data_json['about'], rows):
-                name = j.get('item', {}).get('name', None)
-                description = j.get('item', {}).get('description', None)
-                url = j.get('item', {}).get('url', None)
-                productid = j.get('item', {}).get('productid', None)
-                image = j.get('item', {}).get('image', None)
-                logo = j.get('item', {}).get('logo', None)
-                price = j.get('item', {}).get('offers', {}).get('price', None)
-                priceCurrency = j.get('item', {}).get('offers', {}).get('priceCurrency', None)
-                addressCountry = j.get('item', {}).get('offers', {}).get('availableAtOrFrom', {}).get('address',
-                                                                                                      {}).get(
-                    'addressCountry', None)
-                addressLocality = j.get('item', {}).get('offers', {}).get('availableAtOrFrom', {}).get('address',
-                                                                                                       {}).get(
-                    'addressLocality', None)
-                addressRegion = j.get('item', {}).get('offers', {}).get('availableAtOrFrom', {}).get('address', {}).get(
-                    'addressRegion', None)
-                try:
-                    industry = r.find('span', attrs={"title": "Industry"}).text
-                except:
-                    industry = None
-                try:
-                    category = r.find('span', attrs={"title": "Category"}).text
-                except:
-                    category = None
-
-                values = [name, description, url, productid, image, logo, price, priceCurrency, addressCountry,
-                          addressLocality, addressRegion, industry, category]
-
-                writer.writerow(values)
-
 
 def get_csv_productid():
     csv_filename = 'output.csv'
     productid_list = []
 
-    with open(csv_filename, 'r', newline='', encoding='utf-8') as csvfile:
-        reader = csv.DictReader(csvfile, delimiter=";")
+    try:
+        with open(csv_filename, 'r', newline='', encoding='utf-8') as csvfile:
+            reader = csv.DictReader(csvfile, delimiter=";")
 
-        for row in reader:
-            productid = row.get('productid')
-            if productid:
-                productid_list.append(productid)
+            for row in reader:
+                productid = row.get('productid')
+                if productid:
+                    productid_list.append(productid)
+
+    except FileNotFoundError:
+        # Если файла не существует, функция вернёт пустой список
+        pass
+
     return productid_list
 
 
