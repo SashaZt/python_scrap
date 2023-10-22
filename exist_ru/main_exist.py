@@ -106,7 +106,7 @@ class ProxyExtension:
 
 # def get_chromedriver():
 # def get_chromedriver():
-def get_chromedriver(proxy):
+def get_chromedriver():
     chrome_options = webdriver.ChromeOptions()
 
     chrome_options.add_argument('--disable-blink-features=AutomationControlled')
@@ -122,8 +122,8 @@ def get_chromedriver(proxy):
     # chrome_options.add_argument('--disable-setuid-sandbox')
     chrome_options.add_argument(
         '--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36')
-    proxy_extension = ProxyExtension(*proxy)
-    chrome_options.add_argument(f"--load-extension={proxy_extension.directory}")
+    # proxy_extension = ProxyExtension(*proxy)
+    # chrome_options.add_argument(f"--load-extension={proxy_extension.directory}")
     s = Service(executable_path="./chromedriver.exe")
     driver = webdriver.Chrome(service=s, options=chrome_options)
     driver.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {
@@ -140,8 +140,8 @@ def extract_data_from_csv():
 
     data = []  # Создаем пустой список для хранения данных
 
-    with open(csv_filename, 'r', newline='', encoding='utf-8') as csvfile:
-        reader = csv.DictReader(csvfile, delimiter=';')  # Указываем разделитель точку с запятой
+    with open(csv_filename, 'r', newline='', encoding='utf-16') as csvfile:
+        reader = csv.DictReader(csvfile, delimiter='\t')  # Указываем разделитель точку с запятой
 
         for row in reader:
             item = {}  # Создаем пустой словарь для текущей строки
@@ -153,7 +153,7 @@ def extract_data_from_csv():
 
 def process_data(part_data):
     # создаем экземпляр драйвера для каждого процесса
-    driver = get_chromedriver(proxy)
+    driver = get_chromedriver()
     site = 'E'
     now = datetime.now().date()
     heandler = ['brand', 'part_number', 'description', 'quantity', 'price_new', 'price_old', 'now','site']

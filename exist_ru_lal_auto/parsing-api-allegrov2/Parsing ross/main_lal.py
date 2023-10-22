@@ -2,12 +2,12 @@ import csv
 import datetime
 import glob
 import os
+import pandas as pd
 import re
 from datetime import datetime
 from io import StringIO
 
 import numpy as np
-import pandas as pd
 import requests
 from bs4 import BeautifulSoup
 
@@ -40,8 +40,8 @@ def extract_data_from_csv():
 
     data = []  # Создаем пустой список для хранения данных
 
-    with open(csv_filename, 'r', newline='', encoding='utf-8') as csvfile:
-        reader = csv.DictReader(csvfile, delimiter=';')  # Указываем разделитель точку с запятой
+    with open(csv_filename, 'r', newline='', encoding='utf-16') as csvfile:
+        reader = csv.DictReader(csvfile, delimiter='\t')  # Указываем разделитель точку с запятой
 
         for row in reader:
             item = {}  # Создаем пустой словарь для текущей строки
@@ -63,7 +63,7 @@ def get_requests():
     list_path = os.path.join(temp_path, 'list')
     product_path = os.path.join(temp_path, 'product')
 
-    async def fetch(session, sku, filename, headers):
+    async def fetch(session, sku, brend,price_old, filename, headers):
         params = {
             'action': 'catalog_price_view',
             'code': sku,
@@ -76,7 +76,10 @@ def get_requests():
                 with open(filename, "w", encoding='utf-8') as file:
                     file.write(src)
         except Exception as e:
-            print(f"Error fetching SKU {sku}: {e}")
+            values = [price_old, sku, brend]
+            with open('exist_data.csv', 'a', newline='', encoding='utf-16') as exist_file:
+                exist_writer = csv.writer(exist_file, delimiter='\t')
+                exist_writer.writerow(values)  # Записываем в exist.csv
 
     def extract_data_from_csv():
         csv_filename = 'data.csv'
@@ -84,8 +87,8 @@ def get_requests():
 
         data = []  # Создаем пустой список для хранения данных
 
-        with open(csv_filename, 'r', newline='', encoding='utf-8') as csvfile:
-            reader = csv.DictReader(csvfile, delimiter=';')  # Указываем разделитель точку с запятой
+        with open(csv_filename, 'r', newline='', encoding='utf-16') as csvfile:
+            reader = csv.DictReader(csvfile, delimiter='\t')  # Указываем разделитель точку с запятой
 
             for row in reader:
                 item = {}  # Создаем пустой словарь для текущей строки
@@ -95,6 +98,10 @@ def get_requests():
         return data
 
     async def main():
+        file_path = 'exist_data.csv'
+
+        if os.path.exists(file_path):
+            os.remove(file_path)
         headers = {
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
             'Accept-Language': 'ru,en-US;q=0.9,en;q=0.8,uk;q=0.7,de;q=0.6',
@@ -121,9 +128,11 @@ def get_requests():
                 tasks = []
                 for item in data_csv[i:i + 1000]:
                     sku = item['Numer katalogowy części'].replace(" ", "").replace("/", "")
+                    brend = item['Producent części'].capitalize()
+                    price_old = item['price']
                     filename = os.path.join(product_path, sku + '.html')
                     if not os.path.exists(filename):
-                        tasks.append(fetch(session, sku, filename, headers))
+                        tasks.append(fetch(session, sku, brend,price_old, filename, headers))
                 if tasks:
                     await asyncio.gather(*tasks)
                     if i + 1000 < len(data_csv):
@@ -141,7 +150,7 @@ def parsing():
     site = 'L'
     heandler = ['brand', 'part_number', 'description', 'quantity', 'lowest_price', 'price_old', 'data_transport',
                               'price_update', 'site', 'now']
-    with open(f'{name_files}_lal.csv', 'w', newline='', encoding='utf-16') as file, open('exist_data.csv', 'w', newline='', encoding='utf-16') as exist_file:
+    with open(f'{name_files}_lal.csv', 'w', newline='', encoding='utf-16') as file, open('exist_data.csv', 'a', newline='', encoding='utf-16') as exist_file:
         writer = csv.writer(file, delimiter='\t')
         exist_writer = csv.writer(exist_file, delimiter='\t')  # Создаем writer для exist.csv
         # exist_writer.writerow(['brand', 'sku', 'price'])  # Записываем заголовок для exist.csv
@@ -155,8 +164,11 @@ def parsing():
             sku = sku.replace("/", "")
             brend = item['Producent części'].capitalize()
             folders_html = os.path.join(product_path, f"{sku}.html")
-            with open(folders_html, encoding="utf-8") as file:
-                src = file.read()
+            try:
+                with open(folders_html, encoding="utf-8") as file:
+                    src = file.read()
+            except:
+                continue
             soup = BeautifulSoup(src, 'html.parser')
             table = soup.find('table', class_='datatable')
             html_string_io = StringIO(str(table))
@@ -218,8 +230,18 @@ def parsing():
                 exist_writer.writerow(values)  # Записываем в exist.csv
                 continue
 
+def sort_csv():
+    # Читаем CSV файл
+    df = pd.read_csv(f'{name_files}_lal.csv', sep='\t', encoding='utf-16')
+    # Преобразовываем столбец 'price_update' в формат даты
+    df['price_update'] = pd.to_datetime(df['price_update'], format='%d.%m.%y')
+
+    df = df.sort_values(by='price_update', ascending=False)
+    df.to_csv(f'{name_files}_lal.csv', sep='\t', encoding='utf-16', index=False)
+
 
 if __name__ == '__main__':
     delete_old_data()
     get_requests()
     parsing()
+    sort_csv()

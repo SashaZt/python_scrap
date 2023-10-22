@@ -139,8 +139,8 @@ def extract_data_from_csv():
 
     data = []  # Создаем пустой список для хранения данных
 
-    with open(csv_filename, 'r', newline='', encoding='utf-8') as csvfile:
-        reader = csv.DictReader(csvfile, delimiter=';')  # Указываем разделитель точку с запятой
+    with open(csv_filename, 'r', newline='', encoding='utf-16') as csvfile:
+        reader = csv.DictReader(csvfile, delimiter='\t')  # Указываем разделитель точку с запятой
 
         for row in reader:
             item = {}  # Создаем пустой словарь для текущей строки
@@ -259,7 +259,7 @@ def main():
     data_csv = extract_data_from_csv()
 
     # Разбиваем data_csv на части (например, на 4 части)
-    num_parts = 4
+    num_parts = 2
     size_per_part = len(data_csv) // num_parts
     parts = [data_csv[i:i + size_per_part] for i in range(0, len(data_csv), size_per_part)]
 

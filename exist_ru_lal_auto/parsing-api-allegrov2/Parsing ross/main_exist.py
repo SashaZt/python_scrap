@@ -1,33 +1,24 @@
-from concurrent.futures import ProcessPoolExecutor
-from threading import Lock
 import csv
-from selenium.webdriver.chrome.service import Service
-import os
 import json
-import re
-from pathlib import Path
-import html
-from datetime import datetime
+import os
 import random
+import re
 import shutil
 import tempfile
-import os
-from bs4 import BeautifulSoup
-from proxi import proxies
-import concurrent.futures
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.common.action_chains import ActionChains
-import zipfile
 import time
-# import undetected_chromedriver as webdriver
+from concurrent.futures import ProcessPoolExecutor
+from datetime import datetime
+from threading import Lock
 from selenium import webdriver
-from selenium.common.exceptions import TimeoutException
+from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
-from concurrent.futures import ThreadPoolExecutor
-import csv
+
 from config_exist import ThreadsCount, name_files
+from proxi import proxies
+
 lock = Lock()
 proxy = random.choice(proxies)
 
@@ -133,6 +124,8 @@ def get_chromedriver(proxy):
       '''
     })
     return driver
+
+
 def extract_data_from_csv():
     csv_filename = 'exist_data.csv'
     columns_to_extract = ['price', 'Numer katalogowy części', 'Producent części']
@@ -152,6 +145,7 @@ def extract_data_from_csv():
 
 def process_data(part_data):
     # создаем экземпляр драйвера для каждого процесса
+    print('Работает')
     driver = get_chromedriver(proxy)
 
     site = 'E'
@@ -246,7 +240,8 @@ def process_data(part_data):
                                 else:
                                     lowest_price = None
 
-                                values = [brand, part_number, description, quantity, lowest_price, price_old, data_transport,site ,now]
+                                values = [brand, part_number, description, quantity, lowest_price, price_old,
+                                          data_transport, site, now]
 
                                 # print(values)
                                 writer.writerow(values)  #
@@ -260,7 +255,8 @@ def main():
     parts = [data_csv[i:i + size_per_part] for i in range(0, len(data_csv), size_per_part)]
 
     # Создаём output.csv и записываем заголовок
-    header = ['brand', 'part_number', 'description', 'quantity', 'lowest_price', 'price_old', 'data_transport', 'site','now']
+    header = ['brand', 'part_number', 'description', 'quantity', 'lowest_price', 'price_old', 'data_transport', 'site',
+              'now']
     with open(f'{name_files}_exist.csv', 'w', newline='', encoding='utf-16') as file:
         writer = csv.writer(file, delimiter='\t')
         writer.writerow(header)
