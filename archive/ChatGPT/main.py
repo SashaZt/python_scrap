@@ -9,7 +9,7 @@ def ask_gpt3(prompt):
     try:
         # Отправляем запрос к модели
         response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
+            model="gpt-4",
             messages=[
                 {"role": "system", "content": "You are a helpful assistant."},
                 {"role": "user", "content": prompt}
