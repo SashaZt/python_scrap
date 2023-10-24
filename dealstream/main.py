@@ -35,7 +35,7 @@ def delete_old_data():
 
 
 def get_total_company():
-    url = 'https://dealstream.com/search/businessforsale?updatecriteria=true&q=&industryID=100&price.min=&price.max=&profit.min=&profit.max='
+    url = 'https://dealstream.com/search/financialassets?q='
     response = requests.get(f'http://api.scraperapi.com?api_key={api_key}&url={url}')
     src = response.text
     soup = BeautifulSoup(src, 'lxml')
@@ -70,7 +70,7 @@ def parsing_online():
             if stop_processing:  # Если флаг установлен, прекращаем обработку следующих страниц
                 break
             filename = os.path.join(product_path, f'0{coun}.html')
-            urls = f'https://dealstream.com/search/businessforsale?page={i}&updatecriteria=true&q=&industryID=100&price.min=&price.max=&profit.min=&profit.max='
+            urls = f'https://dealstream.com/search/financialassets?page={i}&q='
             if not os.path.exists(filename):
                 while True:
                     response = requests.get(f'http://api.scraperapi.com?api_key={api_key}&url={urls}')
@@ -161,7 +161,8 @@ def save_xslx():
     pattern = re.compile(r'[\x00-\x08\x0B-\x0C\x0E-\x1F\x7F]')
 
     # Открываем CSV файл для чтения
-    with open('output.csv', 'r', newline='', encoding='utf-8') as csvfile:
+    with open('output_12k.csv', 'r', newline='', encoding='utf-8') as csvfile:
+    # with open('output.csv', 'r', newline='', encoding='utf-8') as csvfile:
         reader = csv.reader(csvfile, delimiter=";")
         # next(reader)  # Пропускаем первую строку с заголовками
 
@@ -175,11 +176,67 @@ def save_xslx():
             sheet.append(filtered_row)
 
         # Сохраняем книгу в файле XLSX
-        workbook.save('output.xlsx')
+        workbook.save('output_12k.xlsx')
+        # workbook.save('output.xlsx')
 
+def parsing_offline():
+    folder = os.path.join('C:\\scrap_tutorial-master\\dealstream\\temp\\product 700', '*.html')
+
+    files_html = glob.glob(folder)
+    heandler = ['name', 'description', 'url', 'productid', 'image', 'logo', 'price', 'priceCurrency', 'addressCountry',
+                'addressLocality', 'addressRegion', 'industry', 'category', 'location']
+    with open('output_12k.csv', 'w', newline='', encoding='utf-8') as file:
+        writer = csv.writer(file, delimiter=";")
+        writer.writerow(heandler)
+        for item in files_html:
+            with open(item, encoding="utf-8") as file:
+                src = file.read()
+            soup = BeautifulSoup(src, 'lxml')
+            scripts = soup.find_all('script', type="application/ld+json")[0]
+            data_json = json.loads(scripts.string)
+            table = soup.find('div', attrs={"class": "panel panel-default"})
+            rows = table.find_all('div', attrs={"class": "list-group-item post"})
+
+            for j, r in zip(data_json['about'], rows):
+                productid = j.get('item', {}).get('productid', None)
+
+                name = j.get('item', {}).get('name', None)
+                description = j.get('item', {}).get('description', None)
+                url = j.get('item', {}).get('url', None)
+                image = j.get('item', {}).get('image', None)
+                logo = j.get('item', {}).get('logo', None)
+                price = j.get('item', {}).get('offers', {}).get('price', None)
+                priceCurrency = j.get('item', {}).get('offers', {}).get('priceCurrency', None)
+                addressCountry = j.get('item', {}).get('offers', {}).get('availableAtOrFrom', {}).get('address',
+                                                                                                      {}).get(
+                    'addressCountry', None)
+                addressLocality = j.get('item', {}).get('offers', {}).get('availableAtOrFrom', {}).get('address',
+                                                                                                       {}).get(
+                    'addressLocality', None)
+                addressRegion = j.get('item', {}).get('offers', {}).get('availableAtOrFrom', {}).get('address',
+                                                                                                     {}).get(
+                    'addressRegion', None)
+                try:
+                    industry = r.find('span', attrs={"title": "Industry"}).text
+                except:
+                    industry = None
+                try:
+                    category = r.find('span', attrs={"title": "Category"}).text
+                except:
+                    category = None
+                try:
+                    location = r.find('span', attrs={"title": "Location"}).text
+                except:
+                    location = None
+
+                values = [name, description, url, productid, image, logo, price, priceCurrency, addressCountry,
+                          addressLocality, addressRegion, industry, category, location]
+
+                writer.writerow(values)
 
 if __name__ == '__main__':
-    delete_old_data()
-    parsing_online()
+    # delete_old_data()
+    # parsing_online()
     save_xslx()
+    # parsing_offline()
 
