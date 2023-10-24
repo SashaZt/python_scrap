@@ -69,31 +69,34 @@ def delete_old_data():
 
 names = 'f2-166'
 
+def total_pages():
+    pass
+
 
 def get_request():
     urls = [
-        # 'https://voltag.ru/catalog/list/f2-39/',
-        #     'https://voltag.ru/catalog/list/f2-547/',
-        #     'https://voltag.ru/catalog/list/f2-153/',
-        #     'https://voltag.ru/catalog/list/f2-159/',
-        #     'https://voltag.ru/catalog/list/f2-158/',
-        #     'https://voltag.ru/catalog/list/f2-179/',
-        #     'https://voltag.ru/catalog/list/f2-506/',
-        # 'https://voltag.ru/catalog/list/f2-167/',
-        # 'https://voltag.ru/catalog/list/f2-165/',
-        # 'https://voltag.ru/catalog/list/f2-166/',
-        # 'https://voltag.ru/catalog/list/f2-41/',
-        # 'https://voltag.ru/catalog/list/f2-280/',
-        # 'https://voltag.ru/catalog/list/f2-292/p-7/',
-        # 'https://voltag.ru/catalog/list/f2-428/p-7/',
-        # 'https://voltag.ru/catalog/list/f2-267/',
-        # 'https://voltag.ru/catalog/list/f2-359/',
-        # 'https://voltag.ru/catalog/list/f2-396/',
-        # 'https://voltag.ru/catalog/list/f2-339/p-7/',
-        # 'https://voltag.ru/catalog/list/f2-350/',
-        # 'https://voltag.ru/catalog/list/f2-225/',
-        # 'https://voltag.ru/catalog/list/f2-318/',
-        # 'https://voltag.ru/catalog/list/f2-119/'
+        'https://voltag.ru/catalog/list/f2-39/',
+        'https://voltag.ru/catalog/list/f2-547/',
+        'https://voltag.ru/catalog/list/f2-153/',
+        'https://voltag.ru/catalog/list/f2-159/',
+        'https://voltag.ru/catalog/list/f2-158/',
+        'https://voltag.ru/catalog/list/f2-179/',
+        'https://voltag.ru/catalog/list/f2-506/',
+        'https://voltag.ru/catalog/list/f2-167/',
+        'https://voltag.ru/catalog/list/f2-165/',
+        'https://voltag.ru/catalog/list/f2-166/',
+        'https://voltag.ru/catalog/list/f2-41/',
+        'https://voltag.ru/catalog/list/f2-280/',
+        'https://voltag.ru/catalog/list/f2-292/',
+        'https://voltag.ru/catalog/list/f2-428/',
+        'https://voltag.ru/catalog/list/f2-267/',
+        'https://voltag.ru/catalog/list/f2-359/',
+        'https://voltag.ru/catalog/list/f2-396/',
+        'https://voltag.ru/catalog/list/f2-339/',
+        'https://voltag.ru/catalog/list/f2-350/',
+        'https://voltag.ru/catalog/list/f2-225/',
+        'https://voltag.ru/catalog/list/f2-318/',
+        'https://voltag.ru/catalog/list/f2-119/'
         ]
 
     pages = 29
