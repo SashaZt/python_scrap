@@ -114,7 +114,7 @@ def get_request_list():
     with open('categories_info.json', 'r', encoding='utf-8') as f:
         data = json.load(f)
 
-    for item in data[1:5]:
+    for item in data[5:]:
         name = item.get('name')
         total_pages = item.get('total_pages')
         for i in range(1, total_pages + 1):
@@ -152,7 +152,7 @@ def get_urls_products():
     with open('categories_info.json', 'r', encoding='utf-8') as f:
         data = json.load(f)
 
-    for item in data[1:5]:
+    for item in data[5:]:
         name = item.get('name')
         filename_hml = os.path.join(list_path, name, '*.html')
         files_glob = glob.glob(filename_hml)
@@ -181,7 +181,7 @@ def get_request_product():
     with open('categories_info.json', 'r', encoding='utf-8') as f:
         data = json.load(f)
 
-    for item in data[1:5]:
+    for item in data[5:]:
         name = item.get('name')
         filename_csv = os.path.join(temp_path, f'{name}.csv')
 
@@ -206,7 +206,7 @@ def parsing():
     with open('categories_info.json', 'r', encoding='utf-8') as f:
         data = json.load(f)
 
-    for item in data[1:5]:
+    for item in data[5:]:
         name = item.get('name')
         filename_hml = os.path.join(product_path, name, '*.html')
         files_glob = glob.glob(filename_hml)
@@ -360,9 +360,9 @@ def parsing():
 if __name__ == '__main__':
     # delete_old_data()
     # extract_data_from_csv()
-    get_request_list()
-    get_urls_products()
-    get_request_product()
+    # get_request_list()
+    # get_urls_products()
+    # get_request_product()
     parsing()
 
     # total_pages()
