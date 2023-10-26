@@ -4,16 +4,21 @@ import json
 import os
 import re
 import time
+import csv
+import openpyxl
+import re
 
 import requests
 from bs4 import BeautifulSoup
 
 current_directory = os.getcwd()
 temp_directory = 'temp'
+csv_directory = 'csv'
 # Создайте полный путь к папке temp
 temp_path = os.path.join(current_directory, temp_directory)
 list_path = os.path.join(temp_path, 'list')
 product_path = os.path.join(temp_path, 'product')
+csv_path = os.path.join(current_directory, csv_directory)
 img_path = os.path.join(temp_path, 'img')
 cookies = {
     'PHPSESSID': 'y46XRseJa01FdwxsfBTBxIs6IFpyXhFc',
@@ -211,7 +216,7 @@ def parsing():
         filename_hml = os.path.join(product_path, name, '*.html')
         files_glob = glob.glob(filename_hml)
         all_data_dicts = []  # Список словарей для хранения всех данных
-        handler_set = {"title","crosslist", "application"}  # Инициализация сета с специальными ключами
+        handler_set = {"title", "crosslist", "application"}  # Инициализация сета с специальными ключами
         for g in files_glob:  # срез на файлы
             with open(g, encoding="utf-8") as file:
                 src = file.read()
@@ -260,102 +265,27 @@ def parsing():
                 writer.writerow(data_dict)
 
 
-                # crosslist_div = soup.find('div', attrs={'class': 'catalog_group_crosslist_info'}).get_text()
-                # crosslist = re.sub(r'\s+', ' ', crosslist_div).strip()
-                # application_div = soup.find('div', attrs={'class': 'catalog_group_application_info'}).get_text()
-                # application = re.sub(r'\s+', ' ', application_div).strip()
-                # values = [catalog_group_title, crosslist, application]
-                # writer.writerow(values)
 
-            #
-            # catalog_group_crosslist_info = soup.find('div', attrs={'class': 'catalog_group_crosslist_info'})
-            #
-            # for row in catalog_group_crosslist_info.find('tbody').find_all('tr'):
-            #     manufacturer_col, parts_col = row.find_all('td')
-            #     manufacturer = manufacturer_col.text.strip()
-            #     parts = parts_col.get_text(separator=", ", strip=True)
 
-    #
-    #
-    # folder = os.path.join(product_path, '*.html')
-    #
-    # files_html = glob.glob(folder)
-    # heandler = ['catalog_item_title', 'catalog_item_subtitle', 'nz', 'tc',
-    #             'hi' 'catalog_item_crosses',
-    #             'catalog_item_application']
-    #
-    # with open(f'{names}.csv', 'w', newline='', encoding='utf-8') as file:
-    #     writer = csv.writer(file, delimiter=";")
-    #     writer.writerow(heandler)
-    #     for item in files_html:  # срез на файлы
-    #         print(item)
-    #         with open(item, encoding="utf-8") as file:
-    #             src = file.read()
-    #         soup = BeautifulSoup(src, 'lxml')
-    #         table = soup.find('div', attrs={'class': 'catalog_list'})
-    #         products = table.find_all('div', attrs={'class': 'catalog_item one_photo'})
-    #         for p in products:  # срез на позиции в таблице
-    #             imgs = []
-    #             catalog_item_title = p.find('div', attrs={'class': 'catalog_item_title_wrap'}).find('h2').text
-    #             catalog_item_subtitle = p.find('div', attrs={'class': 'catalog_item_subtitle'}).text
-    #             """Извлечь весь текст"""
-    #             catalog_item_params = p.find('div', attrs={'class': 'catalog_item_params'})
-    #             data_dict = {}
-    #
-    #             # Извлекаем все строки таблицы
-    #             rows = soup.select("table tr")
-    #             for row in rows:
-    #                 key_col = row.select_one("td b")
-    #                 value_col = row.select_one("td.info-width div, td.info-width span")
-    #
-    #                 # Если оба значения существуют и имеют текст, сохраняем их в словаре
-    #                 if key_col and value_col and key_col.text.strip() and value_col.text.strip():
-    #                     key = key_col.text.strip()[:-1]  # убираем ':' из ключа
-    #                     value = value_col.text.strip()
-    #                     data_dict[key] = value
-    #
-    #             # Присваиваем значения переменным
-    #             nz = data_dict.get("nz", None)
-    #             tc = data_dict.get("tc", None)
-    #             print(nz, tc)
-    #
-    #             catalog_item_crosses_text = p.find('div', attrs={'class': 'catalog_item_crosses'}).get_text(
-    #                 separator=", ",
-    #                 strip=True).replace(
-    #                 '\t', '').replace(" ", "")
-    #             catalog_item_crosses = re.sub(r'\s+', ' ', catalog_item_crosses_text).strip()
-    #             catalog_item_application_text = p.find('div', attrs={'class': 'catalog_item_application'}).get_text()
-    #             catalog_item_application = re.sub(r'\s+', ' ', catalog_item_application_text).strip()
-    #             catalog_item_photo_div = p.find('div', attrs={'class': 'catalog_item_photo'})
-    #
-    #             if catalog_item_photo_div:
-    #                 a_tag = catalog_item_photo_div.find('a')
-    #                 if a_tag:
-    #                     catalog_item_photo = a_tag.get('href')
-    #                     if catalog_item_photo:  # Проверка на случай, если атрибут href отсутствует
-    #                         imgs.append(catalog_item_photo)
-    #
-    #             catalog_item_photo_hidden_photos = p.find_all('div', attrs={'class': 'catalog_item_photo hidden_photo'})
-    #             for j in catalog_item_photo_hidden_photos:
-    #                 a_tag = j.find('a')
-    #                 if a_tag:
-    #                     img = a_tag.get('href')
-    #                     if img:  # Проверка на случай, если атрибут href отсутствует
-    #                         imgs.append(img)
-    #
-    #             cointer = 0
-    #             for url in imgs:
-    #                 files_img = os.path.join(img_path, f'{catalog_item_title}_{cointer}.jpg')
-    #                 if not os.path.exists(files_img):
-    #                     img_data = requests.get(url, headers=headers, cookies=cookies)
-    #                     with open(files_img, 'wb') as file_img:
-    #                         file_img.write(img_data.content)
-    #
-    #                     cointer += 1
-    #             values = [catalog_item_title, catalog_item_subtitle, nz, tc, catalog_item_crosses,
-    #                       catalog_item_application]
-    #             writer.writerow(values)
+def csv_to_xlsx():
+    filename_csv = os.path.join(csv_path, '*.csv')
+    files_glob = glob.glob(filename_csv)
 
+    for g in files_glob:
+        name_xlsx = g.split("\\")[-1].replace(".csv", "")
+
+        if os.path.exists(g):  # Проверка на существование файла
+            workbook = openpyxl.Workbook()
+            worksheet = workbook.active
+            with open(g, 'r', newline='', encoding='utf-8') as csvfile:
+                reader = csv.reader(csvfile, delimiter=";")
+                for row_index, row in enumerate(reader, start=1):
+                    for col_index, cell_value in enumerate(row, start=1):
+                        worksheet.cell(row=row_index, column=col_index, value=cell_value)
+
+            workbook.save(f'{name_xlsx}.xlsx')
+        else:
+            print(f"Файл {g} не существует.")
 
 if __name__ == '__main__':
     # delete_old_data()
@@ -363,6 +293,7 @@ if __name__ == '__main__':
     # get_request_list()
     # get_urls_products()
     # get_request_product()
-    parsing()
+    # parsing()
+    csv_to_xlsx()
 
     # total_pages()
