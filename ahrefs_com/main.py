@@ -1,39 +1,149 @@
-import requests
+import csv
+import glob
 import json
+import os
+import time
+import re
+from openpyxl import Workbook
+
+import requests
+from config import cookies, headers, date_parsing
+
+current_directory = os.getcwd()
+temp_directory = 'temp'
+# Создайте полный путь к папке temp
+temp_path = os.path.join(current_directory, temp_directory)
+json_path = os.path.join(temp_path, 'json')
 
 
+def delete_old_data():
+    # Убедитесь, что папки существуют или создайте их
+    for folder in [temp_path, json_path]:
+        if not os.path.exists(folder):
+            os.makedirs(folder)
+
+    # Удалите файлы из папок list и product
+    for folder in [json_path]:
+        files = glob.glob(os.path.join(folder, '*'))
+        for f in files:
+            if os.path.isfile(f):
+                os.remove(f)
+
+
+def get_csv():
+    csv_filename = 'site.csv'
+    productid_list = []
+
+    with open(csv_filename, 'r', newline='', encoding='utf-8') as csvfile:
+        reader = csv.reader(csvfile, delimiter=';')
+
+        for row in reader:
+            productid_list.append(row)
+    return productid_list
 
 
 def get_requests():
+    sites = get_csv()
+    heandler = ['url', 'domain_rating', 'organic_traffic', 'country_00', 'traffic_00', 'country_01', 'traffic_01',
+                'country_02', 'traffic_02']
+    with open('output.csv', 'w', newline='', encoding='utf-8') as file:
+        writer = csv.writer(file, delimiter=";")
+        writer.writerow(heandler)
+        for row in sites:
+            site = row[0]
+            params = {
+                'input': f'{{"args":{{"competitors":[],"compareDate":["Date","{date_parsing}"],"multiTarget":["Single",'
+                         f'{{"protocol":"both","mode":"subdomains","target":"{site}/"}}],"url":"{site}/","protocol":"both","mode":"subdomains"}}}}',
+            }
 
-    cookies = {
-        '__cflb': '02DiuFMJyRDQ1SqAwiXnXeziU6ebmGZn9jdP5qUKiJuoJ',
-        'BSSESSID': '3inAHX4gWDTQOn3ELYzYmEfOIzlZGHWOxa6tpyvY',
-        'kd-b1b6369c00f15bbb': 'MS%2FanAtPRDlT7e7onG5opee1qceShjVaoa6Sm5%2FHZzgd5ehd4lD%2BA0S4J7oUU9Q1lAKH%2FsR5H8fK32KEcrQ',
-        '__cf_bm': 'IYQkUtQ4JUAR59KhOhHZwrONiGN135339JW8eyDFvNk-1700128201-0-AcHAi1h08KpgyIq84FSs+6/2joFAjpiGh4szEovq/WFVRjyCwcFwIWtch0kX4T6YhNvMeoTG7hqnqvc/JhVu/0o=',
-        'cf_clearance': 'urUqJFphiqw.c6BboAVVN5prvkYsV_jkHgZg1OXFxYc-1700128203-0-1-f6f46a16.ef2c8e30.9c04a62f-0.2.1700128203',
-        'io': 'TqXx4kgPksN_0lWvCo6w',
-        'intercom-device-id-dic5omcp': '7c6db7aa-d9e5-451a-993d-66b9e886d803',
-        'x-consistency': '1700128349.497%2CseSetOverviewSettings',
-        'intercom-session-dic5omcp': 'OFc1akxVUXExWjVBUWZraTg2dlJnd3EyWVd3YW1kZHJqUmtEdFArOS94OGt3blVEa2lzdDVJd21ITUhpOFh6eS0tRUpDYWNOVHQ2UDFFdG9kb250SHlqdz09--f6c5fefd357cf639e845d85d8de7d880e090c4cc',
-    }
-    headers = {
-        'sec-ch-ua': '"Google Chrome";v="119", "Chromium";v="119", "Not?A_Brand";v="24"',
-        'Referer': 'https://app.ahrefs.com/v2-site-explorer/overview?backlinksChartMode=metrics&backlinksChartPerformanceSources=domainRating%7C%7CurlRating&backlinksCompetitorsSource=%22UrlRating%22&chartGranularity=daily&chartInterval=all&competitors=&countries=ru&country=all&generalChartMode=metrics&generalChartPerformanceSources=organicTraffic%7C%7CpaidTraffic%7C%7CrefDomains&generalChartTopPosition=top11_20%7C%7Ctop21_50%7C%7Ctop3%7C%7Ctop4_10%7C%7Ctop51&generalCompetitorsSource=%22OrganicTraffic%22&generalCountriesSource=organic-traffic&highlightChanges=30d&keywordsSource=all&mode=subdomains&organicChartMode=metrics&organicChartPerformanceSources=organicTraffic%7C%7CorganicTrafficValue&organicChartTopPosition=top11_20%7C%7Ctop21_50%7C%7Ctop3%7C%7Ctop4_10%7C%7Ctop51&organicCompetitorsSource=%22OrganicTraffic%22&organicCountriesSource=organic-traffic&overview_tab=general&target=wiki.merionet.ru&topOrganicKeywordsMode=normal&topOrganicPagesMode=normal&trafficType=organic&volume_type=monthly',
-        'DNT': '1',
-        'X-Client-Version': 'release-20231116-bk157790-20f3a35189c',
-        'sec-ch-ua-mobile': '?0',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36',
-        'sec-ch-ua-platform': '"Windows"',
-    }
-    params = {
-        'input': f'{{"args":{{"competitors":[],"compareDate":["Date","2023-10-17"],"multiTarget":["Single",{{"protocol":"both","mode":"subdomains","target":"{site} /"}}],"url":"{site} /","protocol":"both","mode":"subdomains"}}}}',
-    }
+            response_seGetMetricsByCountry = requests.get('https://app.ahrefs.com/v4/seGetMetricsByCountry',
+                                                          params=params,
+                                                          headers=headers,
+                                                          cookies=cookies)
+            response_seGetMetrics = requests.get('https://app.ahrefs.com/v4/seGetMetrics', params=params,
+                                                 cookies=cookies,
+                                                 headers=headers)
 
-    response = requests.get('https://app.ahrefs.com/v4/seGetMetricsByCountry', params=params, headers=headers, cookies=cookies)
-    response.encoding = 'utf-8'
-    # print(response)
-    data_json = response.json()
+            response_seGetDomainRating = requests.get('https://app.ahrefs.com/v4/seGetDomainRating',
+                                                      params=params, cookies=cookies,
+                                                      headers=headers)
 
-    with open(f'{site.replace('.', '_')}.json', 'w', encoding='utf-8') as f:
-        json.dump(data_json, f, ensure_ascii=False, indent=4)  # Записываем в файл
+            data_json_seGetMetricsByCountry = response_seGetMetricsByCountry.json()
+            data_json_seGetMetrics = response_seGetMetrics.json()
+            data_json_seGetDomainRating = response_seGetDomainRating.json()
+            try:
+                metrics = data_json_seGetMetricsByCountry[1].get('metrics', [])
+            except:
+                print(f"Ошибка сайта {site}")
+                continue
+            if len(metrics) > 2:
+                country_00 = metrics[0].get('country')
+                traffic_00 = metrics[0].get('organic', {}).get('traffic', {}).get('value')
+                country_01 = metrics[1].get('country')
+                traffic_01 = metrics[1].get('organic', {}).get('traffic', {}).get('value')
+                country_02 = metrics[2].get('country')
+                traffic_02 = metrics[2].get('organic', {}).get('traffic', {}).get('value')
+            else:
+                country_00 = country_01 = country_02 = traffic_00 = traffic_01 = traffic_02 = None
+
+            organic_traffic = data_json_seGetMetrics[1].get('organic', {}).get('traffic', {}).get('value')
+            domainrating = data_json_seGetDomainRating[1].get('domainRating', {}).get('value')
+
+            value = [site, domainrating, organic_traffic, country_00, traffic_00, country_01, traffic_01, country_02,
+                     traffic_02]
+            writer.writerow(value)
+            time.sleep(1)
+            print(site)
+
+
+def parsing():
+    folder = os.path.join(json_path, '*.json')
+
+    files_json = glob.glob(folder)
+    for item in files_json[:1]:
+        with open(item, 'r', encoding='utf-8') as f:
+            json_data = json.load(f)
+        url = (json_data[1]['countryWithMostKeywords']['seRowsArgsValidatedInput']['url']).replace('/', '')
+        country_00 = json_data[1]['metrics'][0]['country']
+        traffic_00 = json_data[1]['metrics'][0]['organic']['traffic']['value']
+        country_01 = json_data[1]['metrics'][1]['country']
+        traffic_01 = json_data[1]['metrics'][1]['organic']['traffic']['value']
+        country_02 = json_data[1]['metrics'][2]['country']
+        traffic_02 = json_data[1]['metrics'][2]['organic']['traffic']['value']
+
+        print(url)
+        print(country_00, traffic_00)
+        print(country_01, traffic_01)
+        print(country_02, traffic_02)
+
+
+"""Сохранить csv в xlsx ексель"""
+
+
+def save_xslx():
+    # Определите регулярное выражение для фильтрации недопустимых символов
+    pattern = re.compile(r'[\x00-\x08\x0B-\x0C\x0E-\x1F\x7F]')
+
+    # Открываем CSV файл для чтения
+    with open('output.csv', 'r', newline='', encoding='utf-8') as csvfile:
+        # with open('output.csv', 'r', newline='', encoding='utf-8') as csvfile:
+        reader = csv.reader(csvfile, delimiter=";")
+        # next(reader)  # Пропускаем первую строку с заголовками
+
+        # Создаем новую книгу Excel и выбираем активный лист
+        workbook = Workbook()
+        sheet = workbook.active
+
+        # Заполняем лист данными из CSV файла, фильтруя недопустимые символы
+        for row in reader:
+            filtered_row = [re.sub(pattern, '', cell) if cell else cell for cell in row]
+            sheet.append(filtered_row)
+
+        # Сохраняем книгу в файле XLSX
+        workbook.save('output.xlsx')
+        # workbook.save('output.xlsx')
+
+
+if __name__ == '__main__':
+    get_requests()
+    save_xslx()
