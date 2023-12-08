@@ -9,8 +9,8 @@ import cloudscraper
 import os
 import time
 
-def get_requests():
 
+def get_requests():
     cookies = {
         'PHPSESSID_MIKE': 'cu48ap0n218a14pi0v9fee11rd',
         'ActiveBasket': '1',
@@ -60,7 +60,6 @@ def get_requests():
 
 
 def parsing():
-
     with open("larsson.html", encoding="utf-8") as file:
         src = file.read()
     soup = BeautifulSoup(src, 'lxml')
@@ -69,11 +68,18 @@ def parsing():
 
     # Извлекаем все строки таблицы
     row_all = table.find_all('tr', class_='tda')
-    specifications = {}
+    specifications_history = {}
     # Перебираем строки таблицы
+    specifications_table = {}
     for row_td in row_all[:1]:
-        for i in row_td:
-            print(i.find('a').get_text(strip=True))
+        key_table = ('Model', 'Kod roku', 'Typ', 'VIN_od', 'VIN_do', 'Rocznik', 'Il. cyl.', 'Moc silnika')
+
+        # Собираем значения для каждого ключа
+        values_table = [i.find('a').get_text(strip=True) for i in row_all[:len(key_table)]]
+
+        # Создаем словарь, соотнося ключи и значения
+        specifications_table = dict(zip(key_table, values_table))
+
         history = row_td.find('td', attrs={'class': 'show_history_tips'})
         table = history.find('table')
         rows_tr = table.find_all('tr')
@@ -85,12 +91,10 @@ def parsing():
             if len(tds) == 2:  # Убедитесь, что в строке две ячейки
                 key = tds[0].get_text(strip=True)
                 value = tds[1].get_text(strip=True)
-                specifications[key] = value
+                specifications_history[key] = value
 
-
-
-
-        print(specifications)
+    print(specifications_table)
+    print(specifications_history)
 
         # row_data = []
         #
