@@ -186,20 +186,22 @@ def get_asio():
 
     async def main():
         filename = os.path.join(list_path, 'data.csv')
-        # global coun
         coun = 0
         async with aiohttp.ClientSession() as session:
             with open(filename, newline='', encoding='utf-8') as files:
                 urls = list(csv.reader(files, delimiter=' ', quotechar='|'))
-                for i in range(0, len(urls), 100):  # Используйте срезы для создания пакетов по 100 URL
+                for i in range(0, len(urls), 100):
                     tasks = []
-                    for row in urls[i:i+100]:
+                    for row in urls[i:i + 100]:
                         coun += 1
                         url = row[0]
-                        tasks.append(fetch(session, url, coun))
-                    await asyncio.gather(*tasks)
-                    print(f'Completed {coun} requests')
-                    await asyncio.sleep(5)  # Пауза на 10 секунд после каждых 100 URL
+                        filename_to_check = os.path.join(product_path, f'data_{coun}.html')
+                        if not os.path.exists(filename_to_check):  # Проверка на существование файла
+                            tasks.append(fetch(session, url, coun))
+                    if tasks:
+                        await asyncio.gather(*tasks)
+                        print(f'Completed {coun} requests')
+                        await asyncio.sleep(5)
 
     asyncio.run(main())
 
@@ -308,15 +310,15 @@ def parsing_products():
                     coun += 1
 
                 values = [product_name, symbol, price_netto, price_brutto, opis_tovaru, in_stock, category]
-                # print(values)
+                print(values)
                 writer.writerow(values)  # Дописываем значения из values
 
 
 
 
 if __name__ == '__main__':
-    delete_old_data()
-    get_categories_to_html_file()
-    get_urls_product()
+    # delete_old_data()
+    # get_categories_to_html_file()
+    # get_urls_product()
     get_asio()
     parsing_products()
