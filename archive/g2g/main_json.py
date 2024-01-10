@@ -130,7 +130,7 @@ def selenium_get_curl(url, type_pars):
     # Extracting headers
     headers_match = re.findall(r"-H '(.*?)'", curl_command)
     headers = {header.split(': ')[0]: header.split(': ')[1] for header in headers_match}
-    print(f'Всего {count_url}')
+    print(f'Всего {count_url} позиций')
     return curl_command, list_url
 
 
@@ -201,77 +201,154 @@ def get_requests(url, params, cookies, headers, list_url, type_pars):
                 print(f'Паузка 1сек, скачал {file_path}')
                 time.sleep(1)
     elif type_pars == 0:
-
-        # Определите текущую директорию, где находится скрипт
-        current_directory = os.getcwd()
-        # Задайте имя папки data_json
-        data_json_directory = 'data_json_item'
-        if not os.path.exists(data_json_directory):
-            os.makedirs(data_json_directory)
-        # Создайте полный путь к папке data_json
-        data_json_path = os.path.join(current_directory, data_json_directory)
         driver = get_chromedriver()
-        driver.get(url)
-        time.sleep(10)
-        hrefs = driver.find_elements(By.XPATH, '//div[@class="full-height full-width position-relative"]/a')
-        href = [urls.get_attribute('href') for urls in hrefs]
-        extracted_parts = []
-        for u in href:
-            # Разделяем URL на части по '/'
-            parts = u.split('/')
-            # Извлекаем последнюю часть, затем разделяем ее по '?' и берем первую часть
-            extracted_part = parts[-1].split('?')[0]
-            extracted_parts.append(extracted_part)
-        params = {
-            'currency': 'USD',
-            'country': 'UA',
-            'include_inactive': '1',
-            'include_out_of_stock': '1',
-        }
-        headers = {
-            'authority': 'sls.g2g.com',
-            'accept': 'application/json, text/plain, */*',
-            'accept-language': 'ru,en-US;q=0.9,en;q=0.8,uk;q=0.7,de;q=0.6',
-            'authorization': '',
-            'dnt': '1',
-            'origin': 'https://www.g2g.com',
-            'referer': 'https://www.g2g.com/',
-            'sec-ch-ua': '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"',
-            'sec-ch-ua-mobile': '?0',
-            'sec-ch-ua-platform': '"Windows"',
-            'sec-fetch-dest': 'empty',
-            'sec-fetch-mode': 'cors',
-            'sec-fetch-site': 'same-site',
-            'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'x-api-key': '0DWATzuevY8r91rPCySTl91p2Odp6itK23sOskIX',
-        }
-        i = 1
-        for d in extracted_parts:
-            urlss = f'https://sls.g2g.com/offer/{d}'
-            try:
-                response = requests.get(urlss, params=params, headers=headers)
+        # if list_url > 1:
+        for l in range(1, list_url + 1):
+            print(f'Страница {l}, а всего {list_url}')
+            if l == 1:
+                # Определите текущую директорию, где находится скрипт
+                current_directory = os.getcwd()
+                # Задайте имя папки data_json
+                data_json_directory = 'data_json_item'
+                if not os.path.exists(data_json_directory):
+                    os.makedirs(data_json_directory)
+                # Создайте полный путь к папке data_json
+                data_json_path = os.path.join(current_directory, data_json_directory)
 
-                # Проверяем статус ответа
-                if response.status_code == 200:
-                    json_data = response.json()
-                    # Дальнейшая обработка json_data
-                else:
-                    print(f'Error {response.status_code}:', response.text)
+                driver.get(url)
+                time.sleep(10)
+                hrefs = driver.find_elements(By.XPATH, '//div[@class="full-height full-width position-relative"]/a')
+                href = [urls.get_attribute('href') for urls in hrefs]
+                extracted_parts = []
+                for u in href:
+                    # Разделяем URL на части по '/'
+                    parts = u.split('/')
+                    # Извлекаем последнюю часть, затем разделяем ее по '?' и берем первую часть
+                    extracted_part = parts[-1].split('?')[0]
+                    extracted_parts.append(extracted_part)
+                params = {
+                    'currency': 'USD',
+                    'country': 'UA',
+                    'include_inactive': '1',
+                    'include_out_of_stock': '1',
+                }
+                headers = {
+                    'authority': 'sls.g2g.com',
+                    'accept': 'application/json, text/plain, */*',
+                    'accept-language': 'ru,en-US;q=0.9,en;q=0.8,uk;q=0.7,de;q=0.6',
+                    'authorization': '',
+                    'dnt': '1',
+                    'origin': 'https://www.g2g.com',
+                    'referer': 'https://www.g2g.com/',
+                    'sec-ch-ua': '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"',
+                    'sec-ch-ua-mobile': '?0',
+                    'sec-ch-ua-platform': '"Windows"',
+                    'sec-fetch-dest': 'empty',
+                    'sec-fetch-mode': 'cors',
+                    'sec-fetch-site': 'same-site',
+                    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                    'x-api-key': '0DWATzuevY8r91rPCySTl91p2Odp6itK23sOskIX',
+                }
+                i = 1
+                for d in extracted_parts:
+                    urlss = f'https://sls.g2g.com/offer/{d}'
+                    try:
+                        response = requests.get(urlss, params=params, headers=headers)
 
-            except requests.exceptions.RequestException as e:
-                # Обработка исключений связанных с запросами
-                print("Request error:", e)
+                        # Проверяем статус ответа
+                        if response.status_code == 200:
+                            json_data = response.json()
+                            # Дальнейшая обработка json_data
+                        else:
+                            print(f'Error {response.status_code}:', response.text)
 
-            except json.decoder.JSONDecodeError as e:
-                # Обработка ошибок декодирования JSON
-                print("JSON Decode error:", e)
-            filename = f'g2g_{d}.json'
-            file_path = os.path.join(data_json_path, filename)
-            with open(file_path, 'w', encoding='utf-8') as f:
-                json.dump(json_data, f, ensure_ascii=False, indent=4)  # Записываем в файл
-            # print(f'Паузка 1сек, скачал {file_path}')
-            time.sleep(1)
+                    except requests.exceptions.RequestException as e:
+                        # Обработка исключений связанных с запросами
+                        print("Request error:", e)
 
+                    except json.decoder.JSONDecodeError as e:
+                        # Обработка ошибок декодирования JSON
+                        print("JSON Decode error:", e)
+                    filename = f'g2g_{d}.json'
+                    file_path = os.path.join(data_json_path, filename)
+                    with open(file_path, 'w', encoding='utf-8') as f:
+                        json.dump(json_data, f, ensure_ascii=False, indent=4)  # Записываем в файл
+                    # print(f'Паузка 1сек, скачал {file_path}')
+                    time.sleep(1)
+            time.sleep(5)
+            if l > 1:
+                print(f'Страница {l}, а всего {list_url}')
+                # Определите текущую директорию, где находится скрипт
+                current_directory = os.getcwd()
+                # Задайте имя папки data_json
+                data_json_directory = 'data_json_item'
+                if not os.path.exists(data_json_directory):
+                    os.makedirs(data_json_directory)
+                # Создайте полный путь к папке data_json
+                data_json_path = os.path.join(current_directory, data_json_directory)
+                driver.get(f'{url}&page={l}')
+                time.sleep(10)
+                hrefs = driver.find_elements(By.XPATH, '//div[@class="full-height full-width position-relative"]/a')
+                href = [urls.get_attribute('href') for urls in hrefs]
+                extracted_parts = []
+                for u in href:
+                    # Разделяем URL на части по '/'
+                    parts = u.split('/')
+                    # Извлекаем последнюю часть, затем разделяем ее по '?' и берем первую часть
+                    extracted_part = parts[-1].split('?')[0]
+                    extracted_parts.append(extracted_part)
+                params = {
+                    'currency': 'USD',
+                    'country': 'UA',
+                    'include_inactive': '1',
+                    'include_out_of_stock': '1',
+                }
+                headers = {
+                    'authority': 'sls.g2g.com',
+                    'accept': 'application/json, text/plain, */*',
+                    'accept-language': 'ru,en-US;q=0.9,en;q=0.8,uk;q=0.7,de;q=0.6',
+                    'authorization': '',
+                    'dnt': '1',
+                    'origin': 'https://www.g2g.com',
+                    'referer': 'https://www.g2g.com/',
+                    'sec-ch-ua': '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"',
+                    'sec-ch-ua-mobile': '?0',
+                    'sec-ch-ua-platform': '"Windows"',
+                    'sec-fetch-dest': 'empty',
+                    'sec-fetch-mode': 'cors',
+                    'sec-fetch-site': 'same-site',
+                    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                    'x-api-key': '0DWATzuevY8r91rPCySTl91p2Odp6itK23sOskIX',
+                }
+                i = 1
+                for d in extracted_parts:
+                    urlss = f'https://sls.g2g.com/offer/{d}'
+                    try:
+                        response = requests.get(urlss, params=params, headers=headers)
+
+                        # Проверяем статус ответа
+                        if response.status_code == 200:
+                            json_data = response.json()
+                            # Дальнейшая обработка json_data
+                        else:
+                            print(f'Error {response.status_code}:', response.text)
+
+                    except requests.exceptions.RequestException as e:
+                        # Обработка исключений связанных с запросами
+                        print("Request error:", e)
+
+                    except json.decoder.JSONDecodeError as e:
+                        # Обработка ошибок декодирования JSON
+                        print("JSON Decode error:", e)
+                    filename = f'g2g_{d}.json'
+                    file_path = os.path.join(data_json_path, filename)
+                    with open(file_path, 'w', encoding='utf-8') as f:
+                        json.dump(json_data, f, ensure_ascii=False, indent=4)  # Записываем в файл
+                    # print(f'Паузка 1сек, скачал {file_path}')
+                    time.sleep(1)
+            time.sleep(5)
+        driver.close()
+        driver.quit()
 
 def parsing_gamePal(type_pars):
     if type_pars == 1:
@@ -354,7 +431,8 @@ def parsing_gamePal(type_pars):
         data_json_path = os.path.join(current_directory, data_json_directory)
         folder = fr'{data_json_path}\*.json'
         files_json = glob.glob(folder)
-        header_order = ['price', 'unit_price', 'name', 'gallery_images', 'checkout_devlivery', 'stock', 'Server', 'ServiceType']
+        header_order = ['price', 'unit_price', 'name', 'gallery_images', 'checkout_devlivery', 'stock', 'Server',
+                        'ServiceType']
 
         # Создайте множество для уникальных заголовков
         unique_headers = set(header_order)
