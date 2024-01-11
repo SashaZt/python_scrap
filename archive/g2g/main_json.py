@@ -165,7 +165,7 @@ def get_cookie_header(curl_command):
     return url, params, cookies, headers
 
 
-def get_requests(url, params, cookies, headers, list_url, type_pars):
+def get_requests(url, params, headers, list_url, type_pars):
     if type_pars == 1:
         # Определите текущую директорию, где находится скрипт
         current_directory = os.getcwd()
@@ -202,10 +202,10 @@ def get_requests(url, params, cookies, headers, list_url, type_pars):
                 time.sleep(1)
     elif type_pars == 0:
         driver = get_chromedriver()
-        # if list_url > 1:
         for l in range(1, list_url + 1):
-            print(f'Страница {l}, а всего {list_url}')
+
             if l == 1:
+                print(f'Страница {l}, а всего {list_url}')
                 # Определите текущую директорию, где находится скрипт
                 current_directory = os.getcwd()
                 # Задайте имя папки data_json
@@ -274,8 +274,7 @@ def get_requests(url, params, cookies, headers, list_url, type_pars):
                     with open(file_path, 'w', encoding='utf-8') as f:
                         json.dump(json_data, f, ensure_ascii=False, indent=4)  # Записываем в файл
                     # print(f'Паузка 1сек, скачал {file_path}')
-                    time.sleep(1)
-            time.sleep(5)
+                time.sleep(1)
             if l > 1:
                 print(f'Страница {l}, а всего {list_url}')
                 # Определите текущую директорию, где находится скрипт
@@ -345,10 +344,7 @@ def get_requests(url, params, cookies, headers, list_url, type_pars):
                     with open(file_path, 'w', encoding='utf-8') as f:
                         json.dump(json_data, f, ensure_ascii=False, indent=4)  # Записываем в файл
                     # print(f'Паузка 1сек, скачал {file_path}')
-                    time.sleep(1)
-            time.sleep(5)
-        driver.close()
-        driver.quit()
+                time.sleep(1)
 
 def parsing_gamePal(type_pars):
     if type_pars == 1:
@@ -358,7 +354,10 @@ def parsing_gamePal(type_pars):
         # Задайте имя папки data_json
         data_json_directory = 'data_json_GamePal'
         # Создайте полный путь к папке data_json
+
         data_json_path = os.path.join(current_directory, data_json_directory)
+        if not os.path.exists(data_json_path):
+            os.makedirs(data_json_path)
         folder = fr'{data_json_path}\*.json'
         files_json = glob.glob(folder)
         header_order = ['price', 'unit_price', 'name', 'region', 'checkout_devlivery', 'stock', 'Server', 'ServiceType']
@@ -388,7 +387,8 @@ def parsing_gamePal(type_pars):
 
                 if region_id == "dfced32f-2f0a-4df5-a218-1e068cfadffa":
                     region_id = 'US'
-
+                if region_id == 'ac3f85c1-7562-437e-b125-e89576b9a38e':
+                    region_id = 'EU'
                 values = [display_price, unit_price, title, region_id, available_qty, min_qty]
 
                 for o in offer_attributes:
@@ -417,18 +417,19 @@ def parsing_gamePal(type_pars):
 
         # Сохранение данных в файл XLSX
         data.to_excel(f'{file_name_csv}.xlsx', index=False, engine='openpyxl')
-        # Получаем список всех файлов в папке
-        # files = glob.glob(os.path.join(data_json_path, '*'))
-        # # Удаляем каждый файл
-        # for f in files:
-        #     if os.path.isfile(f):
-        #         os.remove(f)
+        files = glob.glob(os.path.join(data_json_path, '*'))
+        # Удаляем каждый файл
+        for f in files:
+            if os.path.isfile(f):
+                os.remove(f)
     elif type_pars == 0:
         current_directory = os.getcwd()
 
         # Задайте имя папки data_json
         data_json_directory = 'data_json_item'
         data_json_path = os.path.join(current_directory, data_json_directory)
+        if not os.path.exists(data_json_path):
+            os.makedirs(data_json_path)
         folder = fr'{data_json_path}\*.json'
         files_json = glob.glob(folder)
         header_order = ['price', 'unit_price', 'name', 'gallery_images', 'checkout_devlivery', 'stock', 'Server',
@@ -437,8 +438,7 @@ def parsing_gamePal(type_pars):
         # Создайте множество для уникальных заголовков
         unique_headers = set(header_order)
         print("Название файла")
-        # file_name_csv = input()
-        file_name_csv = '111'
+        file_name_csv = input()
         # Здесь мы создаем CSV файл и записываем заголовки
         with open(f'{file_name_csv}.csv', 'w', newline='', encoding='utf-8') as csvfile:
             writer = csv.writer(csvfile, delimiter=";")
@@ -455,7 +455,10 @@ def parsing_gamePal(type_pars):
             min_qty = datas['min_qty']
             display_price = unit_price * min_qty
             offer_attributes = datas['offer_attributes']
-            gallery_images = datas['gallery_images'][0]
+            try:
+                gallery_images = datas['gallery_images'][0]
+            except:
+                gallery_images = None
 
             unit_price = str(unit_price).replace('.', ',')
             display_price = str(display_price).replace('.', ',')
@@ -487,18 +490,17 @@ def parsing_gamePal(type_pars):
         # Сохранение данных в файл XLSX
         data.to_excel(f'{file_name_csv}.xlsx', index=False, engine='openpyxl')
 
-        # # Получаем список всех файлов в папке
-        # files = glob.glob(os.path.join(data_json_path, '*'))
-        # # Удаляем каждый файл
-        # for f in files:
-        #     if os.path.isfile(f):
-        #         os.remove(f)
+        # Получаем список всех файлов в папке
+        files = glob.glob(os.path.join(data_json_path, '*'))
+        # Удаляем каждый файл
+        for f in files:
+            if os.path.isfile(f):
+                os.remove(f)
 
 
 if __name__ == '__main__':
     print("Вставьте ссылку")
-    # url = input()
-    url_all = 'https://www.g2g.com/categories/wow-classic-era-item?seller=CNLTeam&region_id=dfced32f-2f0a-4df5-a218-1e068cfadffa'
+    url_all = input()
 
     match = re.search(r'-(\w+)\?', url_all)
     type_pars_str = match.group(1)
@@ -517,7 +519,7 @@ if __name__ == '__main__':
         get_cookie_header(curl_result)
         server.stop()  # остановка сервера должна быть здесь
         url, params, cookies, headers = get_cookie_header(curl_result)
-        get_requests(url, params, cookies, headers, list_url, type_pars)
+        get_requests(url, params, headers, list_url, type_pars)
     if type_pars_str == 'service':
         type_pars = 1  # GamePal
     else:
