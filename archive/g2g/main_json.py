@@ -6,7 +6,6 @@ import os
 import re
 import time
 from urllib.parse import urlparse, parse_qs
-import httpx
 import pandas as pd
 import requests
 from browsermobproxy import Server
@@ -32,8 +31,9 @@ def get_chromedriver():
     chrome_options.add_argument("--proxy-server={0}".format(proxy.proxy))
     chrome_options.add_argument("--start-maximized")
     chrome_options.add_argument('--auto-open-devtools-for-tabs=devtools://devtools/bundled/inspector.html')
-
-    s = Service(executable_path="C:\\scrap_tutorial-master\\chromedriver.exe")
+    current_directory = os.getcwd()
+    folder = f'{current_directory}\chromedriver.exe'
+    s = Service(executable_path=folder)
     driver = webdriver.Chrome(service=s, options=chrome_options)
 
     return driver
@@ -346,6 +346,7 @@ def get_requests(url, params, headers, list_url, type_pars):
                     # print(f'Паузка 1сек, скачал {file_path}')
                 time.sleep(1)
 
+
 def parsing_gamePal(type_pars):
     if type_pars == 1:
         # Определите текущую директорию, где находится скрипт
@@ -441,7 +442,7 @@ def parsing_gamePal(type_pars):
         file_name_csv = input()
         # Здесь мы создаем CSV файл и записываем заголовки
         with open(f'{file_name_csv}.csv', 'w', newline='', encoding='utf-8') as csvfile:
-            writer = csv.writer(csvfile, delimiter=";")
+            writer = csv.writer(csvfile, delimiter=",")
             writer.writerow(header_order)
 
         for item in files_json:
