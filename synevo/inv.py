@@ -23,7 +23,7 @@ async def main():
             else:
                 # Получаем HTML содержимое страницы
                 page_content = await page.content()
-                heandler = ['test_name', 'term_text', 'price']
+                heandler = ['test_name', 'term_text', 'data_sr_id', 'data_service_id', 'category', 'price']
                 with open('output.csv', 'w', newline='', encoding='utf-8') as file:
                     writer = csv.writer(file, delimiter=";")
                     writer.writerow(heandler)  # Записываем заголовки только один раз
@@ -32,6 +32,14 @@ async def main():
 
                     for div in table_results.find_all('div', attrs={'class': 'result'}):
                         test_name = div.find('a').get_text(strip=True)
+                        data_sr_id = div.find('div', attrs={'class': 'cell__value open-research-detail'}).get(
+                            'data-sr-id')
+                        data_service_id = div.find('div', attrs={'class': 'cell__value open-research-detail'}).get(
+                            'data-service-id')
+                        category = div.find('div', attrs={'class': 'cell__value open-research-detail'}).find('div',
+                                                                                                             attrs={
+                                                                                                                 'class': 'cell__label'}).get_text(
+                            strip=True)
                         term_div = div.find_all('div', attrs={'class': 'result__info'})
                         if len(term_div) > 1 and term_div[1].div:
                             term = term_div[1].div.find('div', attrs={'class': 'cell__value'})
@@ -43,9 +51,9 @@ async def main():
                             price = price_div.find('span').get_text(strip=True)
                         else:
                             price = None
-                        values = [test_name, term_text, price]
+                        values = [test_name, term_text, data_sr_id, data_service_id, category, price]
                         writer.writerow(values)
-                break  # Выход из цикла
+                break
 
         await browser.close()
 
@@ -54,11 +62,3 @@ if __name__ == "__main__":
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     loop.run_until_complete(main())
-
-
-
-
-
-
-
-
