@@ -10,17 +10,17 @@ import concurrent.futures
 from config import db_config, use_bd, use_table
 
 cookies = {
+    'PHPSESSID_MIKE': 't73notsemv17bsdniokuocsqh1',
     'ActiveBasket': '1',
-    'dv_consent': '{"accepted":[{"uid":"1"},{"uid":"6"}],"ts":1702806068}',
-    'cf_clearance': 'XsAhv_OMDSHGJQni9erlakaGijtjtk4eH1tR5Kvrodw-1703955534-0-2-4ef17f47.9141edf4.19f020a7-250.0.0',
-    'PHPSESSID_MIKE': '37b02nmrq8racjv1lk4tfav2gm',
+    'dv_consent': '{"accepted":[{"uid":"1"},{"uid":"6"}],"ts":1704032486}',
 }
+
 headers = {
     'authority': 'mike.larsson.pl',
     'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
     'accept-language': 'ru,en-US;q=0.9,en;q=0.8,uk;q=0.7,de;q=0.6',
     'cache-control': 'no-cache',
-    # 'cookie': 'PHPSESSID_MIKE=u5av356gpmenn3l5lmn4mok3ka; ActiveBasket=1; dv_consent={"accepted":[{"uid":"1"},{"uid":"6"}],"ts":1703963308}',
+    # 'cookie': 'PHPSESSID_MIKE=t73notsemv17bsdniokuocsqh1; ActiveBasket=1; dv_consent={"accepted":[{"uid":"1"},{"uid":"6"}],"ts":1704032486}',
     'dnt': '1',
     'pragma': 'no-cache',
     'referer': 'https://www.larsson.pl/',
@@ -44,12 +44,12 @@ url = 'https://exist.ru/Price/?pid=6D6023C3'
 
 # def fetch_data(url, proxy, delay=1):
 def fetch_data(url, timeout=15):
-    proxy_host, proxy_port, proxy_user, proxy_pass = proxy
-    time.sleep(delay)
-    proxi = {`
-        'http': f'http://{proxy_user}:{proxy_pass}@{proxy_host}:{proxy_port}',
-        'https': f'http://{proxy_user}:{proxy_pass}@{proxy_host}:{proxy_port}'
-    }
+    # proxy_host, proxy_port, proxy_user, proxy_pass = proxy
+    # time.sleep(delay)
+    # proxi = {
+    #     'http': f'http://{proxy_user}:{proxy_pass}@{proxy_host}:{proxy_port}',
+    #     'https': f'http://{proxy_user}:{proxy_pass}@{proxy_host}:{proxy_port}'
+    # }
     try:
         # response = requests.get(f'http://api.scraperapi.com?api_key={api_key}&url={url}')
 
@@ -132,7 +132,7 @@ def get_urls_from_db():
 
 def main():
     url_id_map = get_urls_from_db()
-    with ThreadPoolExecutor(max_workers=5) as executor:
+    with ThreadPoolExecutor(max_workers=1) as executor:
         # future_to_data = {executor.submit(process_data, url, get_proxy(), id): (url, id) for url, id in url_id_map.items()}
         future_to_data = {executor.submit(process_data, url, id): (url, id) for url, id in url_id_map.items()}
         for future in concurrent.futures.as_completed(future_to_data):

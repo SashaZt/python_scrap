@@ -15,12 +15,13 @@ cookies = {
     'ActiveBasket': '1',
     'dv_consent': '{"accepted":[{"uid":"1"},{"uid":"6"}],"ts":1704032486}',
 }
+
 headers = {
     'authority': 'mike.larsson.pl',
     'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
     'accept-language': 'ru,en-US;q=0.9,en;q=0.8,uk;q=0.7,de;q=0.6',
     'cache-control': 'no-cache',
-    # 'cookie': 'PHPSESSID_MIKE=u5av356gpmenn3l5lmn4mok3ka; ActiveBasket=1; dv_consent={"accepted":[{"uid":"1"},{"uid":"6"}],"ts":1703963308}',
+    # 'cookie': 'PHPSESSID_MIKE=t73notsemv17bsdniokuocsqh1; ActiveBasket=1; dv_consent={"accepted":[{"uid":"1"},{"uid":"6"}],"ts":1704032486}',
     'dnt': '1',
     'pragma': 'no-cache',
     'referer': 'https://www.larsson.pl/',
@@ -384,7 +385,8 @@ def get_kod_category():
     try:
         cnx = mysql.connector.connect(**db_config)
         cursor = cnx.cursor()
-        cursor.execute("SELECT Model, Url_zapasowa, Kod_części_zamiennej, id FROM larsson WHERE Kod_części_zamiennej IS NULL OR Kod_części_zamiennej = '';")
+        cursor.execute(
+            "SELECT Url_zapasowa, Kod_części_zamiennej, id FROM larsson WHERE Kod_części_zamiennej IS NULL OR Kod_części_zamiennej = '';")
         data_dict = {}
         id_url_map = {}
         for row in cursor:
@@ -394,7 +396,8 @@ def get_kod_category():
         url_zapasowa_list = [url for url in data_dict.keys()]
         """Перебираем ссылки"""
         for u in url_zapasowa_list:
-            response = requests.get(u, cookies=cookies, headers=headers )
+
+            response = requests.get(u, cookies=cookies, headers=headers)
             src = response.text
             soup = BeautifulSoup(src, 'lxml')
             table_category = soup.find('div', attrs={'id': 'cat-con'})
@@ -412,7 +415,8 @@ def get_kod_category():
                 src_c = response.text
                 soup = BeautifulSoup(src_c, 'lxml')
                 try:
-                    table_cods = soup.find('div', attrs={'class': 'gallery'}).find_all('div', attrs={'class': 'gal_elem kombi'})
+                    table_cods = soup.find('div', attrs={'class': 'gallery'}).find_all('div', attrs={
+                        'class': 'gal_elem kombi'})
                 except:
                     continue
 
