@@ -310,7 +310,6 @@ def parsing_products():
                     coun += 1
 
                 values = [product_name, symbol, price_netto, price_brutto, opis_tovaru, in_stock, category]
-                print(values)
                 writer.writerow(values)  # Дописываем значения из values
 
 
