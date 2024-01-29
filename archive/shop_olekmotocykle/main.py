@@ -81,9 +81,9 @@ def urls_photo():
         json.dump(result_dict, json_file)
 
 
-def run_main_asio_photo():
-    import main_asio_photo
-    asyncio.run(main_asio_photo.main())
+# def run_main_asio_photo():
+#     import main_asio_photo
+#     asyncio.run(main_asio_photo.main())
 
 
 def main_download_url():
