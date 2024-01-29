@@ -216,7 +216,7 @@ def get_requests(url, params, headers, list_url, type_pars):
                 data_json_path = os.path.join(current_directory, data_json_directory)
 
                 driver.get(url)
-                time.sleep(10)
+                time.sleep(5)
                 hrefs = driver.find_elements(By.XPATH, '//div[@class="full-height full-width position-relative"]/a')
                 href = [urls.get_attribute('href') for urls in hrefs]
                 extracted_parts = []
@@ -286,7 +286,7 @@ def get_requests(url, params, headers, list_url, type_pars):
                 # Создайте полный путь к папке data_json
                 data_json_path = os.path.join(current_directory, data_json_directory)
                 driver.get(f'{url}&page={l}')
-                time.sleep(10)
+                time.sleep(5)
                 hrefs = driver.find_elements(By.XPATH, '//div[@class="full-height full-width position-relative"]/a')
                 href = [urls.get_attribute('href') for urls in hrefs]
                 extracted_parts = []
@@ -455,7 +455,7 @@ def parsing_gamePal(type_pars):
             available_qty = datas['available_qty']
             min_qty = datas['min_qty']
             display_price = unit_price * min_qty
-            offer_attributes = datas['offer_attributes']
+
             try:
                 gallery_images = datas['gallery_images'][0]
             except:
@@ -465,9 +465,19 @@ def parsing_gamePal(type_pars):
             display_price = str(display_price).replace('.', ',')
             values = [display_price, unit_price, title, gallery_images, available_qty, min_qty]
 
+            offer_attributes = datas['offer_attributes']
             for o in offer_attributes:
-                pattern = r'lgc_\d+_(\w+)'
-                collection_id = re.findall(pattern, o['collection_id'])[0]
+                if o['collection_id'] == "9870fe77":
+                    collection_id = "Server"
+                elif o['collection_id'] == "33821c26":
+                    collection_id = "Item Type"
+                else:
+                    pattern = r'lgc_\d+_(\w+)'
+                    matches = re.findall(pattern, o['collection_id'])
+                    if matches:
+                        collection_id = matches[0]
+                    else:
+                        collection_id = "Unknown"
                 value = o['value']
 
                 unique_headers.add(collection_id)  # Добавляем новый заголовок в множество
