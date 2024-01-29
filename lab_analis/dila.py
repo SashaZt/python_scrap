@@ -201,8 +201,8 @@ def get_asio():
 
 
 if __name__ == '__main__':
-    # delete_old_data()
-    # get_pages()
-    # parsing_pages()
-    # get_asio()
+    delete_old_data()
+    get_pages()
+    parsing_pages()
+    get_asio()
     parsing()
