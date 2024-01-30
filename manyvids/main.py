@@ -14,11 +14,16 @@ from oauth2client.service_account import ServiceAccountCredentials
 from config import db_config, use_bd, use_table_daily_sales, use_table_monthly_sales, headers
 from proxi import proxies
 
-spreadsheet_id = '145mee2ZsApZXiTnASng4lTzbocYCJWM5EDksTx_FVYY'
-scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/spreadsheets',
-         'https://www.googleapis.com/auth/drive.file', 'https://www.googleapis.com/auth/drive']
-creds = ServiceAccountCredentials.from_json_keyfile_name("C:\\scrap_tutorial-master\\manyvids\\access.json", scope)
-client = gspread.authorize(creds)
+
+def get_google():
+    spreadsheet_id = '145mee2ZsApZXiTnASng4lTzbocYCJWM5EDksTx_FVYY'
+    scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/spreadsheets',
+             'https://www.googleapis.com/auth/drive.file', 'https://www.googleapis.com/auth/drive']
+    creds = ServiceAccountCredentials.from_json_keyfile_name("C:\\scrap_tutorial-master\\manyvids\\access.json", scope)
+    client = gspread.authorize(creds)
+    return client, spreadsheet_id
+
+
 current_directory = os.getcwd()
 temp_directory = 'temp'
 # Создайте полный путь к папке temp
@@ -414,8 +419,8 @@ def get_table_01_to_google():
     cnx.close()
 
     """Запись в Google Таблицу"""
-
-    sheet = client.open_by_key(spreadsheet_id).sheet1  # Первый лист в книге daily_sales
+    client, spreadsheet_id = get_google()
+    sheet01 = client.open_by_key(spreadsheet_id).get_worksheet(0)  # Первый лист в книге daily_sales
 
     # Читаем CSV файл
     df = pd.read_csv('daily_sales.csv')
@@ -425,11 +430,11 @@ def get_table_01_to_google():
 
     # Добавляем заголовки столбцов в начало списка
     values.insert(0, df.columns.tolist())
-    # Очистка всего листа
 
-    sheet.clear()
+    # Очистка всего листа
+    sheet01.clear()
     # Обновляем данные в Google Sheets
-    sheet.update(values, 'A1')
+    sheet01.update(values, 'A1')
 
 
 def get_table_02_to_google():
@@ -438,14 +443,13 @@ def get_table_02_to_google():
     cursor = cnx.cursor()
 
     cursor.execute("""
-        SELECT * FROM manyvids.monthly_sales
+        SELECT model_id, sales_month,sales_year,total_sum FROM manyvids.monthly_sales
         ORDER BY model_id, sales_year, sales_month;
+
     """)
 
     # Получение результатов в DataFrame
     df = pd.DataFrame(cursor.fetchall(), columns=[x[0] for x in cursor.description])
-    # print(df)
-    #
     df['sales_month'] = df['sales_month'].astype(int)
     # df['sales_year'] = df['sales_year'].astype(str)
     # df['month_year'] = pd.to_datetime(df['sales_month'] + '.' + df['sales_year'], format='%m.%Y')
@@ -461,6 +465,75 @@ def get_table_02_to_google():
     # Закрытие курсора и соединения
     cursor.close()
     cnx.close()
+    """Запись в Google Таблицу"""
+    client, spreadsheet_id = get_google()
+    df = pd.read_csv('monthly_sales.csv')
+    columns_to_check = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"]  # Список колонок для проверки
+
+    for col in columns_to_check:
+        if col in df.columns:
+            # Определяем индекс листа на основе номера колонки
+            sheet_index = int(col) if col.isdigit() else 0
+            sheet = client.open_by_key(spreadsheet_id).get_worksheet(sheet_index)
+
+            # Выбираем только колонки 'model_id' и текущую колонку
+            df_subset = df[['model_id', col]]
+
+            # Преобразуем DataFrame в список списков и вставляем заголовки колонок
+            values = [df_subset.columns.tolist()] + df_subset.values.tolist()
+
+            # Очищаем лист и записываем данные
+            sheet.clear()
+            sheet.update(values, 'A1')
+    # # Проверяем наличие колонки с названием "1" и выбираем соответствующий лист
+    # if "1" in df.columns:
+    #     sheet02 = client.open_by_key(spreadsheet_id).get_worksheet(1)  # Первый лист для daily_sales
+    #     # Выбираем только колонки 'model_id' и '1'
+    #     df_subset = df[['model_id', '1']]
+    #     # Преобразуем DataFrame в список списков и вставляем заголовки колонок
+    #     values = [df_subset.columns.tolist()] + df_subset.values.tolist()
+    #
+    #     # Очищаем лист и записываем данные
+    #     sheet02.clear()
+    #     sheet02.update(values, 'A1')
+    # if "11" in df.columns:
+    #     sheet11 = client.open_by_key(spreadsheet_id).get_worksheet(11)  # Первый лист для daily_sales
+    #     # Выбираем только колонки 'model_id' и '1'
+    #     df_subset = df[['model_id', '11']]
+    #     # Преобразуем DataFrame в список списков и вставляем заголовки колонок
+    #     values = [df_subset.columns.tolist()] + df_subset.values.tolist()
+    #
+    #     # Очищаем лист и записываем данные
+    #     sheet11.clear()
+    #     sheet11.update(values, 'A1')
+    # if "12" in df.columns:
+    #     sheet12 = client.open_by_key(spreadsheet_id).get_worksheet(12)  # Первый лист для daily_sales
+    #     # Выбираем только колонки 'model_id' и '1'
+    #     df_subset = df[['model_id', '12']]
+    #     # Преобразуем DataFrame в список списков и вставляем заголовки колонок
+    #     values = [df_subset.columns.tolist()] + df_subset.values.tolist()
+    #
+    #     # Очищаем лист и записываем данные
+    #     sheet12.clear()
+    #     sheet12.update(values, 'A1')
+
+    # client, spreadsheet_id = get_google()
+    #
+    # sheet = client.open_by_key(spreadsheet_id).sheet1  # Первый лист в книге daily_sales
+    #
+    # # Читаем CSV файл
+    # df = pd.read_csv('daily_sales.csv')
+    #
+    # # Конвертируем DataFrame в список списков
+    # values = df.values.tolist()
+    #
+    # # Добавляем заголовки столбцов в начало списка
+    # values.insert(0, df.columns.tolist())
+    # # Очистка всего листа
+    #
+    # sheet.clear()
+    # # Обновляем данные в Google Sheets
+    # sheet.update(values, 'A1')
 
 
 def get_to_google():
