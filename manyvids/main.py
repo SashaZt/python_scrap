@@ -1,12 +1,44 @@
+import glob
 import json
+import os
 import random
+from collections import defaultdict
 from datetime import datetime
 
+import gspread
 import mysql.connector
+import pandas as pd
 import requests
+from oauth2client.service_account import ServiceAccountCredentials
 
-from config import db_config, use_bd, use_table, headers
+from config import db_config, use_bd, use_table_daily_sales, use_table_monthly_sales, headers
 from proxi import proxies
+
+spreadsheet_id = '145mee2ZsApZXiTnASng4lTzbocYCJWM5EDksTx_FVYY'
+scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/spreadsheets',
+         'https://www.googleapis.com/auth/drive.file', 'https://www.googleapis.com/auth/drive']
+creds = ServiceAccountCredentials.from_json_keyfile_name("C:\\scrap_tutorial-master\\manyvids\\access.json", scope)
+client = gspread.authorize(creds)
+current_directory = os.getcwd()
+temp_directory = 'temp'
+# Создайте полный путь к папке temp
+temp_path = os.path.join(current_directory, temp_directory)
+daily_sales_path = os.path.join(temp_path, 'daily_sales')
+monthly_sales_path = os.path.join(temp_path, 'monthly_sales')
+
+
+def delete_old_data():
+    # Убедитесь, что папки существуют или создайте их
+    for folder in [temp_path, daily_sales_path, monthly_sales_path]:
+        if not os.path.exists(folder):
+            os.makedirs(folder)
+
+    # Удалите файлы из папок list и product
+    for folder in [daily_sales_path, monthly_sales_path]:
+        files = glob.glob(os.path.join(folder, '*'))
+        for f in files:
+            if os.path.isfile(f):
+                os.remove(f)
 
 
 def proxy_random():
@@ -24,171 +56,242 @@ def proxy_random():
     }
 
 
+"""Скачивание данных"""
+
+
 def get_requests_daily_sales():
     proxi = proxy_random()
     cookies = {
-        'KGID': 'vw81enngnq',
-        'contentPopup': 'false',
-        'fp_token_7c6a6574-f011-4c9a-abdd-9894a102ccef': 'oix6rQRGBtS6uFahjigPvPhEKbgJi3Tr5BC8yJsspR8=',
-        '_hjSessionUser_665482': 'eyJpZCI6ImJkMWRiNzI1LWNhNzItNWNiNS1hYjlmLTA2ODU1MGE3ZTc4ZCIsImNyZWF0ZWQiOjE2OTg3NDg4Mjg5NDQsImV4aXN0aW5nIjp0cnVlfQ==',
-        '_ga': 'GA1.1.1303883953.1698748820',
-        'privacyPolicyRead': '1',
-        '_gat': '1',
+        'KGID': 'o80cgt04fte',
         'userPreferredContent': '1p2p3p',
         'dataSectionTemp': '0',
-        'MSG_LEG_TKN': 'IS6Q61g8WwFJn9vjnRwKqA==',
+        'contentPopup': 'false',
+        'fp_token_7c6a6574-f011-4c9a-abdd-9894a102ccef': 'zqYNeuNq+n2916euUK3gXOFHg4G1WNhLPHLjgeszP+I=',
+        '_hjSessionUser_665482': 'eyJpZCI6IjA3NjI1MWZmLWY5MDMtNThjYy04NjNmLTkwMjk5YTQwYzlkNyIsImNyZWF0ZWQiOjE2OTkyMDAxMDY1MDAsImV4aXN0aW5nIjp0cnVlfQ==',
+        '_gat': '1',
+        '_ga': 'GA1.1.2086640919.1699200083',
+        'privacyPolicyRead': '1',
+        'MSG_LEG_TKN': 'nIosQT4UW5EOiuumof3ONw==',
+        'manyvh': 'bt6T3y7uGGOPmR086VFJyegqq0BsAwvwBJIi',
         '_gat_UA-45103406-1': '1',
-        '_hjSessionUser_665482': 'eyJpZCI6ImJkMWRiNzI1LWNhNzItNWNiNS1hYjlmLTA2ODU1MGE3ZTc4ZCIsImNyZWF0ZWQiOjE2OTg3NDg4Mjg5NDQsImV4aXN0aW5nIjp0cnVlfQ==',
-        '_ga_K93D8HD50B': 'deleted',
-        '_hjIncludedInSessionSample_665482': '0',
-        'KGID': '28b938dd-8db9-57a6-b5d9-6d96c6b8af21',
-        '_hjAbsoluteSessionInProgress': '0',
-        '_hjDonePolls': '977734%2C977740',
         'timezone': 'Europe%2FAmsterdam',
-        '_gid': 'GA1.2.79581497.1705419542',
         '_hjIncludedInSessionSample_665482': '0',
-        'seenWarningPage': 'eyJpdiI6ImpycUVnWWxzWkRoZW1FZ0tBQlJPRlE9PSIsInZhbHVlIjoibXVlUnBHOGRmXC8renhublI0SWZHMUE9PSIsIm1hYyI6IjhmZWZhZjJkZTUwNGZkZGI2YzhlYWVjMWQwNTczZWM5YTEzZmYzOWU4N2E0YTU2ZjhhZDM4MDExYjZlOTBiZjMifQ%3D%3D',
-        'API_KEY': 'FWfDdyNjdYgqDDr7b61HVUV%2Fec7fc3BuZRJ0zDzRQaZe15QDNnO3%2FlzV59AdirEm',
-        'manyvh': 'th7WJdHKAwbYHEUUwWYGGaWfahAob0Lh0sem',
-        'PHPSESSID': '63i286ueif1ikoe4aslol56cg24frvb3aelip72b',
-        '_gid': 'GA1.1.79581497.1705419542',
-        'mvAnnouncement': 'kVZfGcleqyVt',
+        'KGID': '2e3fcde2-6671-5bf6-896a-8743cecda114',
         '_ga_K93D8HD50B': 'deleted',
-        '_hjSession_665482': 'eyJpZCI6ImYxMmZhNTliLTczYzUtNDE4My05YzQzLWI5NjIzMzNmY2UxZCIsImMiOjE3MDY1Mzk5ODEyNDcsInMiOjAsInIiOjAsInNiIjoxLCJzciI6MCwic2UiOjAsImZzIjowLCJzcCI6MH0=',
-        'XSRF-TOKEN': 'eyJpdiI6InBHVTBINzJGVjdZRGI4dyttSVdhbFE9PSIsInZhbHVlIjoiZEZkXC9Ma2lHMVFQMm9uYXRlaXEraXVMdEVxaU1DSGdTUUFCSVphTlwvd2VyMzRuVzBJajVxSEJsOFBtbmF1bFlLIiwibWFjIjoiMmRkOTNhOGFjYTg5YjQ2YjlmMzc4NWUxNTM3M2VjNWFjYjY1ZTYyYjMwNWM2Y2VmZjc5NjE3OGVjNjYwZjhkZiJ9',
-        'AWSALB': 'xCR1IhfrFYrIK6C4YCrHAl5fz9HgPERtcHKUMyDBso61KiLvolWk0tZ5FoFw2UwUW5awuSbjq+DoR3PW3KPeBJ8NW0iOtopEkzOnF2ritFs2xjlIiNwkF3bW4+0cLTPlcBAV5ALfTUoxEpN9mZPVw8Ai9SEMkMhKQCqrQ9QLOtWp5lA+04JvGyHMqxS/fg==',
-        'AWSALBCORS': 'xCR1IhfrFYrIK6C4YCrHAl5fz9HgPERtcHKUMyDBso61KiLvolWk0tZ5FoFw2UwUW5awuSbjq+DoR3PW3KPeBJ8NW0iOtopEkzOnF2ritFs2xjlIiNwkF3bW4+0cLTPlcBAV5ALfTUoxEpN9mZPVw8Ai9SEMkMhKQCqrQ9QLOtWp5lA+04JvGyHMqxS/fg==',
-        '_ga': 'GA1.2.1303883953.1698748820',
-        '_ga_K93D8HD50B': 'GS1.1.1706539974.2.1.1706541444.31.0.0',
-        '_dd_s': 'logs=1&id=9c9c1aa6-5d06-470e-9872-a28131751e24&created=1706539901243&expire=1706542363950',
+        '_hjSessionUser_665482': 'eyJpZCI6IjA3NjI1MWZmLWY5MDMtNThjYy04NjNmLTkwMjk5YTQwYzlkNyIsImNyZWF0ZWQiOjE2OTkyMDAxMDY1MDAsImV4aXN0aW5nIjp0cnVlfQ==',
+        '_hjAbsoluteSessionInProgress': '1',
+        '_hjIncludedInSessionSample_665482': '0',
+        '_hjAbsoluteSessionInProgress': '1',
+        '_gid': 'GA1.2.1554863151.1702850273',
+        '_gid': 'GA1.1.1554863151.1702850273',
+        '_ga_K93D8HD50B': 'deleted',
+        'seenWarningPage': 'eyJpdiI6IjlHWVBpMEZ4NjAxSXFHV21MQ2dVY1E9PSIsInZhbHVlIjoidXNnQ0FFMmRJbTNRQktBTHlkdFNZUT09IiwibWFjIjoiNjllZGFiMmE1MmU2ZDRhZDZiOWE3NzM3M2I1YmY3YmE3NDg0MGFiOThmMWYzZjNjMjE4ZWQ2NDBlMTU4MWVlNSJ9',
+        'API_KEY': 'EB1chmbGUzvVF%2Bbd0KzZGh3K2vnZBgSeNcIFkzDzsA%2B7gKI%2FEl%2BgOVSFVZzgHyLq',
+        'preview': '0',
+        'seenWarningPage': 'true',
+        'PHPSESSID': 'nlvkp8c0fv168vuobkfhmjdvk4b3o3kjqal2fnrp',
+        'mvAnnouncement': 'fGYXzXk7Iu58%3AJWyKCvZPRv1W',
+        '_hjSession_665482': 'eyJpZCI6IjU0ZjMyODQ4LTYzZjAtNGNiOC1hNWQ1LTAzNWQ2ZjNhYzBlYyIsImMiOjE3MDY2MjI2Njk5ODgsInMiOjAsInIiOjAsInNiIjowLCJzciI6MCwic2UiOjAsImZzIjowLCJzcCI6MH0=',
+        'XSRF-TOKEN': 'eyJpdiI6InpoNkduaUkrNkxcL0M2b0luTU1teStBPT0iLCJ2YWx1ZSI6Ikt6N1NqdmFzd0wwUXUxaXIrRVwvSjBEUGF3ODlybVwvUWg5Z0x5S0wrbUNuR3hvTUxiYnBsSk9jXC83dEY1eWpOajQiLCJtYWMiOiI5YmUwY2RlNzU3ODIzNDdkOWM4MTRkNzM3MjE1MDY1N2NiMjFhM2E5NjAxYWQyYWIyMDFhZTJkYzRkMjAyZWM1In0%3D',
+        '_hjSession_665482': 'eyJpZCI6IjcxZjdlY2RhLWU5NzgtNGI0Ny1iYzFjLTAwZjA3NDI2MDkyOSIsImMiOjE3MDY2MzczNjAxNTYsInMiOjAsInIiOjAsInNiIjowLCJzciI6MCwic2UiOjAsImZzIjowLCJzcCI6MX0=',
+        'AWSALB': 'LsRiwKEH9Jf35c3WXS5M1/XiqxFzayJBkp+9Ijo4kg9FruONxl0eHLnAMZA9+lge6Vm/3tSjFWJz0MokajTR6ksMN46cB3blq9zCJOq20Pz6f4NmK8c0/SMgmemN3LL9OE713uEve4Ozem1RoTTvwxd0vbnAH8LJyZpq1y6+vymU0nbrJTNnqULpfVKFqw==',
+        'AWSALBCORS': 'LsRiwKEH9Jf35c3WXS5M1/XiqxFzayJBkp+9Ijo4kg9FruONxl0eHLnAMZA9+lge6Vm/3tSjFWJz0MokajTR6ksMN46cB3blq9zCJOq20Pz6f4NmK8c0/SMgmemN3LL9OE713uEve4Ozem1RoTTvwxd0vbnAH8LJyZpq1y6+vymU0nbrJTNnqULpfVKFqw==',
+        '_ga': 'GA1.2.2086640919.1699200083',
+        '_ga_K93D8HD50B': 'GS1.1.1706637351.39.1.1706637380.31.0.0',
+        '_dd_s': 'logs=1&id=3d2c7a36-ac92-42cf-bbea-0ccf1716eafc&created=1706637351457&expire=1706638283820',
     }
 
-
     data = {
-        'mvtoken': '65af8f4235331358595768',
+        'mvtoken': '65b5d5a4977f5536834414',
         'day': '',
         'month': '11',
         'filterYear': '2023',
     }
-
-    response = requests.post('https://www.manyvids.com/includes/get_earnings.php', cookies=cookies, headers=headers,
-                             data=data, proxies=proxi)
     mvtoken_value = data['mvtoken']
-    filename = f'{mvtoken_value}_daily_sales.json'
-    json_data = response.json()
-    with open(filename, 'w', encoding='utf-8') as f:
-        json.dump(json_data, f, ensure_ascii=False, indent=4)  # Записываем в файл
+    month_value = data['month']
+    filterYear_value = data['filterYear']
+    filename = os.path.join(daily_sales_path, f'{mvtoken_value}_{month_value}_{filterYear_value}.json')
+    if not os.path.exists(filename):
+        response = requests.post('https://www.manyvids.com/includes/get_earnings.php', cookies=cookies, headers=headers,
+                                 data=data, proxies=proxi)
+
+        json_data = response.json()
+        with open(filename, 'w', encoding='utf-8') as f:
+            json.dump(json_data, f, ensure_ascii=False, indent=4)  # Записываем в файл
+
 
 def get_requests_monthly_sales():
     proxi = proxy_random()
     cookies = {
-        'KGID': 'vw81enngnq',
-        'contentPopup': 'false',
-        'fp_token_7c6a6574-f011-4c9a-abdd-9894a102ccef': 'oix6rQRGBtS6uFahjigPvPhEKbgJi3Tr5BC8yJsspR8=',
-        '_hjSessionUser_665482': 'eyJpZCI6ImJkMWRiNzI1LWNhNzItNWNiNS1hYjlmLTA2ODU1MGE3ZTc4ZCIsImNyZWF0ZWQiOjE2OTg3NDg4Mjg5NDQsImV4aXN0aW5nIjp0cnVlfQ==',
-        '_ga': 'GA1.1.1303883953.1698748820',
-        'privacyPolicyRead': '1',
-        '_gat': '1',
+        'KGID': 'o80cgt04fte',
         'userPreferredContent': '1p2p3p',
         'dataSectionTemp': '0',
-        'MSG_LEG_TKN': 'IS6Q61g8WwFJn9vjnRwKqA==',
+        'contentPopup': 'false',
+        'fp_token_7c6a6574-f011-4c9a-abdd-9894a102ccef': 'zqYNeuNq+n2916euUK3gXOFHg4G1WNhLPHLjgeszP+I=',
+        '_hjSessionUser_665482': 'eyJpZCI6IjA3NjI1MWZmLWY5MDMtNThjYy04NjNmLTkwMjk5YTQwYzlkNyIsImNyZWF0ZWQiOjE2OTkyMDAxMDY1MDAsImV4aXN0aW5nIjp0cnVlfQ==',
+        '_gat': '1',
+        '_ga': 'GA1.1.2086640919.1699200083',
+        'privacyPolicyRead': '1',
+        'MSG_LEG_TKN': 'nIosQT4UW5EOiuumof3ONw==',
+        'manyvh': 'bt6T3y7uGGOPmR086VFJyegqq0BsAwvwBJIi',
         '_gat_UA-45103406-1': '1',
-        '_hjSessionUser_665482': 'eyJpZCI6ImJkMWRiNzI1LWNhNzItNWNiNS1hYjlmLTA2ODU1MGE3ZTc4ZCIsImNyZWF0ZWQiOjE2OTg3NDg4Mjg5NDQsImV4aXN0aW5nIjp0cnVlfQ==',
-        '_ga_K93D8HD50B': 'deleted',
-        '_hjIncludedInSessionSample_665482': '0',
-        'KGID': '28b938dd-8db9-57a6-b5d9-6d96c6b8af21',
-        '_hjAbsoluteSessionInProgress': '0',
-        '_hjDonePolls': '977734%2C977740',
         'timezone': 'Europe%2FAmsterdam',
-        '_gid': 'GA1.2.79581497.1705419542',
         '_hjIncludedInSessionSample_665482': '0',
-        'seenWarningPage': 'eyJpdiI6ImpycUVnWWxzWkRoZW1FZ0tBQlJPRlE9PSIsInZhbHVlIjoibXVlUnBHOGRmXC8renhublI0SWZHMUE9PSIsIm1hYyI6IjhmZWZhZjJkZTUwNGZkZGI2YzhlYWVjMWQwNTczZWM5YTEzZmYzOWU4N2E0YTU2ZjhhZDM4MDExYjZlOTBiZjMifQ%3D%3D',
-        'API_KEY': 'FWfDdyNjdYgqDDr7b61HVUV%2Fec7fc3BuZRJ0zDzRQaZe15QDNnO3%2FlzV59AdirEm',
-        'manyvh': 'th7WJdHKAwbYHEUUwWYGGaWfahAob0Lh0sem',
-        'PHPSESSID': '63i286ueif1ikoe4aslol56cg24frvb3aelip72b',
-        '_gid': 'GA1.1.79581497.1705419542',
-        'mvAnnouncement': 'kVZfGcleqyVt',
+        'KGID': '2e3fcde2-6671-5bf6-896a-8743cecda114',
         '_ga_K93D8HD50B': 'deleted',
-        'XSRF-TOKEN': 'eyJpdiI6ImZcL2RMOTc0VDlXb0ZhK2hcL2IzeW1sUT09IiwidmFsdWUiOiJROVhMdVVVd1lJTnQ0ZXBSanRLNkdPWVVyZWhoWG45KzVkVCt3T0dqcHh5eFVjaWpZSWdlXC9xU3AzTXNYQUk3QSIsIm1hYyI6IjI3MGE0NWZkMzgwMTBmY2NiOWJhMzcyY2JjZDViMjI3OGNmOGNkMDJjYTQ4NWQ1MzNmOTNkOTZjNWQyMjI0OTkifQ%3D%3D',
-        '_hjSession_665482': 'eyJpZCI6IjNmZDNkODMyLTU3ZWQtNDAzZS05Yjg1LTlkZGRlOTc0N2U2MCIsImMiOjE3MDY1NTc4NTc4MTAsInMiOjAsInIiOjAsInNiIjowLCJzciI6MCwic2UiOjAsImZzIjowLCJzcCI6MH0=',
-        '_ga': 'GA1.2.1303883953.1698748820',
-        '_ga_K93D8HD50B': 'GS1.1.1706557313.5.1.1706557985.52.0.0',
-        'AWSALB': 'EPQtEkWseI4/v245Ywl86NAjtFUVH47mN7vohKdsnKmnC49LjLdNFD2y7ZusqeIMrx96eHN75VPacTw4Ua5I2JOGKvVpTDZ26HSzLnCvK7133rbDVOq2GcOcfHuwiDGB3CqzDeY7TRQogBQQqUc+QXJj78pJeJhS8pwxjlp/pE4zeI7+F63syEjTmrhJ/A==',
-        'AWSALBCORS': 'EPQtEkWseI4/v245Ywl86NAjtFUVH47mN7vohKdsnKmnC49LjLdNFD2y7ZusqeIMrx96eHN75VPacTw4Ua5I2JOGKvVpTDZ26HSzLnCvK7133rbDVOq2GcOcfHuwiDGB3CqzDeY7TRQogBQQqUc+QXJj78pJeJhS8pwxjlp/pE4zeI7+F63syEjTmrhJ/A==',
-        '_dd_s': 'logs=1&id=57a5760d-0b18-4b63-99fb-dcdbaee78db9&created=1706557313718&expire=1706558895825',
+        '_hjSessionUser_665482': 'eyJpZCI6IjA3NjI1MWZmLWY5MDMtNThjYy04NjNmLTkwMjk5YTQwYzlkNyIsImNyZWF0ZWQiOjE2OTkyMDAxMDY1MDAsImV4aXN0aW5nIjp0cnVlfQ==',
+        '_hjAbsoluteSessionInProgress': '1',
+        '_hjIncludedInSessionSample_665482': '0',
+        '_hjAbsoluteSessionInProgress': '1',
+        '_gid': 'GA1.2.1554863151.1702850273',
+        '_gid': 'GA1.1.1554863151.1702850273',
+        '_ga_K93D8HD50B': 'deleted',
+        'seenWarningPage': 'eyJpdiI6IjlHWVBpMEZ4NjAxSXFHV21MQ2dVY1E9PSIsInZhbHVlIjoidXNnQ0FFMmRJbTNRQktBTHlkdFNZUT09IiwibWFjIjoiNjllZGFiMmE1MmU2ZDRhZDZiOWE3NzM3M2I1YmY3YmE3NDg0MGFiOThmMWYzZjNjMjE4ZWQ2NDBlMTU4MWVlNSJ9',
+        'API_KEY': 'EB1chmbGUzvVF%2Bbd0KzZGh3K2vnZBgSeNcIFkzDzsA%2B7gKI%2FEl%2BgOVSFVZzgHyLq',
+        'preview': '0',
+        'seenWarningPage': 'true',
+        'PHPSESSID': 'nlvkp8c0fv168vuobkfhmjdvk4b3o3kjqal2fnrp',
+        'mvAnnouncement': 'fGYXzXk7Iu58%3AJWyKCvZPRv1W',
+        '_hjSession_665482': 'eyJpZCI6IjU0ZjMyODQ4LTYzZjAtNGNiOC1hNWQ1LTAzNWQ2ZjNhYzBlYyIsImMiOjE3MDY2MjI2Njk5ODgsInMiOjAsInIiOjAsInNiIjowLCJzciI6MCwic2UiOjAsImZzIjowLCJzcCI6MH0=',
+        'XSRF-TOKEN': 'eyJpdiI6InpoNkduaUkrNkxcL0M2b0luTU1teStBPT0iLCJ2YWx1ZSI6Ikt6N1NqdmFzd0wwUXUxaXIrRVwvSjBEUGF3ODlybVwvUWg5Z0x5S0wrbUNuR3hvTUxiYnBsSk9jXC83dEY1eWpOajQiLCJtYWMiOiI5YmUwY2RlNzU3ODIzNDdkOWM4MTRkNzM3MjE1MDY1N2NiMjFhM2E5NjAxYWQyYWIyMDFhZTJkYzRkMjAyZWM1In0%3D',
+        '_ga': 'GA1.2.2086640919.1699200083',
+        '_hjSession_665482': 'eyJpZCI6IjU0ZjMyODQ4LTYzZjAtNGNiOC1hNWQ1LTAzNWQ2ZjNhYzBlYyIsImMiOjE3MDY2MjI2Njk5ODgsInMiOjAsInIiOjAsInNiIjowLCJzciI6MCwic2UiOjAsImZzIjowLCJzcCI6MH0=',
+        '_ga_K93D8HD50B': 'GS1.1.1706647640.40.0.1706647640.60.0.0',
+        'AWSALB': 'KCEKBpQjqQUHOsP3Lhw2lrtT5ti0VcjcIkzsS1KWaEtGF5JrFmgr1RiToZDfL41bDZxxwm7gzHUGsrIdP6Rsq2XmEgjLb8Np1vK5aIxaBRfJ1/Pvm6qcsUeq3uiqp6tLDmReaRYqtrVkKWFKrsfYfDYOTHPmJjRL0YnCdCeIU0y9NDApb5JUfmQlqNGn3A==',
+        'AWSALBCORS': 'KCEKBpQjqQUHOsP3Lhw2lrtT5ti0VcjcIkzsS1KWaEtGF5JrFmgr1RiToZDfL41bDZxxwm7gzHUGsrIdP6Rsq2XmEgjLb8Np1vK5aIxaBRfJ1/Pvm6qcsUeq3uiqp6tLDmReaRYqtrVkKWFKrsfYfDYOTHPmJjRL0YnCdCeIU0y9NDApb5JUfmQlqNGn3A==',
+        '_dd_s': 'logs=1&id=f0c3e95f-ee2b-4222-83bb-ec06804681ec&created=1706647640602&expire=1706648544705',
     }
 
-
     data = {
-        'mvtoken': '65af8f4235331358595768',
-        'year': '2023',
+        'mvtoken': '65b5d5a4977f5536834414',
+        'year': '2024',
     }
 
     response = requests.post('https://www.manyvids.com/includes/get_earnings.php', cookies=cookies, headers=headers,
                              data=data, proxies=proxi)
     json_data = response.json()
     mvtoken_value = data['mvtoken']
-    filename = f'{mvtoken_value}_monthly_sales.json'
+    filterYear_value = data['year']
+    filename = os.path.join(monthly_sales_path, f'{mvtoken_value}_{filterYear_value}.json')
     with open(filename, 'w', encoding='utf-8') as f:
         json.dump(json_data, f, ensure_ascii=False, indent=4)  # Записываем в файл
 
+
+"""Загрузка данных в БД"""
 
 
 def parsing_daily_sales():
     # Подключение к базе данных
     cnx = mysql.connector.connect(**db_config)
     cursor = cnx.cursor()
+    folder = os.path.join(daily_sales_path, '*.json')
+    files_json = glob.glob(folder)
 
-    filename = f'manyvids.json'
-    with open(filename, 'r', encoding="utf-8") as f:
-        data_json = json.load(f)
+    for item in files_json:
+        with open(item, 'r', encoding="utf-8") as f:
+            data_json = json.load(f)
 
-    dayItems = data_json['dayItems']
-    buyer_username = dayItems[0]['buyer_username']
+        dayItems = data_json['dayItems']
+        try:
+            buyer_username = dayItems[0]['buyer_username']
+        except IndexError:
 
-    try:
+            print(f"dayItems пустой в файле {item}.")
+            continue
+
+        filename = os.path.basename(item)
+        parts = filename.split("_")
+        mvtoken = parts[0]
+
         for day in dayItems:
-            buyer_stage_name = day['buyer_stage_name']
-            buyer_user_id = day['buyer_user_id']
-            title = day['title']
-            type_content = day['type']
-            sales_date = day['sales_date'].replace('/', '.')
-            sales_date = datetime.strptime(sales_date, '%d.%m.%Y').strftime('%Y-%m-%d')
+            try:
+                buyer_stage_name = day['buyer_stage_name']
+                buyer_user_id = day['buyer_user_id']
+                title = day['title']
+                type_content = day['type']
+                sales_date = day['sales_date'].replace('/', '.')
+                sales_date = datetime.strptime(sales_date, '%d.%m.%Y').strftime('%Y-%m-%d')
+                sales_time = day['sales_time']
+                seller_commission_price = day['seller_commission_price']
+                model_id = day['model_id']
+                values = [buyer_username, buyer_stage_name, buyer_user_id, title, type_content, sales_date, sales_time,
+                          seller_commission_price, model_id, mvtoken]
 
-            sales_time = day['sales_time']
-            seller_commission_price = day['seller_commission_price']
-            model_id = day['model_id']
-            values = [buyer_username, buyer_stage_name, buyer_user_id, title, type_content, sales_date, sales_time,
-                      seller_commission_price, model_id]
+                # SQL-запрос для вставки данных
+                insert_query = f"""
+                INSERT INTO {use_table_daily_sales} (buyer_username, buyer_stage_name, buyer_user_id, title, type_content, sales_date, sales_time,
+                          seller_commission_price, model_id, mvtoken)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """
+                cursor.execute(insert_query, values)
+                cnx.commit()  # Подтверждение изменений
 
-            # SQL-запрос для вставки данных
-            insert_query = f"""
-            INSERT INTO {use_table} (buyer_username, buyer_stage_name, buyer_user_id, title, type_content, sales_date, sales_time, seller_commission_price, model_id)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-            """
-            cursor.execute(insert_query, values)
-            cnx.commit()  # Подтверждение изменений
-            # print("Данные успешно добавлены.")
+            except mysql.connector.Error as err:
+                print("Ошибка при добавлении данных:", err)
+                break  # Прерываем цикл в случае ошибки
 
-    except mysql.connector.Error as err:
-        print("Ошибка при добавлении данных:", err)
-    finally:
-        # Закрытие соединения с базой данных
-        cursor.close()
-        cnx.close()
+    # Закрытие соединения с базой данных
+    cursor.close()
+    cnx.close()
+
 
 def parsing_monthly_sales():
-    filename = f'65af8f4235331358595768_monthly_sales.json'
-    with open(filename, 'r', encoding="utf-8") as f:
-        data_json = json.load(f)
-    monthItems = data_json['monthItems']
-    for month in monthItems:
-        type_content = month['type']
-        sales_date = month['sales_date'].replace('/', '.')
-        sales_date = datetime.strptime(sales_date, '%d.%m.%Y').strftime('%Y-%m-%d')
-        seller_commission_price = month['seller_commission_price']
-        values = [type_content, sales_date, seller_commission_price]
-        print(values)
+    cnx = mysql.connector.connect(**db_config)
+    cursor = cnx.cursor()
+    # Инициализация словаря для хранения сумм по месяцам
+    monthly_sums = defaultdict(float)
+
+    # Получение словаря id_models
+    id_models = get_id_models()
+
+    folder = os.path.join(monthly_sales_path, '*.json')
+    files_json = glob.glob(folder)
+
+    for item in files_json:
+        filename = os.path.basename(item)
+        parts = filename.split("_")
+        mvtoken = parts[0]
+
+        # Ищем, какому ключу соответствует mvtoken
+        models_id = [key for key, value in id_models.items() if value == mvtoken]
+        try:
+            model_id = models_id[0]
+        except:
+            model_id = None
+        with open(item, 'r', encoding="utf-8") as f:
+            data_json = json.load(f)
+
+        monthItems = data_json['monthItems']
+
+        for month in monthItems:
+            sales_date = month['sales_date'].replace('/', '.')
+            sales_date = datetime.strptime(sales_date, '%d.%m.%Y')
+            sales_month = sales_date.month
+            sales_year = sales_date.year
+
+            seller_commission_price = float(month['seller_commission_price'])
+
+            # Формирование ключа в формате "(model_id, Месяц Год)"
+            # month_year = sales_date.strftime("%b %Y")
+            key = (model_id, sales_month, sales_year)
+            monthly_sums[key] += seller_commission_price
+
+        # Вывод суммы по каждой модели и месяцу
+
+    for (model_id, sales_month, sales_year), total_sum in monthly_sums.items():
+        formatted_total_sum = "{:.2f}".format(total_sum)
+        values = [model_id, sales_month, sales_year, formatted_total_sum]
+        # SQL-запрос для вставки данных
+        insert_query = f"""
+                        INSERT INTO {use_table_monthly_sales} (model_id, sales_month,sales_year, total_sum)
+                        VALUES (%s,%s, %s, %s)
+                        """
+        cursor.execute(insert_query, values)
+        cnx.commit()  # Подтверждение изменений
+
+
+"""Создание БД"""
+
 
 def create_sql_daily_sales():
     # 1. Подключаемся к серверу MySQL
@@ -207,9 +310,10 @@ def create_sql_daily_sales():
     # 4. Создаем необходимые колонки
 
     cursor.execute(f"""
-        CREATE TABLE {use_table} (
+        CREATE TABLE {use_table_daily_sales} (
                     id INT AUTO_INCREMENT PRIMARY KEY,
                     buyer_username VARCHAR(255),
+                    model_id VARCHAR(255),
                     buyer_stage_name VARCHAR(255),
                     buyer_user_id VARCHAR(255),
                     title VARCHAR(255),
@@ -217,9 +321,7 @@ def create_sql_daily_sales():
                     sales_date DATE,
                     sales_time TIME,
                     seller_commission_price VARCHAR(255),
-                    model_id VARCHAR(255)
-                    
-    )
+                    mvtoken VARCHAR(255)    )
         """)
     # """Добавить колонку в текущую БД"""
     # cursor.execute(f"""
@@ -228,6 +330,7 @@ def create_sql_daily_sales():
     # """)
     # Закрываем соединение
     cnx.close()
+
 
 def create_sql_monthly_sales():
     # 1. Подключаемся к серверу MySQL
@@ -246,19 +349,13 @@ def create_sql_monthly_sales():
     # 4. Создаем необходимые колонки
 
     cursor.execute(f"""
-            CREATE TABLE {use_table} (
+            CREATE TABLE {use_table_monthly_sales} (
                         id INT AUTO_INCREMENT PRIMARY KEY,
-                        buyer_username VARCHAR(255),
-                        buyer_stage_name VARCHAR(255),
-                        buyer_user_id VARCHAR(255),
-                        title VARCHAR(255),
-                        type_content VARCHAR(255),
-                        sales_date DATE,
-                        sales_time TIME,
-                        seller_commission_price VARCHAR(255),
-                        model_id VARCHAR(255)
-
-        )
+                        model_id VARCHAR(255),
+                        sales_month INT,
+                        sales_year INT,
+                        total_sum VARCHAR(255)
+                        )
             """)
     # """Добавить колонку в текущую БД"""
     # cursor.execute(f"""
@@ -268,10 +365,125 @@ def create_sql_monthly_sales():
     # Закрываем соединение
     cnx.close()
 
+
+"""Формирование отчетов"""
+
+
+def get_id_models():
+    # Подключение к базе данных
+    cnx = mysql.connector.connect(**db_config)
+    cursor = cnx.cursor()
+
+    # Выполнение запроса для получения уникальных значений
+    cursor.execute("SELECT DISTINCT model_id, mvtoken FROM manyvids.daily_sales")
+
+    dict_models = {}
+    # Получение и вывод результатов
+    results = cursor.fetchall()
+    for row in results:
+        model_id, mvtoken = row
+        dict_models[model_id] = mvtoken
+    # Закрытие курсора и соединения
+    cursor.close()
+    cnx.close()
+    return dict_models
+
+
+def get_table_01_to_google():
+    cnx = mysql.connector.connect(**db_config)
+    cursor = cnx.cursor()
+
+    cursor.execute("""
+        SELECT model_id, sales_date, ROUND(SUM(seller_commission_price), 2) AS total_seller_commission
+        FROM manyvids.daily_sales
+        GROUP BY model_id, sales_date
+        ORDER BY model_id ASC, sales_date ASC
+    """)
+
+    # Получение результатов в DataFrame
+    df = pd.DataFrame(cursor.fetchall(), columns=[x[0] for x in cursor.description])
+
+    # Преобразование DataFrame
+    pivot_df = df.pivot_table(index='model_id', columns='sales_date', values='total_seller_commission', fill_value=0)
+
+    # Сохранение в CSV
+    pivot_df.to_csv('daily_sales.csv')
+
+    # Закрытие курсора и соединения
+    cursor.close()
+    cnx.close()
+
+    """Запись в Google Таблицу"""
+
+    sheet = client.open_by_key(spreadsheet_id).sheet1  # Первый лист в книге daily_sales
+
+    # Читаем CSV файл
+    df = pd.read_csv('daily_sales.csv')
+
+    # Конвертируем DataFrame в список списков
+    values = df.values.tolist()
+
+    # Добавляем заголовки столбцов в начало списка
+    values.insert(0, df.columns.tolist())
+    # Очистка всего листа
+
+    sheet.clear()
+    # Обновляем данные в Google Sheets
+    sheet.update(values, 'A1')
+
+
+def get_table_02_to_google():
+    # Подключение к базе данных
+    cnx = mysql.connector.connect(**db_config)
+    cursor = cnx.cursor()
+
+    cursor.execute("""
+        SELECT * FROM manyvids.monthly_sales
+        ORDER BY model_id, sales_year, sales_month;
+    """)
+
+    # Получение результатов в DataFrame
+    df = pd.DataFrame(cursor.fetchall(), columns=[x[0] for x in cursor.description])
+    # print(df)
+    #
+    df['sales_month'] = df['sales_month'].astype(int)
+    # df['sales_year'] = df['sales_year'].astype(str)
+    # df['month_year'] = pd.to_datetime(df['sales_month'] + '.' + df['sales_year'], format='%m.%Y')
+    df['total_sum'] = pd.to_numeric(df['total_sum'])
+    # # Создание сводной таблицы
+    pivot_df = df.pivot_table(index='model_id', columns='sales_month', values='total_sum', fill_value=0)
+    #
+    # # Вывод результата
+    #
+    # # Сохранение в CSV
+    pivot_df.to_csv('monthly_sales.csv')
+
+    # Закрытие курсора и соединения
+    cursor.close()
+    cnx.close()
+
+
+def get_to_google():
+    spreadsheet_id = '145mee2ZsApZXiTnASng4lTzbocYCJWM5EDksTx_FVYY'
+    scope = ["https://spreadsheets.google.com/feeds", 'https://www.googleapis.com/auth/spreadsheets',
+             "https://www.googleapis.com/auth/drive.file", "https://www.googleapis.com/auth/drive"]
+
+    creds = ServiceAccountCredentials.from_json_keyfile_name("C:\\scrap_tutorial-master\\manyvids\\access.json", scope)
+    client = gspread.authorize(creds)
+    spreadsheet = client.open_by_key(spreadsheet_id)
+    sheet = spreadsheet.sheet1
+    sheet.update_cell(1, 1, "Привет, мир!")
+
+
 if __name__ == '__main__':
+    # delete_old_data()
     # create_sql_daily_sales()
     # create_sql_monthly_sales()
     # get_requests_daily_sales()
     # get_requests_monthly_sales()
     # parsing_daily_sales()
     # parsing_monthly_sales()
+    # get_id_models()
+    # get_table_01_to_google()
+    get_table_02_to_google()
+    # get_to_google()
