@@ -4,8 +4,8 @@ import pandas as pd
 import numpy as np
 
 # Укажите путь к файлу с учетными данными JSON и идентификатор таблицы
-CREDENTIALS_FILE = 'C:\scrap_tutorial-master\synevo\laboratory.json'
-spreadsheet_id = '1e3hDtNw-3jdqFOvn02a3rNMyJNCX7DpBnur4xiOw-FM'
+CREDENTIALS_FILE = 'C:\\scrap_tutorial-master\\manyvids\\access.json'
+spreadsheet_id = '145mee2ZsApZXiTnASng4lTzbocYCJWM5EDksTx_FVYY'
 
 
 # Создаем функцию для обновления данных в конкретном листе
