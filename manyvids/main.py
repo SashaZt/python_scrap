@@ -11,7 +11,7 @@ import pandas as pd
 import requests
 from oauth2client.service_account import ServiceAccountCredentials
 
-from config import db_config, use_bd, use_table_daily_sales, use_table_monthly_sales, headers
+from config import db_config, use_bd, use_table_daily_sales, use_table_monthly_sales, use_table_payout_history, headers
 from proxi import proxies
 
 
@@ -30,6 +30,7 @@ temp_directory = 'temp'
 temp_path = os.path.join(current_directory, temp_directory)
 daily_sales_path = os.path.join(temp_path, 'daily_sales')
 monthly_sales_path = os.path.join(temp_path, 'monthly_sales')
+payout_history_path = os.path.join(temp_path, 'payout_history')
 
 
 def delete_old_data():
@@ -182,6 +183,65 @@ def get_requests_monthly_sales():
         json.dump(json_data, f, ensure_ascii=False, indent=4)  # Записываем в файл
 
 
+def get_requests_payout_history():
+    proxi = proxy_random()
+    cookies = {
+        'KGID': 'vw81enngnq',
+        'contentPopup': 'false',
+        'fp_token_7c6a6574-f011-4c9a-abdd-9894a102ccef': 'oix6rQRGBtS6uFahjigPvPhEKbgJi3Tr5BC8yJsspR8=',
+        '_hjSessionUser_665482': 'eyJpZCI6ImJkMWRiNzI1LWNhNzItNWNiNS1hYjlmLTA2ODU1MGE3ZTc4ZCIsImNyZWF0ZWQiOjE2OTg3NDg4Mjg5NDQsImV4aXN0aW5nIjp0cnVlfQ==',
+        '_ga': 'GA1.1.1303883953.1698748820',
+        'privacyPolicyRead': '1',
+        '_gat': '1',
+        'userPreferredContent': '1p2p3p',
+        'dataSectionTemp': '0',
+        'MSG_LEG_TKN': 'IS6Q61g8WwFJn9vjnRwKqA==',
+        '_gat_UA-45103406-1': '1',
+        '_hjSessionUser_665482': 'eyJpZCI6ImJkMWRiNzI1LWNhNzItNWNiNS1hYjlmLTA2ODU1MGE3ZTc4ZCIsImNyZWF0ZWQiOjE2OTg3NDg4Mjg5NDQsImV4aXN0aW5nIjp0cnVlfQ==',
+        '_ga_K93D8HD50B': 'deleted',
+        '_hjIncludedInSessionSample_665482': '0',
+        'KGID': '28b938dd-8db9-57a6-b5d9-6d96c6b8af21',
+        '_hjAbsoluteSessionInProgress': '0',
+        '_hjDonePolls': '977734%2C977740',
+        'timezone': 'Europe%2FAmsterdam',
+        '_gid': 'GA1.2.79581497.1705419542',
+        '_hjIncludedInSessionSample_665482': '0',
+        'seenWarningPage': 'eyJpdiI6ImpycUVnWWxzWkRoZW1FZ0tBQlJPRlE9PSIsInZhbHVlIjoibXVlUnBHOGRmXC8renhublI0SWZHMUE9PSIsIm1hYyI6IjhmZWZhZjJkZTUwNGZkZGI2YzhlYWVjMWQwNTczZWM5YTEzZmYzOWU4N2E0YTU2ZjhhZDM4MDExYjZlOTBiZjMifQ%3D%3D',
+        'API_KEY': 'FWfDdyNjdYgqDDr7b61HVUV%2Fec7fc3BuZRJ0zDzRQaZe15QDNnO3%2FlzV59AdirEm',
+        'manyvh': 'th7WJdHKAwbYHEUUwWYGGaWfahAob0Lh0sem',
+        'PHPSESSID': '63i286ueif1ikoe4aslol56cg24frvb3aelip72b',
+        '_gid': 'GA1.1.79581497.1705419542',
+        'mvAnnouncement': 'kVZfGcleqyVt',
+        '_ga_K93D8HD50B': 'deleted',
+        'XSRF-TOKEN': 'eyJpdiI6InBYNkw4a2F1WGRoQUxWcnRaUmIralE9PSIsInZhbHVlIjoiRnlKSDdPTmdURXdzQlFaR2dwb1hCcGZlbUp5WHhqUVU2VCtsVjI5V3pQQlZ3TE5lNlF4R0REZzIrUlo0eWw3cSIsIm1hYyI6IjE4NjhhNjE3MzlkOWFiMjU4MGJhZTcwNmYxODgwODgzZGYwNGYyZWM5OTJjYmY3ZjRjODRhZDBiY2EyNjAyYTQifQ%3D%3D',
+        '_ga': 'GA1.2.1303883953.1698748820',
+        '_ga_K93D8HD50B': 'GS1.1.1706690810.12.0.1706690810.60.0.0',
+        'AWSALB': '5hplWRaLPeZQRlhrR1AcQ/d3gO+UpAVn777juwQ6zBeH34SXhGVmJmnbw18737ulAoPQeioDLZ16sR6WrorISiC5CwDW1UyOt4GjkxNV3cWw3z8yON6jj3zHqCVxpngfKhQF5AL7sp1z+MYeyHqjaLQg2pb8Qrt8oUPMrDDB3reWz+ekC/pLUfYdsh/SVw==',
+        'AWSALBCORS': '5hplWRaLPeZQRlhrR1AcQ/d3gO+UpAVn777juwQ6zBeH34SXhGVmJmnbw18737ulAoPQeioDLZ16sR6WrorISiC5CwDW1UyOt4GjkxNV3cWw3z8yON6jj3zHqCVxpngfKhQF5AL7sp1z+MYeyHqjaLQg2pb8Qrt8oUPMrDDB3reWz+ekC/pLUfYdsh/SVw==',
+        '_dd_s': 'logs=1&id=666ea429-03af-4fcb-ab0f-624bd66fdb79&created=1706690810572&expire=1706691740883',
+    }
+    data = {
+        'mvtoken': '65af8f4235331358595768',
+        'year': '2023',
+    }
+    mvtoken_value = data['mvtoken']
+    filterYear_value = data['year']
+    filename = os.path.join(payout_history_path, f'{mvtoken_value}_{filterYear_value}.json')
+    if not os.path.exists(filename):
+        response = requests.post(
+            'https://www.manyvids.com/includes/get_payperiod_earnings.php',
+            cookies=cookies,
+            headers=headers,
+            data=data,
+            proxies=proxi
+        )
+
+        json_data = response.json()
+
+        with open(filename, 'w', encoding='utf-8') as f:
+            json.dump(json_data, f, ensure_ascii=False, indent=4)  # Записываем в файл
+
+
 """Загрузка данных в БД"""
 
 
@@ -295,6 +355,47 @@ def parsing_monthly_sales():
         cnx.commit()  # Подтверждение изменений
 
 
+def parsing_payout_history():
+    cnx = mysql.connector.connect(**db_config)
+    cursor = cnx.cursor()
+
+    folder = os.path.join(payout_history_path, '*.json')
+    files_json = glob.glob(folder)
+    id_models = get_id_models()
+    for item in files_json:
+        filename = os.path.basename(item)
+        parts = filename.split("_")
+        mvtoken = parts[0]
+
+        # Ищем, какому ключу соответствует mvtoken
+        models_id = [key for key, value in id_models.items() if value == mvtoken]
+        try:
+            model_id = models_id[0]
+        except:
+            model_id = None
+        with open(item, 'r', encoding="utf-8") as f:
+            data_json = json.load(f)
+        try:
+            payPeriodItems = data_json['payPeriodItems']
+        except:
+            continue
+        for item in payPeriodItems:
+            payment_date = item['end_period_date']
+            paid = item['paid']
+            values = [model_id, payment_date, paid]
+            # print(values)
+
+            # SQL-запрос для вставки данных
+            insert_query = f"""
+                            INSERT INTO {use_table_payout_history} (model_id, payment_date, paid)
+                            VALUES (%s, %s, %s)
+                            """
+            cursor.execute(insert_query, values)
+        cnx.commit()  # Подтверждение изменений
+    cursor.close()
+    cnx.close()
+
+
 """Создание БД"""
 
 
@@ -371,6 +472,39 @@ def create_sql_monthly_sales():
     cnx.close()
 
 
+def create_sql_payout_history():
+    # 1. Подключаемся к серверу MySQL
+    cnx = mysql.connector.connect(**db_config)
+
+    # Создаем объект курсора, чтобы выполнять SQL-запросы
+    cursor = cnx.cursor()
+
+    # 2. Создаем базу данных с именем kupypai_com
+    # cursor.execute("CREATE DATABASE vpromo2_usa")
+
+    # Указываем, что будем использовать эту базу данных
+    cursor.execute(f"USE {use_bd}")
+
+    # 3. В базе данных создаем таблицу ad
+    # 4. Создаем необходимые колонки
+
+    cursor.execute(f"""
+                CREATE TABLE {use_table_payout_history} (
+                            id INT AUTO_INCREMENT PRIMARY KEY,
+                            model_id VARCHAR(255),
+                            payment_date DATE,
+                            paid VARCHAR(255)
+                            )
+                """)
+    # """Добавить колонку в текущую БД"""
+    # cursor.execute(f"""
+    #     ALTER TABLE {use_table}
+    #     ADD COLUMN Kod_części_zamiennej TEXT
+    # """)
+    # Закрываем соединение
+    cnx.close()
+
+
 """Формирование отчетов"""
 
 
@@ -420,8 +554,7 @@ def get_table_01_to_google():
 
     """Запись в Google Таблицу"""
     client, spreadsheet_id = get_google()
-    sheet01 = client.open_by_key(spreadsheet_id).get_worksheet(0)  # Первый лист в книге daily_sales
-
+    sheet_daily_sales = client.open_by_key(spreadsheet_id).worksheet('daily_sales')
     # Читаем CSV файл
     df = pd.read_csv('daily_sales.csv')
 
@@ -432,9 +565,9 @@ def get_table_01_to_google():
     values.insert(0, df.columns.tolist())
 
     # Очистка всего листа
-    sheet01.clear()
+    sheet_daily_sales.clear()
     # Обновляем данные в Google Sheets
-    sheet01.update(values, 'A1')
+    sheet_daily_sales.update(values, 'A1')
 
 
 def get_table_02_to_google():
@@ -536,6 +669,89 @@ def get_table_02_to_google():
     # sheet.update(values, 'A1')
 
 
+def get_table_03_to_google():
+    # Подключение к базе данных
+    cnx = mysql.connector.connect(**db_config)
+    cursor = cnx.cursor()
+
+    cursor.execute("""
+        SELECT model_id,  payment_date, paid FROM manyvids.payout_history
+        ORDER BY model_id, payment_date;
+
+    """)
+
+    # Получение результатов в DataFrame
+    df = pd.DataFrame(cursor.fetchall(), columns=[x[0] for x in cursor.description])
+    pivot_df = df.pivot(index='model_id', columns='payment_date', values='paid')
+    pivot_df.to_csv('payout_history.csv')
+
+    # Закрытие курсора и соединения
+    cursor.close()
+    cnx.close()
+    """Запись в Google Таблицу"""
+
+    client, spreadsheet_id = get_google()
+    sheet_payout_history = client.open_by_key(spreadsheet_id).worksheet('payout_history')
+
+    # Читаем CSV файл
+    df = pd.read_csv('payout_history.csv')
+    df.fillna(0, inplace=True)
+    df = df.astype(str)
+    # Конвертируем DataFrame в список списков
+    values = df.values.tolist()
+
+    # Добавляем заголовки столбцов в начало списка
+    values.insert(0, df.columns.tolist())
+
+    # Очистка всего листа
+    sheet_payout_history.clear()
+    # Обновляем данные в Google Sheets
+    sheet_payout_history.update(values, 'A1')
+
+
+def get_table_04_to_google():
+    cnx = mysql.connector.connect(**db_config)
+    cursor = cnx.cursor()
+
+    cursor.execute("""
+            SELECT 
+    buyer_stage_name, 
+    buyer_user_id, 
+    ROUND(SUM(seller_commission_price), 2) AS total_commission, 
+    COUNT(*) AS total_count, 
+    ROUND(AVG(seller_commission_price), 2) AS average_commission,
+    GROUP_CONCAT(DISTINCT model_id SEPARATOR ', ') AS all_buyer_usernames
+FROM manyvids.daily_sales
+GROUP BY buyer_stage_name, buyer_user_id;
+
+
+        """)
+
+    # Получение результатов в DataFrame
+    df = pd.DataFrame(cursor.fetchall(), columns=[x[0] for x in cursor.description])
+    # Запись DataFrame в CSV файл
+    df.to_csv('withdrawals.csv', index=False)
+    """Запись в Google Таблицу"""
+
+    client, spreadsheet_id = get_google()
+    sheet_payout_history = client.open_by_key(spreadsheet_id).worksheet('withdrawals')
+
+    # Читаем CSV файл
+    df = pd.read_csv('withdrawals.csv')
+    df.fillna(0, inplace=True)
+    df = df.astype(str)
+    # Конвертируем DataFrame в список списков
+    values = df.values.tolist()
+
+    # Добавляем заголовки столбцов в начало списка
+    values.insert(0, df.columns.tolist())
+
+    # Очистка всего листа
+    sheet_payout_history.clear()
+    # Обновляем данные в Google Sheets
+    sheet_payout_history.update(values, 'A1')
+
+
 def get_to_google():
     spreadsheet_id = '145mee2ZsApZXiTnASng4lTzbocYCJWM5EDksTx_FVYY'
     scope = ["https://spreadsheets.google.com/feeds", 'https://www.googleapis.com/auth/spreadsheets',
@@ -552,11 +768,16 @@ if __name__ == '__main__':
     # delete_old_data()
     # create_sql_daily_sales()
     # create_sql_monthly_sales()
+    # create_sql_payout_history()
     # get_requests_daily_sales()
     # get_requests_monthly_sales()
+    # get_requests_payout_history()
     # parsing_daily_sales()
     # parsing_monthly_sales()
+    # parsing_payout_history()
     # get_id_models()
     # get_table_01_to_google()
-    get_table_02_to_google()
+    # get_table_02_to_google()
+    # get_table_03_to_google()
+    get_table_04_to_google()
     # get_to_google()
