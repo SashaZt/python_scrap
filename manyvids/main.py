@@ -1,3 +1,4 @@
+import csv
 import glob
 import json
 import os
@@ -14,6 +15,16 @@ from oauth2client.service_account import ServiceAccountCredentials
 from config import db_config, use_bd, use_table_daily_sales, use_table_monthly_sales, use_table_payout_history, headers
 from proxi import proxies
 
+current_directory = os.getcwd()
+temp_directory = 'temp'
+# Создайте полный путь к папке temp
+temp_path = os.path.join(current_directory, temp_directory)
+cookies_path = os.path.join(temp_path, 'cookies')
+login_pass_path = os.path.join(temp_path, 'login_pass')
+daily_sales_path = os.path.join(temp_path, 'daily_sales')
+monthly_sales_path = os.path.join(temp_path, 'monthly_sales')
+payout_history_path = os.path.join(temp_path, 'payout_history')
+
 
 def get_google():
     spreadsheet_id = '145mee2ZsApZXiTnASng4lTzbocYCJWM5EDksTx_FVYY'
@@ -22,15 +33,6 @@ def get_google():
     creds = ServiceAccountCredentials.from_json_keyfile_name("C:\\scrap_tutorial-master\\manyvids\\access.json", scope)
     client = gspread.authorize(creds)
     return client, spreadsheet_id
-
-
-current_directory = os.getcwd()
-temp_directory = 'temp'
-# Создайте полный путь к папке temp
-temp_path = os.path.join(current_directory, temp_directory)
-daily_sales_path = os.path.join(temp_path, 'daily_sales')
-monthly_sales_path = os.path.join(temp_path, 'monthly_sales')
-payout_history_path = os.path.join(temp_path, 'payout_history')
 
 
 def delete_old_data():
@@ -62,184 +64,232 @@ def proxy_random():
     }
 
 
+"""Создание БД"""
+
+
+def create_sql_daily_sales():
+    # 1. Подключаемся к серверу MySQL
+    cnx = mysql.connector.connect(**db_config)
+
+    # Создаем объект курсора, чтобы выполнять SQL-запросы
+    cursor = cnx.cursor()
+
+    # 2. Создаем базу данных с именем kupypai_com
+    # cursor.execute("CREATE DATABASE vpromo2_usa")
+
+    # Указываем, что будем использовать эту базу данных
+    cursor.execute(f"USE {use_bd}")
+
+    # 3. В базе данных создаем таблицу ad
+    # 4. Создаем необходимые колонки
+
+    cursor.execute(f"""
+        CREATE TABLE {use_table_daily_sales} (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    buyer_username VARCHAR(255),
+                    model_id VARCHAR(255),
+                    buyer_stage_name VARCHAR(255),
+                    buyer_user_id VARCHAR(255),
+                    title VARCHAR(255),
+                    type_content VARCHAR(255),
+                    sales_date DATE,
+                    sales_time TIME,
+                    seller_commission_price VARCHAR(255),
+                    mvtoken VARCHAR(255),
+                    model_fm  VARCHAR(255)
+                       )
+        """)
+    # """Добавить колонку в текущую БД"""
+    # cursor.execute(f"""
+    #     ALTER TABLE {use_table}
+    #     ADD COLUMN Kod_części_zamiennej TEXT
+    # """)
+    # Закрываем соединение
+    cnx.close()
+
+
+def create_sql_monthly_sales():
+    # 1. Подключаемся к серверу MySQL
+    cnx = mysql.connector.connect(**db_config)
+
+    # Создаем объект курсора, чтобы выполнять SQL-запросы
+    cursor = cnx.cursor()
+
+    # 2. Создаем базу данных с именем kupypai_com
+    # cursor.execute("CREATE DATABASE vpromo2_usa")
+
+    # Указываем, что будем использовать эту базу данных
+    cursor.execute(f"USE {use_bd}")
+
+    # 3. В базе данных создаем таблицу ad
+    # 4. Создаем необходимые колонки
+
+    cursor.execute(f"""
+            CREATE TABLE {use_table_monthly_sales} (
+                        id INT AUTO_INCREMENT PRIMARY KEY,
+                        model_id VARCHAR(255),
+                        sales_month INT,
+                        sales_year INT,
+                        total_sum VARCHAR(255)
+                        
+                        
+                        )
+            """)
+    # """Добавить колонку в текущую БД"""
+    # cursor.execute(f"""
+    #     ALTER TABLE {use_table}
+    #     ADD COLUMN Kod_części_zamiennej TEXT
+    # """)
+    # Закрываем соединение
+    cnx.close()
+
+
+def create_sql_payout_history():
+    # 1. Подключаемся к серверу MySQL
+    cnx = mysql.connector.connect(**db_config)
+
+    # Создаем объект курсора, чтобы выполнять SQL-запросы
+    cursor = cnx.cursor()
+
+    # 2. Создаем базу данных с именем kupypai_com
+    # cursor.execute("CREATE DATABASE vpromo2_usa")
+
+    # Указываем, что будем использовать эту базу данных
+    cursor.execute(f"USE {use_bd}")
+
+    # 3. В базе данных создаем таблицу ad
+    # 4. Создаем необходимые колонки
+
+    cursor.execute(f"""
+                CREATE TABLE {use_table_payout_history} (
+                            id INT AUTO_INCREMENT PRIMARY KEY,
+                            model_id VARCHAR(255),
+                            payment_date DATE,
+                            paid VARCHAR(255)
+                            )
+                """)
+    # """Добавить колонку в текущую БД"""
+    # cursor.execute(f"""
+    #     ALTER TABLE {use_table}
+    #     ADD COLUMN Kod_części_zamiennej TEXT
+    # """)
+    # Закрываем соединение
+    cnx.close()
+
+
 """Скачивание данных"""
 
 
 def get_requests_daily_sales():
     proxi = proxy_random()
-    cookies = {
-        'KGID': 'o80cgt04fte',
-        'userPreferredContent': '1p2p3p',
-        'dataSectionTemp': '0',
-        'contentPopup': 'false',
-        'fp_token_7c6a6574-f011-4c9a-abdd-9894a102ccef': 'zqYNeuNq+n2916euUK3gXOFHg4G1WNhLPHLjgeszP+I=',
-        '_hjSessionUser_665482': 'eyJpZCI6IjA3NjI1MWZmLWY5MDMtNThjYy04NjNmLTkwMjk5YTQwYzlkNyIsImNyZWF0ZWQiOjE2OTkyMDAxMDY1MDAsImV4aXN0aW5nIjp0cnVlfQ==',
-        '_gat': '1',
-        '_ga': 'GA1.1.2086640919.1699200083',
-        'privacyPolicyRead': '1',
-        'MSG_LEG_TKN': 'nIosQT4UW5EOiuumof3ONw==',
-        'manyvh': 'bt6T3y7uGGOPmR086VFJyegqq0BsAwvwBJIi',
-        '_gat_UA-45103406-1': '1',
-        'timezone': 'Europe%2FAmsterdam',
-        '_hjIncludedInSessionSample_665482': '0',
-        'KGID': '2e3fcde2-6671-5bf6-896a-8743cecda114',
-        '_ga_K93D8HD50B': 'deleted',
-        '_hjSessionUser_665482': 'eyJpZCI6IjA3NjI1MWZmLWY5MDMtNThjYy04NjNmLTkwMjk5YTQwYzlkNyIsImNyZWF0ZWQiOjE2OTkyMDAxMDY1MDAsImV4aXN0aW5nIjp0cnVlfQ==',
-        '_hjAbsoluteSessionInProgress': '1',
-        '_hjIncludedInSessionSample_665482': '0',
-        '_hjAbsoluteSessionInProgress': '1',
-        '_gid': 'GA1.2.1554863151.1702850273',
-        '_gid': 'GA1.1.1554863151.1702850273',
-        '_ga_K93D8HD50B': 'deleted',
-        'seenWarningPage': 'eyJpdiI6IjlHWVBpMEZ4NjAxSXFHV21MQ2dVY1E9PSIsInZhbHVlIjoidXNnQ0FFMmRJbTNRQktBTHlkdFNZUT09IiwibWFjIjoiNjllZGFiMmE1MmU2ZDRhZDZiOWE3NzM3M2I1YmY3YmE3NDg0MGFiOThmMWYzZjNjMjE4ZWQ2NDBlMTU4MWVlNSJ9',
-        'API_KEY': 'EB1chmbGUzvVF%2Bbd0KzZGh3K2vnZBgSeNcIFkzDzsA%2B7gKI%2FEl%2BgOVSFVZzgHyLq',
-        'preview': '0',
-        'seenWarningPage': 'true',
-        'PHPSESSID': 'nlvkp8c0fv168vuobkfhmjdvk4b3o3kjqal2fnrp',
-        'mvAnnouncement': 'fGYXzXk7Iu58%3AJWyKCvZPRv1W',
-        '_hjSession_665482': 'eyJpZCI6IjU0ZjMyODQ4LTYzZjAtNGNiOC1hNWQ1LTAzNWQ2ZjNhYzBlYyIsImMiOjE3MDY2MjI2Njk5ODgsInMiOjAsInIiOjAsInNiIjowLCJzciI6MCwic2UiOjAsImZzIjowLCJzcCI6MH0=',
-        'XSRF-TOKEN': 'eyJpdiI6InpoNkduaUkrNkxcL0M2b0luTU1teStBPT0iLCJ2YWx1ZSI6Ikt6N1NqdmFzd0wwUXUxaXIrRVwvSjBEUGF3ODlybVwvUWg5Z0x5S0wrbUNuR3hvTUxiYnBsSk9jXC83dEY1eWpOajQiLCJtYWMiOiI5YmUwY2RlNzU3ODIzNDdkOWM4MTRkNzM3MjE1MDY1N2NiMjFhM2E5NjAxYWQyYWIyMDFhZTJkYzRkMjAyZWM1In0%3D',
-        '_hjSession_665482': 'eyJpZCI6IjcxZjdlY2RhLWU5NzgtNGI0Ny1iYzFjLTAwZjA3NDI2MDkyOSIsImMiOjE3MDY2MzczNjAxNTYsInMiOjAsInIiOjAsInNiIjowLCJzciI6MCwic2UiOjAsImZzIjowLCJzcCI6MX0=',
-        'AWSALB': 'LsRiwKEH9Jf35c3WXS5M1/XiqxFzayJBkp+9Ijo4kg9FruONxl0eHLnAMZA9+lge6Vm/3tSjFWJz0MokajTR6ksMN46cB3blq9zCJOq20Pz6f4NmK8c0/SMgmemN3LL9OE713uEve4Ozem1RoTTvwxd0vbnAH8LJyZpq1y6+vymU0nbrJTNnqULpfVKFqw==',
-        'AWSALBCORS': 'LsRiwKEH9Jf35c3WXS5M1/XiqxFzayJBkp+9Ijo4kg9FruONxl0eHLnAMZA9+lge6Vm/3tSjFWJz0MokajTR6ksMN46cB3blq9zCJOq20Pz6f4NmK8c0/SMgmemN3LL9OE713uEve4Ozem1RoTTvwxd0vbnAH8LJyZpq1y6+vymU0nbrJTNnqULpfVKFqw==',
-        '_ga': 'GA1.2.2086640919.1699200083',
-        '_ga_K93D8HD50B': 'GS1.1.1706637351.39.1.1706637380.31.0.0',
-        '_dd_s': 'logs=1&id=3d2c7a36-ac92-42cf-bbea-0ccf1716eafc&created=1706637351457&expire=1706638283820',
-    }
+    filename_cookies = os.path.join(cookies_path, '*.json')
+    files_json = glob.glob(filename_cookies)
+    for item in files_json:
+        with open(item, 'r') as f:
+            cookies = json.load(f)
+        filename = os.path.basename(item)
+        parts = filename.split("_")
+        mvtoken = parts[1].replace('.json', '')
+        # Создание сессии
+        session = requests.Session()
 
-    data = {
-        'mvtoken': '65b5d5a4977f5536834414',
-        'day': '',
-        'month': '11',
-        'filterYear': '2023',
-    }
-    mvtoken_value = data['mvtoken']
-    month_value = data['month']
-    filterYear_value = data['filterYear']
-    filename = os.path.join(daily_sales_path, f'{mvtoken_value}_{month_value}_{filterYear_value}.json')
-    if not os.path.exists(filename):
-        response = requests.post('https://www.manyvids.com/includes/get_earnings.php', cookies=cookies, headers=headers,
-                                 data=data, proxies=proxi)
+        # Добавление кук в сессию
+        for name, value in cookies.items():
+            session.cookies.set(name, value)
 
-        json_data = response.json()
-        with open(filename, 'w', encoding='utf-8') as f:
-            json.dump(json_data, f, ensure_ascii=False, indent=4)  # Записываем в файл
+        data = {
+            'mvtoken': mvtoken,
+            'day': '',
+            'month': '1',
+            'filterYear': '2024',
+        }
+        # proxy_host = '85.237.196.5'
+        # proxy_port = 51523
+        # proxy_user = 'locomgmt'
+        # proxy_pass = 'ogzj4wAZnz'
+        # proxi = {
+        #     'http': f'http://{proxy_user}:{proxy_pass}@{proxy_host}:{proxy_port}',
+        #     'https': f'http://{proxy_user}:{proxy_pass}@{proxy_host}:{proxy_port}'
+        # }
+        mvtoken_value = data['mvtoken']
+        month_value = data['month']
+        filterYear_value = data['filterYear']
+        filename = os.path.join(daily_sales_path, f'{mvtoken_value}_{month_value}_{filterYear_value}.json')
+        if not os.path.exists(filename):
+            response = session.post('https://www.manyvids.com/includes/get_earnings.php', headers=headers,
+                                    proxies=proxi, data=data)
+
+            json_data = response.json()
+            with open(filename, 'w', encoding='utf-8') as f:
+                json.dump(json_data, f, ensure_ascii=False, indent=4)  # Записываем в файл
 
 
 def get_requests_monthly_sales():
     proxi = proxy_random()
-    cookies = {
-        'KGID': 'o80cgt04fte',
-        'userPreferredContent': '1p2p3p',
-        'dataSectionTemp': '0',
-        'contentPopup': 'false',
-        'fp_token_7c6a6574-f011-4c9a-abdd-9894a102ccef': 'zqYNeuNq+n2916euUK3gXOFHg4G1WNhLPHLjgeszP+I=',
-        '_hjSessionUser_665482': 'eyJpZCI6IjA3NjI1MWZmLWY5MDMtNThjYy04NjNmLTkwMjk5YTQwYzlkNyIsImNyZWF0ZWQiOjE2OTkyMDAxMDY1MDAsImV4aXN0aW5nIjp0cnVlfQ==',
-        '_gat': '1',
-        '_ga': 'GA1.1.2086640919.1699200083',
-        'privacyPolicyRead': '1',
-        'MSG_LEG_TKN': 'nIosQT4UW5EOiuumof3ONw==',
-        'manyvh': 'bt6T3y7uGGOPmR086VFJyegqq0BsAwvwBJIi',
-        '_gat_UA-45103406-1': '1',
-        'timezone': 'Europe%2FAmsterdam',
-        '_hjIncludedInSessionSample_665482': '0',
-        'KGID': '2e3fcde2-6671-5bf6-896a-8743cecda114',
-        '_ga_K93D8HD50B': 'deleted',
-        '_hjSessionUser_665482': 'eyJpZCI6IjA3NjI1MWZmLWY5MDMtNThjYy04NjNmLTkwMjk5YTQwYzlkNyIsImNyZWF0ZWQiOjE2OTkyMDAxMDY1MDAsImV4aXN0aW5nIjp0cnVlfQ==',
-        '_hjAbsoluteSessionInProgress': '1',
-        '_hjIncludedInSessionSample_665482': '0',
-        '_hjAbsoluteSessionInProgress': '1',
-        '_gid': 'GA1.2.1554863151.1702850273',
-        '_gid': 'GA1.1.1554863151.1702850273',
-        '_ga_K93D8HD50B': 'deleted',
-        'seenWarningPage': 'eyJpdiI6IjlHWVBpMEZ4NjAxSXFHV21MQ2dVY1E9PSIsInZhbHVlIjoidXNnQ0FFMmRJbTNRQktBTHlkdFNZUT09IiwibWFjIjoiNjllZGFiMmE1MmU2ZDRhZDZiOWE3NzM3M2I1YmY3YmE3NDg0MGFiOThmMWYzZjNjMjE4ZWQ2NDBlMTU4MWVlNSJ9',
-        'API_KEY': 'EB1chmbGUzvVF%2Bbd0KzZGh3K2vnZBgSeNcIFkzDzsA%2B7gKI%2FEl%2BgOVSFVZzgHyLq',
-        'preview': '0',
-        'seenWarningPage': 'true',
-        'PHPSESSID': 'nlvkp8c0fv168vuobkfhmjdvk4b3o3kjqal2fnrp',
-        'mvAnnouncement': 'fGYXzXk7Iu58%3AJWyKCvZPRv1W',
-        '_hjSession_665482': 'eyJpZCI6IjU0ZjMyODQ4LTYzZjAtNGNiOC1hNWQ1LTAzNWQ2ZjNhYzBlYyIsImMiOjE3MDY2MjI2Njk5ODgsInMiOjAsInIiOjAsInNiIjowLCJzciI6MCwic2UiOjAsImZzIjowLCJzcCI6MH0=',
-        'XSRF-TOKEN': 'eyJpdiI6InpoNkduaUkrNkxcL0M2b0luTU1teStBPT0iLCJ2YWx1ZSI6Ikt6N1NqdmFzd0wwUXUxaXIrRVwvSjBEUGF3ODlybVwvUWg5Z0x5S0wrbUNuR3hvTUxiYnBsSk9jXC83dEY1eWpOajQiLCJtYWMiOiI5YmUwY2RlNzU3ODIzNDdkOWM4MTRkNzM3MjE1MDY1N2NiMjFhM2E5NjAxYWQyYWIyMDFhZTJkYzRkMjAyZWM1In0%3D',
-        '_ga': 'GA1.2.2086640919.1699200083',
-        '_hjSession_665482': 'eyJpZCI6IjU0ZjMyODQ4LTYzZjAtNGNiOC1hNWQ1LTAzNWQ2ZjNhYzBlYyIsImMiOjE3MDY2MjI2Njk5ODgsInMiOjAsInIiOjAsInNiIjowLCJzciI6MCwic2UiOjAsImZzIjowLCJzcCI6MH0=',
-        '_ga_K93D8HD50B': 'GS1.1.1706647640.40.0.1706647640.60.0.0',
-        'AWSALB': 'KCEKBpQjqQUHOsP3Lhw2lrtT5ti0VcjcIkzsS1KWaEtGF5JrFmgr1RiToZDfL41bDZxxwm7gzHUGsrIdP6Rsq2XmEgjLb8Np1vK5aIxaBRfJ1/Pvm6qcsUeq3uiqp6tLDmReaRYqtrVkKWFKrsfYfDYOTHPmJjRL0YnCdCeIU0y9NDApb5JUfmQlqNGn3A==',
-        'AWSALBCORS': 'KCEKBpQjqQUHOsP3Lhw2lrtT5ti0VcjcIkzsS1KWaEtGF5JrFmgr1RiToZDfL41bDZxxwm7gzHUGsrIdP6Rsq2XmEgjLb8Np1vK5aIxaBRfJ1/Pvm6qcsUeq3uiqp6tLDmReaRYqtrVkKWFKrsfYfDYOTHPmJjRL0YnCdCeIU0y9NDApb5JUfmQlqNGn3A==',
-        '_dd_s': 'logs=1&id=f0c3e95f-ee2b-4222-83bb-ec06804681ec&created=1706647640602&expire=1706648544705',
-    }
+    filename_cookies = os.path.join(cookies_path, '*.json')
+    files_json = glob.glob(filename_cookies)
+    for item in files_json:
+        with open(item, 'r') as f:
+            cookies = json.load(f)
+        filename = os.path.basename(item)
+        parts = filename.split("_")
+        mvtoken = parts[1].replace('.json', '')
+        session = requests.Session()
 
-    data = {
-        'mvtoken': '65b5d5a4977f5536834414',
-        'year': '2024',
-    }
+        # Добавление кук в сессию
+        for name, value in cookies.items():
+            session.cookies.set(name, value)
 
-    response = requests.post('https://www.manyvids.com/includes/get_earnings.php', cookies=cookies, headers=headers,
-                             data=data, proxies=proxi)
-    json_data = response.json()
-    mvtoken_value = data['mvtoken']
-    filterYear_value = data['year']
-    filename = os.path.join(monthly_sales_path, f'{mvtoken_value}_{filterYear_value}.json')
-    with open(filename, 'w', encoding='utf-8') as f:
-        json.dump(json_data, f, ensure_ascii=False, indent=4)  # Записываем в файл
+        data = {
+            'mvtoken': mvtoken,
+            'year': '2023',
+        }
+
+        response = session.post('https://www.manyvids.com/includes/get_earnings.php', headers=headers,
+                                data=data, proxies=proxi)
+        json_data = response.json()
+        mvtoken_value = data['mvtoken']
+        filterYear_value = data['year']
+        filename = os.path.join(monthly_sales_path, f'{mvtoken_value}_{filterYear_value}.json')
+        with open(filename, 'w', encoding='utf-8') as f:
+            json.dump(json_data, f, ensure_ascii=False, indent=4)  # Записываем в файл
 
 
 def get_requests_payout_history():
     proxi = proxy_random()
-    cookies = {
-        'KGID': 'vw81enngnq',
-        'contentPopup': 'false',
-        'fp_token_7c6a6574-f011-4c9a-abdd-9894a102ccef': 'oix6rQRGBtS6uFahjigPvPhEKbgJi3Tr5BC8yJsspR8=',
-        '_hjSessionUser_665482': 'eyJpZCI6ImJkMWRiNzI1LWNhNzItNWNiNS1hYjlmLTA2ODU1MGE3ZTc4ZCIsImNyZWF0ZWQiOjE2OTg3NDg4Mjg5NDQsImV4aXN0aW5nIjp0cnVlfQ==',
-        '_ga': 'GA1.1.1303883953.1698748820',
-        'privacyPolicyRead': '1',
-        '_gat': '1',
-        'userPreferredContent': '1p2p3p',
-        'dataSectionTemp': '0',
-        'MSG_LEG_TKN': 'IS6Q61g8WwFJn9vjnRwKqA==',
-        '_gat_UA-45103406-1': '1',
-        '_hjSessionUser_665482': 'eyJpZCI6ImJkMWRiNzI1LWNhNzItNWNiNS1hYjlmLTA2ODU1MGE3ZTc4ZCIsImNyZWF0ZWQiOjE2OTg3NDg4Mjg5NDQsImV4aXN0aW5nIjp0cnVlfQ==',
-        '_ga_K93D8HD50B': 'deleted',
-        '_hjIncludedInSessionSample_665482': '0',
-        'KGID': '28b938dd-8db9-57a6-b5d9-6d96c6b8af21',
-        '_hjAbsoluteSessionInProgress': '0',
-        '_hjDonePolls': '977734%2C977740',
-        'timezone': 'Europe%2FAmsterdam',
-        '_gid': 'GA1.2.79581497.1705419542',
-        '_hjIncludedInSessionSample_665482': '0',
-        'seenWarningPage': 'eyJpdiI6ImpycUVnWWxzWkRoZW1FZ0tBQlJPRlE9PSIsInZhbHVlIjoibXVlUnBHOGRmXC8renhublI0SWZHMUE9PSIsIm1hYyI6IjhmZWZhZjJkZTUwNGZkZGI2YzhlYWVjMWQwNTczZWM5YTEzZmYzOWU4N2E0YTU2ZjhhZDM4MDExYjZlOTBiZjMifQ%3D%3D',
-        'API_KEY': 'FWfDdyNjdYgqDDr7b61HVUV%2Fec7fc3BuZRJ0zDzRQaZe15QDNnO3%2FlzV59AdirEm',
-        'manyvh': 'th7WJdHKAwbYHEUUwWYGGaWfahAob0Lh0sem',
-        'PHPSESSID': '63i286ueif1ikoe4aslol56cg24frvb3aelip72b',
-        '_gid': 'GA1.1.79581497.1705419542',
-        'mvAnnouncement': 'kVZfGcleqyVt',
-        '_ga_K93D8HD50B': 'deleted',
-        'XSRF-TOKEN': 'eyJpdiI6InBYNkw4a2F1WGRoQUxWcnRaUmIralE9PSIsInZhbHVlIjoiRnlKSDdPTmdURXdzQlFaR2dwb1hCcGZlbUp5WHhqUVU2VCtsVjI5V3pQQlZ3TE5lNlF4R0REZzIrUlo0eWw3cSIsIm1hYyI6IjE4NjhhNjE3MzlkOWFiMjU4MGJhZTcwNmYxODgwODgzZGYwNGYyZWM5OTJjYmY3ZjRjODRhZDBiY2EyNjAyYTQifQ%3D%3D',
-        '_ga': 'GA1.2.1303883953.1698748820',
-        '_ga_K93D8HD50B': 'GS1.1.1706690810.12.0.1706690810.60.0.0',
-        'AWSALB': '5hplWRaLPeZQRlhrR1AcQ/d3gO+UpAVn777juwQ6zBeH34SXhGVmJmnbw18737ulAoPQeioDLZ16sR6WrorISiC5CwDW1UyOt4GjkxNV3cWw3z8yON6jj3zHqCVxpngfKhQF5AL7sp1z+MYeyHqjaLQg2pb8Qrt8oUPMrDDB3reWz+ekC/pLUfYdsh/SVw==',
-        'AWSALBCORS': '5hplWRaLPeZQRlhrR1AcQ/d3gO+UpAVn777juwQ6zBeH34SXhGVmJmnbw18737ulAoPQeioDLZ16sR6WrorISiC5CwDW1UyOt4GjkxNV3cWw3z8yON6jj3zHqCVxpngfKhQF5AL7sp1z+MYeyHqjaLQg2pb8Qrt8oUPMrDDB3reWz+ekC/pLUfYdsh/SVw==',
-        '_dd_s': 'logs=1&id=666ea429-03af-4fcb-ab0f-624bd66fdb79&created=1706690810572&expire=1706691740883',
-    }
-    data = {
-        'mvtoken': '65af8f4235331358595768',
-        'year': '2023',
-    }
-    mvtoken_value = data['mvtoken']
-    filterYear_value = data['year']
-    filename = os.path.join(payout_history_path, f'{mvtoken_value}_{filterYear_value}.json')
-    if not os.path.exists(filename):
-        response = requests.post(
-            'https://www.manyvids.com/includes/get_payperiod_earnings.php',
-            cookies=cookies,
-            headers=headers,
-            data=data,
-            proxies=proxi
-        )
+    filename_cookies = os.path.join(cookies_path, '*.json')
+    files_json = glob.glob(filename_cookies)
+    for item in files_json:
+        with open(item, 'r') as f:
+            cookies = json.load(f)
+        filename = os.path.basename(item)
+        parts = filename.split("_")
+        mvtoken = parts[1].replace('.json', '')
+        session = requests.Session()
 
-        json_data = response.json()
+        # Добавление кук в сессию
+        for name, value in cookies.items():
+            session.cookies.set(name, value)
 
-        with open(filename, 'w', encoding='utf-8') as f:
-            json.dump(json_data, f, ensure_ascii=False, indent=4)  # Записываем в файл
+        data = {
+            'mvtoken': mvtoken,
+            'year': '2023',
+        }
+        mvtoken_value = data['mvtoken']
+        filterYear_value = data['year']
+        filename = os.path.join(payout_history_path, f'{mvtoken_value}_{filterYear_value}.json')
+        if not os.path.exists(filename):
+            response = session.post(
+                'https://www.manyvids.com/includes/get_payperiod_earnings.php',
+                headers=headers,
+                data=data,
+                proxies=proxi
+            )
+
+            json_data = response.json()
+
+            with open(filename, 'w', encoding='utf-8') as f:
+                json.dump(json_data, f, ensure_ascii=False, indent=4)  # Записываем в файл
 
 
 """Загрузка данных в БД"""
@@ -251,7 +301,7 @@ def parsing_daily_sales():
     cursor = cnx.cursor()
     folder = os.path.join(daily_sales_path, '*.json')
     files_json = glob.glob(folder)
-
+    models_fms = get_id_models_csv()
     for item in files_json:
         with open(item, 'r', encoding="utf-8") as f:
             data_json = json.load(f)
@@ -279,14 +329,21 @@ def parsing_daily_sales():
                 sales_time = day['sales_time']
                 seller_commission_price = day['seller_commission_price']
                 model_id = day['model_id']
+
+                models_fm = [key for key, value in models_fms.items() if value == model_id]
+                try:
+                    model_fm = models_fm[0]
+                except:
+                    model_fm = None
+
                 values = [buyer_username, buyer_stage_name, buyer_user_id, title, type_content, sales_date, sales_time,
-                          seller_commission_price, model_id, mvtoken]
+                          seller_commission_price, model_id, mvtoken, model_fm]
 
                 # SQL-запрос для вставки данных
                 insert_query = f"""
                 INSERT INTO {use_table_daily_sales} (buyer_username, buyer_stage_name, buyer_user_id, title, type_content, sales_date, sales_time,
-                          seller_commission_price, model_id, mvtoken)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                          seller_commission_price, model_id, mvtoken,model_fm)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 """
                 cursor.execute(insert_query, values)
                 cnx.commit()  # Подтверждение изменений
@@ -396,116 +453,22 @@ def parsing_payout_history():
     cnx.close()
 
 
-"""Создание БД"""
-
-
-def create_sql_daily_sales():
-    # 1. Подключаемся к серверу MySQL
-    cnx = mysql.connector.connect(**db_config)
-
-    # Создаем объект курсора, чтобы выполнять SQL-запросы
-    cursor = cnx.cursor()
-
-    # 2. Создаем базу данных с именем kupypai_com
-    # cursor.execute("CREATE DATABASE vpromo2_usa")
-
-    # Указываем, что будем использовать эту базу данных
-    cursor.execute(f"USE {use_bd}")
-
-    # 3. В базе данных создаем таблицу ad
-    # 4. Создаем необходимые колонки
-
-    cursor.execute(f"""
-        CREATE TABLE {use_table_daily_sales} (
-                    id INT AUTO_INCREMENT PRIMARY KEY,
-                    buyer_username VARCHAR(255),
-                    model_id VARCHAR(255),
-                    buyer_stage_name VARCHAR(255),
-                    buyer_user_id VARCHAR(255),
-                    title VARCHAR(255),
-                    type_content VARCHAR(255),
-                    sales_date DATE,
-                    sales_time TIME,
-                    seller_commission_price VARCHAR(255),
-                    mvtoken VARCHAR(255)    )
-        """)
-    # """Добавить колонку в текущую БД"""
-    # cursor.execute(f"""
-    #     ALTER TABLE {use_table}
-    #     ADD COLUMN Kod_części_zamiennej TEXT
-    # """)
-    # Закрываем соединение
-    cnx.close()
-
-
-def create_sql_monthly_sales():
-    # 1. Подключаемся к серверу MySQL
-    cnx = mysql.connector.connect(**db_config)
-
-    # Создаем объект курсора, чтобы выполнять SQL-запросы
-    cursor = cnx.cursor()
-
-    # 2. Создаем базу данных с именем kupypai_com
-    # cursor.execute("CREATE DATABASE vpromo2_usa")
-
-    # Указываем, что будем использовать эту базу данных
-    cursor.execute(f"USE {use_bd}")
-
-    # 3. В базе данных создаем таблицу ad
-    # 4. Создаем необходимые колонки
-
-    cursor.execute(f"""
-            CREATE TABLE {use_table_monthly_sales} (
-                        id INT AUTO_INCREMENT PRIMARY KEY,
-                        model_id VARCHAR(255),
-                        sales_month INT,
-                        sales_year INT,
-                        total_sum VARCHAR(255)
-                        )
-            """)
-    # """Добавить колонку в текущую БД"""
-    # cursor.execute(f"""
-    #     ALTER TABLE {use_table}
-    #     ADD COLUMN Kod_części_zamiennej TEXT
-    # """)
-    # Закрываем соединение
-    cnx.close()
-
-
-def create_sql_payout_history():
-    # 1. Подключаемся к серверу MySQL
-    cnx = mysql.connector.connect(**db_config)
-
-    # Создаем объект курсора, чтобы выполнять SQL-запросы
-    cursor = cnx.cursor()
-
-    # 2. Создаем базу данных с именем kupypai_com
-    # cursor.execute("CREATE DATABASE vpromo2_usa")
-
-    # Указываем, что будем использовать эту базу данных
-    cursor.execute(f"USE {use_bd}")
-
-    # 3. В базе данных создаем таблицу ad
-    # 4. Создаем необходимые колонки
-
-    cursor.execute(f"""
-                CREATE TABLE {use_table_payout_history} (
-                            id INT AUTO_INCREMENT PRIMARY KEY,
-                            model_id VARCHAR(255),
-                            payment_date DATE,
-                            paid VARCHAR(255)
-                            )
-                """)
-    # """Добавить колонку в текущую БД"""
-    # cursor.execute(f"""
-    #     ALTER TABLE {use_table}
-    #     ADD COLUMN Kod_części_zamiennej TEXT
-    # """)
-    # Закрываем соединение
-    cnx.close()
-
-
 """Формирование отчетов"""
+
+
+def get_id_models_csv():
+    model_dict = {}
+
+    # Открываем файл
+    with open('model_id.csv', mode='r') as csvfile:
+        reader = csv.reader(csvfile, delimiter=';')  # Используем точку с запятой как разделитель
+        for row in reader:
+            key = row[0]
+            value = row[1]
+            model_dict[key] = value
+
+    # Теперь model_dict содержит данные из CSV
+    return model_dict
 
 
 def get_id_models():
@@ -514,7 +477,7 @@ def get_id_models():
     cursor = cnx.cursor()
 
     # Выполнение запроса для получения уникальных значений
-    cursor.execute("SELECT DISTINCT model_id, mvtoken FROM manyvids.daily_sales")
+    cursor.execute("SELECT DISTINCT model_fm, mvtoken FROM manyvids.daily_sales")
 
     dict_models = {}
     # Получение и вывод результатов
@@ -533,17 +496,17 @@ def get_table_01_to_google():
     cursor = cnx.cursor()
 
     cursor.execute("""
-        SELECT model_id, sales_date, ROUND(SUM(seller_commission_price), 2) AS total_seller_commission
+        SELECT model_fm, sales_date, ROUND(SUM(seller_commission_price), 2) AS total_seller_commission
         FROM manyvids.daily_sales
-        GROUP BY model_id, sales_date
-        ORDER BY model_id ASC, sales_date ASC
+        GROUP BY model_fm, sales_date
+        ORDER BY model_fm ASC, sales_date ASC
     """)
 
     # Получение результатов в DataFrame
     df = pd.DataFrame(cursor.fetchall(), columns=[x[0] for x in cursor.description])
 
     # Преобразование DataFrame
-    pivot_df = df.pivot_table(index='model_id', columns='sales_date', values='total_seller_commission', fill_value=0)
+    pivot_df = df.pivot_table(index='model_fm', columns='sales_date', values='total_seller_commission', fill_value=0)
 
     # Сохранение в CSV
     pivot_df.to_csv('daily_sales.csv')
@@ -714,15 +677,16 @@ def get_table_04_to_google():
     cursor = cnx.cursor()
 
     cursor.execute("""
-            SELECT 
+           SELECT 
     buyer_stage_name, 
     buyer_user_id, 
     ROUND(SUM(seller_commission_price), 2) AS total_commission, 
     COUNT(*) AS total_count, 
     ROUND(AVG(seller_commission_price), 2) AS average_commission,
-    GROUP_CONCAT(DISTINCT model_id SEPARATOR ', ') AS all_buyer_usernames
+    GROUP_CONCAT(DISTINCT model_fm SEPARATOR ', ') AS all_buyer_usernames
 FROM manyvids.daily_sales
 GROUP BY buyer_stage_name, buyer_user_id;
+
 
 
         """)
@@ -734,7 +698,7 @@ GROUP BY buyer_stage_name, buyer_user_id;
     """Запись в Google Таблицу"""
 
     client, spreadsheet_id = get_google()
-    sheet_payout_history = client.open_by_key(spreadsheet_id).worksheet('withdrawals')
+    sheet_payout_history = client.open_by_key(spreadsheet_id).worksheet('clients')
 
     # Читаем CSV файл
     df = pd.read_csv('withdrawals.csv')
@@ -753,15 +717,25 @@ GROUP BY buyer_stage_name, buyer_user_id;
 
 
 def get_to_google():
-    spreadsheet_id = '145mee2ZsApZXiTnASng4lTzbocYCJWM5EDksTx_FVYY'
-    scope = ["https://spreadsheets.google.com/feeds", 'https://www.googleapis.com/auth/spreadsheets',
-             "https://www.googleapis.com/auth/drive.file", "https://www.googleapis.com/auth/drive"]
+    proxi = proxy_random()
+    import requests
+    import json
 
-    creds = ServiceAccountCredentials.from_json_keyfile_name("C:\\scrap_tutorial-master\\manyvids\\access.json", scope)
-    client = gspread.authorize(creds)
-    spreadsheet = client.open_by_key(spreadsheet_id)
-    sheet = spreadsheet.sheet1
-    sheet.update_cell(1, 1, "Привет, мир!")
+    with open('cookies.json', 'r') as f:
+        cookies = json.load(f)
+
+    session = requests.Session()
+    for cookie in cookies:
+        session.cookies.set(cookie['name'], cookie['value'])
+
+    # Выполнение запроса с использованием сессии, кук, заголовков и прокси
+    response = session.get('https://www.manyvids.com/View-my-earnings/', headers=headers, proxies=proxi)
+    src = response.text
+
+    # Сохранение ответа в файл
+    filename = "cookies.html"
+    with open(filename, "w", encoding='utf-8') as file:
+        file.write(src)
 
 
 if __name__ == '__main__':
@@ -771,7 +745,7 @@ if __name__ == '__main__':
     # create_sql_payout_history()
     # get_requests_daily_sales()
     # get_requests_monthly_sales()
-    # get_requests_payout_history()
+    get_requests_payout_history()
     # parsing_daily_sales()
     # parsing_monthly_sales()
     # parsing_payout_history()
@@ -779,5 +753,5 @@ if __name__ == '__main__':
     # get_table_01_to_google()
     # get_table_02_to_google()
     # get_table_03_to_google()
-    get_table_04_to_google()
+    # get_table_04_to_google()
     # get_to_google()
