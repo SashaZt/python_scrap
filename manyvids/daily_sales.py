@@ -3,29 +3,14 @@ import glob
 import json
 import os
 import random
-from collections import defaultdict
-from datetime import datetime
-
+import time
+from datetime import datetime, timedelta
+import schedule
 import gspread
 import mysql.connector
 import pandas as pd
 import requests
 from oauth2client.service_account import ServiceAccountCredentials
-
-from config import db_config, use_bd, use_table_daily_sales, use_table_monthly_sales, use_table_payout_history, \
-    use_table_login_pass, headers
-from proxi import proxies
-import glob
-import json
-import os
-import random
-from datetime import datetime
-import schedule
-import time
-from datetime import datetime, timedelta
-
-import mysql.connector
-import requests
 
 from config import db_config, use_table_daily_sales, headers
 from proxi import proxies
@@ -55,6 +40,7 @@ def get_id_models_csv():
     # Теперь model_dict содержит данные из CSV
     return model_dict
 
+
 def get_google():
     spreadsheet_id = '145mee2ZsApZXiTnASng4lTzbocYCJWM5EDksTx_FVYY'
     scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/spreadsheets',
@@ -62,6 +48,7 @@ def get_google():
     creds = ServiceAccountCredentials.from_json_keyfile_name("C:\\scrap_tutorial-master\\manyvids\\access.json", scope)
     client = gspread.authorize(creds)
     return client, spreadsheet_id
+
 
 def get_id_models():
     # Подключение к базе данных
@@ -104,7 +91,6 @@ def get_requests(month, filterYear):
     filename_cookies = os.path.join(cookies_path, '*.json')
     files_json = glob.glob(filename_cookies)
     for item in files_json:
-
         with open(item, 'r') as f:
             cookies_list = json.load(f)
 
@@ -117,29 +103,57 @@ def get_requests(month, filterYear):
         filename = os.path.basename(item)
         parts = filename.split("_")
         mvtoken = parts[1].replace('.json', '')
-        data = {
+        data_day = {
             'mvtoken': mvtoken,
             'day': '',
             'month': month,
             'filterYear': filterYear,
         }
+        data_month = {
+            'mvtoken': mvtoken,
+            'year': filterYear,
+        }
+        data_payout_history = {
+            'mvtoken': mvtoken,
+            'year': filterYear,
+        }
 
-        mvtoken_value = data['mvtoken']
-        month_value = data['month']
-        filterYear_value = data['filterYear']
-        filename = os.path.join(daily_sales_path, f'{mvtoken_value}_{month_value}_{filterYear_value}.json')
-        if not os.path.exists(filename):
-            response = requests.post('https://www.manyvids.com/includes/get_earnings.php', headers=headers,
-                                     proxies=proxi, data=data, cookies=cookies_dict)
+        mvtoken_value = data_day['mvtoken']
+        month_value = data_day['month']
+        filterYear_value = data_day['filterYear']
 
-            json_data = response.json()
-            with open(filename, 'w', encoding='utf-8') as f:
-                json.dump(json_data, f, ensure_ascii=False, indent=4)  # Записываем в файл
-            print(f'Сохранился {mvtoken_value}_{month_value}_{filterYear_value}.json')
-            print('Пауза 10сек')
+        filename_day = os.path.join(daily_sales_path, f'{mvtoken_value}_{month_value}_{filterYear_value}.json')
+        filename_month = os.path.join(monthly_sales_path, f'{mvtoken_value}_{filterYear_value}.json')
+        filename_payout_history = os.path.join(payout_history_path, f'{mvtoken_value}_{filterYear_value}.json')
+
+        response_day = session.post('https://www.manyvids.com/includes/get_earnings.php', headers=headers,
+                                    proxies=proxi, data=data_day, cookies=cookies_dict)
+        if not os.path.exists(filename_month):
             time.sleep(10)
+            response_month = session.post('https://www.manyvids.com/includes/get_earnings.php', headers=headers,
+                                          data=data_month, proxies=proxi)
+            json_data_month = response_month.json()
+            with open(filename_month, 'w', encoding='utf-8') as f:
+                json.dump(json_data_month, f, ensure_ascii=False, indent=4)  # Записываем в файл
 
-def get_sql_data():
+        if not os.path.exists(filename_payout_history):
+            time.sleep(10)
+            response_payout_history = session.post('https://www.manyvids.com/includes/get_payperiod_earnings.php',
+                                                   headers=headers, data=data_payout_history, proxies=proxi
+                                                   )
+            json_data_payout_history = response_payout_history.json()
+            with open(filename_payout_history, 'w', encoding='utf-8') as f:
+                json.dump(json_data_payout_history, f, ensure_ascii=False, indent=4)
+
+        json_data_day = response_day.json()
+        with open(filename_day, 'w', encoding='utf-8') as f:
+            json.dump(json_data_day, f, ensure_ascii=False, indent=4)  # Записываем в файл
+
+        print('Пауза 10сек')
+        time.sleep(10)
+
+
+def get_sql_data_data_day():
     cnx = mysql.connector.connect(**db_config)
     cursor = cnx.cursor()
     cursor.execute("""
@@ -149,14 +163,15 @@ def get_sql_data():
     cursor.close()
     cnx.close()
     return data
-def get_sql():
+
+
+def get_sql_data_day():
     # Получение данных из SQL
-    sql_data = get_sql_data()
+    sql_data = get_sql_data_data_day()
 
     # Подключение к базе данных
     cnx = mysql.connector.connect(**db_config)
     cursor = cnx.cursor()
-
 
     # # Очистка таблицы перед вставкой новых данных
     # truncate_query = f"TRUNCATE TABLE {use_table_daily_sales}"
@@ -247,6 +262,7 @@ def get_sql():
     cursor.close()
     cnx.close()
 
+
 def get_table_01_to_google():
     cnx = mysql.connector.connect(**db_config)
     cursor = cnx.cursor()
@@ -294,6 +310,7 @@ def get_table_01_to_google():
         if os.path.isfile(f):
             os.remove(f)
 
+
 def job():
     # Получение текущего месяца и года
     now = datetime.now()
@@ -302,22 +319,23 @@ def job():
 
     print(f"Запуск задачи для месяца {month} и года {filterYear}.")
     get_requests(month, filterYear)
-    get_sql()
+    get_sql_data_day()
     get_table_01_to_google()
 
+
 # Настройка расписания
-schedule.every().hour.at(":59").do(job)  # Запуск каждый час в 00 минут
+schedule.every().hour.at(":55").do(job)  # Запуск каждый час в 00 минут
 
 while True:
     schedule.run_pending()
     time.sleep(1)
 
-# #
+
 # if __name__ == '__main__':
-#     # print("Какой месяц парсим от 1 до 12?")
-#     # month = input()
-#     # print("Какой год парсим? в формате 2024")
-#     # filterYear = input()
+#     print("Какой месяц парсим от 1 до 12?")
+#     month = input()
+#     print("Какой год парсим? в формате 2024")
+#     filterYear = input()
 #     get_requests(month, filterYear)
-#     get_sql()
+#     get_sql_data_day()
 #     get_table_01_to_google()
