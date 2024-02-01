@@ -1,8 +1,20 @@
-import time
 import json
+import os
 import random
+import time
+
+import mysql.connector
 from playwright.sync_api import sync_playwright
+
+from config import db_config
 from proxi import proxies
+
+current_directory = os.getcwd()
+temp_directory = 'temp'
+# Создайте полный путь к папке temp
+temp_path = os.path.join(current_directory, temp_directory)
+cookies_path = os.path.join(temp_path, 'cookies')
+login_pass_path = os.path.join(temp_path, 'login_pass')
 
 
 def save_cookies(page):
@@ -15,49 +27,80 @@ def proxy_random():
     proxy_port = proxy[1]
     proxy_user = proxy[2]
     proxy_pass = proxy[3]
-    formatted_proxy = f"http://{proxy_user}:{proxy_pass}@{proxy_host}:{proxy_port}"
 
+    # Возвращаем словарь, соответствующий ожидаемому формату для Playwright
     return {
-        "server": formatted_proxy,
-        # Заметьте, что для Playwright не нужно разделять на http и https
+        'server': f'http://{proxy_host}:{proxy_port}',
+        'username': proxy_user,
+        'password': proxy_pass,
     }
+
+
+def login_pass():
+    cnx = mysql.connector.connect(**db_config)
+    cursor = cnx.cursor()
+
+    cursor.execute("""
+        SELECT identifier, login, pass FROM manyvids.login_pass;
+    """)
+
+    # Получение всех записей
+    records = cursor.fetchall()
+
+    # Список для хранения данных
+    data_list = []
+
+    for record in records:
+        # Создание словаря для каждой строки и добавление его в список
+        data_dict = {'identifier': record[0], 'login': record[1], 'password': record[2]}
+        data_list.append(data_dict)
+
+    cursor.close()
+    cnx.close()
+    return data_list
 
 
 def run(playwright):
     proxy = proxy_random()
-    # """Так передаем один прокси для playwright"""
-    # browser = playwright.chromium.launch(headless=False, proxy={
-    #     'server': 'http://85.237.196.5:51523',  # Замените на ваш прокси-сервер
-    #     'username': 'locomgmt',  # Имя пользователя прокси
-    #     'password': 'ogzj4wAZnz'  # Пароль прокси
-    # })
-    """Так передаем случайные прокси для playwright"""
-    browser = playwright.chromium.launch(headless=False, proxy=proxy)
+    data_login_pass = login_pass()
+    for item in data_login_pass:
+        filename_coockies = os.path.join(cookies_path, f"{item['identifier']}.json")
+        if not os.path.exists(filename_coockies):  # Проверка на существование файла
+            login = item['login']
+            password = item['password']
 
-    context = browser.new_context()
-    page = context.new_page()
-    page.goto('https://www.manyvids.com/Login/')
-    # Находим элемент ввода логина и вводим значение
-    page.fill('input#triggerUsername', 'calllili_one@outlook.com')
-    #
-    # # Находим элемент ввода пароля и вводим значение
-    page.fill('input#triggerPassword', '@oK4/7o=P5usF')
+            # """Так передаем один прокси для playwright"""
+            # browser = playwright.chromium.launch(headless=False, proxy={
+            #     'server': 'http://85.237.196.5:51523',  # Замените на ваш прокси-сервер
+            #     'username': 'locomgmt',  # Имя пользователя прокси
+            #     'password': 'ogzj4wAZnz'  # Пароль прокси
+            # })
 
-    # Нажимаем Enter после ввода пароля
-    page.press('input#triggerPassword', 'Enter')
-    # Здесь добавьте действия для входа на сайт: ввод логина, пароля и нажатие на кнопку входа.
+            # """Так передаем случайные прокси для playwright"""
+            browser = playwright.chromium.launch(headless=False, proxy=proxy)
 
-    time.sleep(60)
-    # page.goto('https://www.manyvids.com/View-my-earnings/')
-    # Сохранение куки после входа
-    cookies = save_cookies(page)
-    # Сохранение кук в файл
-    cookies = context.cookies()
-    with open('cookies.json', 'w') as f:
-        json.dump(cookies, f)
+            context = browser.new_context()
+            page = context.new_page()
+            page.goto('https://www.manyvids.com/Login/')
+            # Находим элемент ввода логина и вводим значение
+            page.fill('input#triggerUsername', login)
+            #
+            # # Находим элемент ввода пароля и вводим значение
+            page.fill('input#triggerPassword', password)
 
-    browser.close()
-    browser.close()
+            # Нажимаем Enter после ввода пароля
+            page.press('input#triggerPassword', 'Enter')
+            # Здесь добавьте действия для входа на сайт: ввод логина, пароля и нажатие на кнопку входа.
+
+            time.sleep(20)
+            cookies = save_cookies(page)
+            # Сохранение кук в файл
+            cookies = context.cookies()
+            with open(filename_coockies, 'w') as f:
+                json.dump(cookies, f)
+            print(f"Сохрани {item['identifier']}")
+            browser.close()
+            browser.close()
 
 
 with sync_playwright() as playwright:
