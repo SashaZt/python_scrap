@@ -12,7 +12,8 @@ import pandas as pd
 import requests
 from oauth2client.service_account import ServiceAccountCredentials
 
-from config import db_config, use_bd, use_table_daily_sales, use_table_monthly_sales, use_table_payout_history, headers
+from config import db_config, use_bd, use_table_daily_sales, use_table_monthly_sales, use_table_payout_history, \
+    use_table_login_pass, headers
 from proxi import proxies
 
 current_directory = os.getcwd()
@@ -67,229 +68,13 @@ def proxy_random():
 """Создание БД"""
 
 
-def create_sql_daily_sales():
-    # 1. Подключаемся к серверу MySQL
-    cnx = mysql.connector.connect(**db_config)
 
-    # Создаем объект курсора, чтобы выполнять SQL-запросы
-    cursor = cnx.cursor()
-
-    # 2. Создаем базу данных с именем kupypai_com
-    # cursor.execute("CREATE DATABASE vpromo2_usa")
-
-    # Указываем, что будем использовать эту базу данных
-    cursor.execute(f"USE {use_bd}")
-
-    # 3. В базе данных создаем таблицу ad
-    # 4. Создаем необходимые колонки
-
-    cursor.execute(f"""
-        CREATE TABLE {use_table_daily_sales} (
-                    id INT AUTO_INCREMENT PRIMARY KEY,
-                    buyer_username VARCHAR(255),
-                    model_id VARCHAR(255),
-                    buyer_stage_name VARCHAR(255),
-                    buyer_user_id VARCHAR(255),
-                    title VARCHAR(255),
-                    type_content VARCHAR(255),
-                    sales_date DATE,
-                    sales_time TIME,
-                    seller_commission_price VARCHAR(255),
-                    mvtoken VARCHAR(255),
-                    model_fm  VARCHAR(255)
-                       )
-        """)
-    # """Добавить колонку в текущую БД"""
-    # cursor.execute(f"""
-    #     ALTER TABLE {use_table}
-    #     ADD COLUMN Kod_części_zamiennej TEXT
-    # """)
-    # Закрываем соединение
-    cnx.close()
-
-
-def create_sql_monthly_sales():
-    # 1. Подключаемся к серверу MySQL
-    cnx = mysql.connector.connect(**db_config)
-
-    # Создаем объект курсора, чтобы выполнять SQL-запросы
-    cursor = cnx.cursor()
-
-    # 2. Создаем базу данных с именем kupypai_com
-    # cursor.execute("CREATE DATABASE vpromo2_usa")
-
-    # Указываем, что будем использовать эту базу данных
-    cursor.execute(f"USE {use_bd}")
-
-    # 3. В базе данных создаем таблицу ad
-    # 4. Создаем необходимые колонки
-
-    cursor.execute(f"""
-            CREATE TABLE {use_table_monthly_sales} (
-                        id INT AUTO_INCREMENT PRIMARY KEY,
-                        model_id VARCHAR(255),
-                        sales_month INT,
-                        sales_year INT,
-                        total_sum VARCHAR(255)
-                        
-                        
-                        )
-            """)
-    # """Добавить колонку в текущую БД"""
-    # cursor.execute(f"""
-    #     ALTER TABLE {use_table}
-    #     ADD COLUMN Kod_części_zamiennej TEXT
-    # """)
-    # Закрываем соединение
-    cnx.close()
-
-
-def create_sql_payout_history():
-    # 1. Подключаемся к серверу MySQL
-    cnx = mysql.connector.connect(**db_config)
-
-    # Создаем объект курсора, чтобы выполнять SQL-запросы
-    cursor = cnx.cursor()
-
-    # 2. Создаем базу данных с именем kupypai_com
-    # cursor.execute("CREATE DATABASE vpromo2_usa")
-
-    # Указываем, что будем использовать эту базу данных
-    cursor.execute(f"USE {use_bd}")
-
-    # 3. В базе данных создаем таблицу ad
-    # 4. Создаем необходимые колонки
-
-    cursor.execute(f"""
-                CREATE TABLE {use_table_payout_history} (
-                            id INT AUTO_INCREMENT PRIMARY KEY,
-                            model_id VARCHAR(255),
-                            payment_date DATE,
-                            paid VARCHAR(255)
-                            )
-                """)
-    # """Добавить колонку в текущую БД"""
-    # cursor.execute(f"""
-    #     ALTER TABLE {use_table}
-    #     ADD COLUMN Kod_części_zamiennej TEXT
-    # """)
-    # Закрываем соединение
-    cnx.close()
 
 
 """Скачивание данных"""
 
 
-def get_requests_daily_sales():
-    proxi = proxy_random()
-    filename_cookies = os.path.join(cookies_path, '*.json')
-    files_json = glob.glob(filename_cookies)
-    for item in files_json:
-        with open(item, 'r') as f:
-            cookies = json.load(f)
-        filename = os.path.basename(item)
-        parts = filename.split("_")
-        mvtoken = parts[1].replace('.json', '')
-        # Создание сессии
-        session = requests.Session()
 
-        # Добавление кук в сессию
-        for name, value in cookies.items():
-            session.cookies.set(name, value)
-
-        data = {
-            'mvtoken': mvtoken,
-            'day': '',
-            'month': '1',
-            'filterYear': '2024',
-        }
-        # proxy_host = '85.237.196.5'
-        # proxy_port = 51523
-        # proxy_user = 'locomgmt'
-        # proxy_pass = 'ogzj4wAZnz'
-        # proxi = {
-        #     'http': f'http://{proxy_user}:{proxy_pass}@{proxy_host}:{proxy_port}',
-        #     'https': f'http://{proxy_user}:{proxy_pass}@{proxy_host}:{proxy_port}'
-        # }
-        mvtoken_value = data['mvtoken']
-        month_value = data['month']
-        filterYear_value = data['filterYear']
-        filename = os.path.join(daily_sales_path, f'{mvtoken_value}_{month_value}_{filterYear_value}.json')
-        if not os.path.exists(filename):
-            response = session.post('https://www.manyvids.com/includes/get_earnings.php', headers=headers,
-                                    proxies=proxi, data=data)
-
-            json_data = response.json()
-            with open(filename, 'w', encoding='utf-8') as f:
-                json.dump(json_data, f, ensure_ascii=False, indent=4)  # Записываем в файл
-
-
-def get_requests_monthly_sales():
-    proxi = proxy_random()
-    filename_cookies = os.path.join(cookies_path, '*.json')
-    files_json = glob.glob(filename_cookies)
-    for item in files_json:
-        with open(item, 'r') as f:
-            cookies = json.load(f)
-        filename = os.path.basename(item)
-        parts = filename.split("_")
-        mvtoken = parts[1].replace('.json', '')
-        session = requests.Session()
-
-        # Добавление кук в сессию
-        for name, value in cookies.items():
-            session.cookies.set(name, value)
-
-        data = {
-            'mvtoken': mvtoken,
-            'year': '2023',
-        }
-
-        response = session.post('https://www.manyvids.com/includes/get_earnings.php', headers=headers,
-                                data=data, proxies=proxi)
-        json_data = response.json()
-        mvtoken_value = data['mvtoken']
-        filterYear_value = data['year']
-        filename = os.path.join(monthly_sales_path, f'{mvtoken_value}_{filterYear_value}.json')
-        with open(filename, 'w', encoding='utf-8') as f:
-            json.dump(json_data, f, ensure_ascii=False, indent=4)  # Записываем в файл
-
-
-def get_requests_payout_history():
-    proxi = proxy_random()
-    filename_cookies = os.path.join(cookies_path, '*.json')
-    files_json = glob.glob(filename_cookies)
-    for item in files_json:
-        with open(item, 'r') as f:
-            cookies = json.load(f)
-        filename = os.path.basename(item)
-        parts = filename.split("_")
-        mvtoken = parts[1].replace('.json', '')
-        session = requests.Session()
-
-        # Добавление кук в сессию
-        for name, value in cookies.items():
-            session.cookies.set(name, value)
-
-        data = {
-            'mvtoken': mvtoken,
-            'year': '2023',
-        }
-        mvtoken_value = data['mvtoken']
-        filterYear_value = data['year']
-        filename = os.path.join(payout_history_path, f'{mvtoken_value}_{filterYear_value}.json')
-        if not os.path.exists(filename):
-            response = session.post(
-                'https://www.manyvids.com/includes/get_payperiod_earnings.php',
-                headers=headers,
-                data=data,
-                proxies=proxi
-            )
-
-            json_data = response.json()
-
-            with open(filename, 'w', encoding='utf-8') as f:
-                json.dump(json_data, f, ensure_ascii=False, indent=4)  # Записываем в файл
 
 
 """Загрузка данных в БД"""
@@ -738,20 +523,96 @@ def get_to_google():
         file.write(src)
 
 
+"""Загрузка логи и пароля в БД"""
+
+
+def get_login_pass_to_sql():
+    cnx = mysql.connector.connect(**db_config)
+    cursor = cnx.cursor()
+
+    # Очистка таблицы перед вставкой новых данных
+    truncate_query = f"TRUNCATE TABLE {use_table_login_pass}"
+    cursor.execute(truncate_query)
+    cnx.commit()  # Подтверждение изменений
+
+    csv_file_path = os.path.join(login_pass_path, 'login_pass.csv')
+    with open(csv_file_path, mode='r', encoding='utf-8') as csv_file:
+        csv_reader = csv.reader(csv_file, delimiter=';')
+        for c in csv_reader:
+            identifier = f'{c[0]}_{c[1]}'
+            login = c[2]
+            password = c[3]
+            values = [identifier, login, password]
+
+            # SQL-запрос для вставки данных
+            insert_query = f"""
+            INSERT INTO {use_table_login_pass} (identifier, login,pass)
+            VALUES (%s, %s, %s)
+            """
+            cursor.execute(insert_query, values)
+            cnx.commit()  # Подтверждение изменений
+    # Закрытие соединения с базой данных
+    cursor.close()
+    cnx.close()
+
+
+"""Полученние логин и пароля с БД"""
+
+
+def login_pass():
+    cnx = mysql.connector.connect(**db_config)
+    cursor = cnx.cursor()
+
+    cursor.execute("""
+        SELECT identifier, login, pass FROM manyvids.login_pass;
+    """)
+
+    # Получение всех записей
+    records = cursor.fetchall()
+
+    # Список для хранения данных
+    data_list = []
+
+    for record in records:
+        # Создание словаря для каждой строки и добавление его в список
+        data_dict = {'identifier': record[0], 'login': record[1], 'password': record[2]}
+        data_list.append(data_dict)
+
+    cursor.close()
+    cnx.close()
+    return data_list
+
+
+def check_json():
+    # Загрузка данных из файла JSON
+    with open('output.json', 'r') as json_file:
+        data = json.load(json_file)
+
+    # Извлечение первой пары ключ-значение
+    file_names, credentials = list(data.items())[0]
+
+    # Извлечение логина и пароля
+    logi, passw = list(credentials.items())[0]
+
+    print(f"file_names = {file_names}")
+    print(f"logi = {logi}")
+    print(f"pass = {passw}")
+
+
 if __name__ == '__main__':
-    # delete_old_data()
-    # create_sql_daily_sales()
-    # create_sql_monthly_sales()
-    # create_sql_payout_history()
-    # get_requests_daily_sales()
-    # get_requests_monthly_sales()
-    get_requests_payout_history()
-    # parsing_daily_sales()
-    # parsing_monthly_sales()
-    # parsing_payout_history()
-    # get_id_models()
-    # get_table_01_to_google()
-    # get_table_02_to_google()
-    # get_table_03_to_google()
-    # get_table_04_to_google()
-    # get_to_google()
+# delete_old_data()
+
+# get_requests_daily_sales()
+# get_requests_monthly_sales()
+# get_requests_payout_history()
+# get_login_pass_to_sql()
+# parsing_daily_sales()
+# parsing_monthly_sales()
+# parsing_payout_history()
+# get_id_models()
+# login_pass()
+# get_table_01_to_google()
+# get_table_02_to_google()
+# get_table_03_to_google()
+# get_table_04_to_google()
+# get_to_google()
