@@ -1,23 +1,21 @@
 import csv
+import datetime
 import glob
 import json
 import os
-import schedule
-from datetime import datetime
-import schedule
-import time
-import datetime
 import random
-from sqlalchemy import create_engine
 import time
 from datetime import datetime, timedelta
-import schedule
+import numpy as np
 import gspread
 import mysql.connector
 import pandas as pd
 import requests
+import schedule
 from oauth2client.service_account import ServiceAccountCredentials
-from config import db_config, use_table_daily_sales, headers, host, user, password, database, use_table_payout_history
+from sqlalchemy import create_engine
+from bs4 import BeautifulSoup
+from config import db_config, use_table_daily_sales, headers, host, user, password, database, use_table_payout_history,use_table_monthly_sales
 from proxi import proxies
 
 current_directory = os.getcwd()
@@ -29,6 +27,7 @@ login_pass_path = os.path.join(temp_path, 'login_pass')
 daily_sales_path = os.path.join(temp_path, 'daily_sales')
 monthly_sales_path = os.path.join(temp_path, 'monthly_sales')
 payout_history_path = os.path.join(temp_path, 'payout_history')
+pending_custom_path = os.path.join(temp_path, 'pending_custom')
 
 
 def get_id_models_csv():
@@ -126,21 +125,16 @@ def get_requests(month, filterYear):
         mvtoken_value = data_day['mvtoken']
         month_value = data_day['month']
         filterYear_value = data_day['filterYear']
-
+        """День"""
         filename_day = os.path.join(daily_sales_path, f'{mvtoken_value}_{month_value}_{filterYear_value}.json')
-        # filename_month = os.path.join(monthly_sales_path, f'{mvtoken_value}_{filterYear_value}.json')
-        filename_payout_history = os.path.join(payout_history_path, f'{mvtoken_value}_{filterYear_value}.json')
-
         response_day = session.post('https://www.manyvids.com/includes/get_earnings.php', headers=headers,
-                                    proxies=proxi, data=data_day, cookies=cookies_dict)
-        # if not os.path.exists(filename_month):
-        #     time.sleep(5)
-        #     response_month = session.post('https://www.manyvids.com/includes/get_earnings.php', headers=headers,
-        #                                   data=data_month, proxies=proxi)
-        #     json_data_month = response_month.json()
-        #     with open(filename_month, 'w', encoding='utf-8') as f:
-        #         json.dump(json_data_month, f, ensure_ascii=False, indent=4)  # Записываем в файл
+                                    proxies=proxi, data=data_day)  # , cookies=cookies_dict
+        json_data_day = response_day.json()
+        with open(filename_day, 'w', encoding='utf-8') as f:
+            json.dump(json_data_day, f, ensure_ascii=False, indent=4)  # Записываем в файл
 
+        """История"""
+        filename_payout_history = os.path.join(payout_history_path, f'{mvtoken_value}_{filterYear_value}.json')
         if not os.path.exists(filename_payout_history):
             time.sleep(5)
             response_payout_history = session.post('https://www.manyvids.com/includes/get_payperiod_earnings.php',
@@ -150,9 +144,24 @@ def get_requests(month, filterYear):
             with open(filename_payout_history, 'w', encoding='utf-8') as f:
                 json.dump(json_data_payout_history, f, ensure_ascii=False, indent=4)
 
-        json_data_day = response_day.json()
-        with open(filename_day, 'w', encoding='utf-8') as f:
-            json.dump(json_data_day, f, ensure_ascii=False, indent=4)  # Записываем в файл
+        """pending"""
+        filename_pending_custom = os.path.join(pending_custom_path, f'{mvtoken_value}_{filterYear_value}.html')
+
+        time.sleep(5)
+        response_pending_custom = session.get('https://www.manyvids.com/View-my-earnings/', headers=headers)
+        src_pending_custom = response_pending_custom.text
+        with open(filename_pending_custom, "w", encoding='utf-8') as file:
+            file.write(src_pending_custom)
+
+        # filename_month = os.path.join(monthly_sales_path, f'{mvtoken_value}_{filterYear_value}.json')
+
+        # if not os.path.exists(filename_month):
+        #     time.sleep(5)
+        #     response_month = session.post('https://www.manyvids.com/includes/get_earnings.php', headers=headers,
+        #                                   data=data_month, proxies=proxi)
+        #     json_data_month = response_month.json()
+        #     with open(filename_month, 'w', encoding='utf-8') as f:
+        #         json.dump(json_data_month, f, ensure_ascii=False, indent=4)  # Записываем в файл
 
         print('Пауза 10сек')
         time.sleep(10)
@@ -165,6 +174,19 @@ def get_sql_data_data_day():
         SELECT buyer_user_id, sales_date, sales_time, seller_commission_price FROM manyvids.daily_sales;
     """)
     data = {(row[0], row[1], row[2], row[3]) for row in cursor.fetchall()}
+    cursor.close()
+    cnx.close()
+    return data
+
+
+
+def get_sql_data_payout_history():
+    cnx = mysql.connector.connect(**db_config)
+    cursor = cnx.cursor()
+    cursor.execute("""
+        SELECT model_id,payment_date,paid  FROM manyvids.payout_history;
+    """)
+    data = {(row[0], row[1], row[2]) for row in cursor.fetchall()}
     cursor.close()
     cnx.close()
     return data
@@ -321,8 +343,7 @@ def parsing_monthly_sales_in_daily():
 
     # Выполнение запроса и чтение данных в DataFrame
     query = """
-            SELECT 
-                model_fm, 
+            SELECT model_fm,
                 EXTRACT(YEAR FROM sales_date) AS year, 
                 EXTRACT(MONTH FROM sales_date) AS month, 
                 ROUND(SUM(seller_commission_price), 2) AS total_seller_commission
@@ -365,19 +386,202 @@ def parsing_monthly_sales_in_daily():
             sheet.clear()
             sheet.update(values, 'A1')
 
+def get_pending_to_google():
+    spreadsheet_id = '145mee2ZsApZXiTnASng4lTzbocYCJWM5EDksTx_FVYY'
+    scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/spreadsheets',
+             'https://www.googleapis.com/auth/drive.file', 'https://www.googleapis.com/auth/drive']
+    creds = ServiceAccountCredentials.from_json_keyfile_name("C:\\scrap_tutorial-master\\manyvids\\access.json", scope)
+    client = gspread.authorize(creds)
+    spreadsheet = client.open_by_key(spreadsheet_id)
+    database_uri = f"mysql+mysqlconnector://{user}:{password}@{host}/{database}"
 
-def get_sql_data_payout_history():
+    # Создание движка SQLAlchemy
+    engine = create_engine(database_uri)
     cnx = mysql.connector.connect(**db_config)
     cursor = cnx.cursor()
+
     cursor.execute("""
-        SELECT model_id,payment_date,paid  FROM manyvids.payout_history;
-    """)
-    data = {(row[0], row[1], row[2]) for row in cursor.fetchall()}
+                  SELECT model_fm,
+                EXTRACT(YEAR FROM sales_date) AS year,
+                EXTRACT(MONTH FROM sales_date) AS month,
+                ROUND(SUM(seller_commission_price), 2) AS total_seller_commission
+            FROM
+                manyvids.daily_sales
+            GROUP BY
+                model_fm, year, month
+            ORDER BY
+                model_fm ASC, year ASC, month ASC;
+
+
+
+
+                """)
+    # Получение результатов в DataFrame
+    df = pd.DataFrame(cursor.fetchall(), columns=[x[0] for x in cursor.description])
+    # Запись DataFrame в CSV файл
+    df.to_csv('monthly_sales.csv', index=False)
+    # Чтение CSV файла
+    df = pd.read_csv('monthly_sales.csv')
+
+    # Переименование столбцов в DataFrame для соответствия таблице в БД
+    df.rename(columns={
+        'model_fm': 'model_id',
+        'year': 'sales_year',
+        'month': 'sales_month',  # Убедитесь, что названия столбцов соответствуют вашему CSV файлу
+        'total_seller_commission': 'total_sum'
+    }, inplace=True)
+
+    # # Создание строки подключения
+    # connection_string = f'mysql+mysqlconnector://{user}:{password}@{host}/{database}'
+
+    # Создание движка SQLAlchemy
+
+    cnx = mysql.connector.connect(**db_config)
+    cursor = cnx.cursor()
+
+
+    # Очистка таблицы перед вставкой новых данных
+    truncate_query = f"TRUNCATE TABLE {use_table_monthly_sales}"
+    cursor.execute(truncate_query)
+    cnx.commit()  # Подтверждение изменений
     cursor.close()
     cnx.close()
-    return data
+
+    # Запись DataFrame в таблицу MySQL
+    df.to_sql(name='monthly_sales', con=engine, if_exists='append', index=False)
+    cnx = mysql.connector.connect(**db_config)
+    cursor = cnx.cursor()
+    now = datetime.now()  # Текущие дата и время
+    month = str(now.month)
+    clear_pending_query = """
+            UPDATE manyvids.monthly_sales
+            SET pending_custom = NULL
+            WHERE sales_month != %s;
+        """
+    cursor.execute(clear_pending_query, (month,))
+    cnx.commit()
+    id_models = get_id_models()
+    folder = os.path.join(pending_custom_path, '*.html')
+
+    files_html = glob.glob(folder)
+    for item in files_html:
+        filename = os.path.basename(item)
+        parts = filename.split("_")
+        mvtoken = parts[0]
+        # Ищем, какому ключу соответствует mvtoken
+        models_id = [key for key, value in id_models.items() if value == mvtoken]
+        try:
+            model_id = models_id[0]
+        except:
+            model_id = None
+        with open(item, encoding="utf-8") as file:
+            src = file.read()
+        soup = BeautifulSoup(src, 'lxml')
+        custom_vids_body = soup.find_all('div', id="customVidsBody")
+        for c in custom_vids_body:
+            # Извлекаем все строки таблицы внутри найденного div
+            rows = c.find_all('tr')
+
+            # Проходимся по каждой строке и извлекаем содержимое шестой ячейки с элементом strong
+            for row in rows:
+                # Предполагая, что каждая строка содержит как минимум 6 ячеек
+                if len(row.find_all('td')) >= 6:
+                    strong_tag = row.find_all('td')[5].find(
+                        'strong')  # Индексация начинается с 0, поэтому шестая ячейка это индекс 5
+                    if strong_tag:
+                        pending = strong_tag.get_text(strip=True).replace('$', '')
+                        values = [model_id, month, pending]
+                        # Убедитесь, что 'pending' преобразуется в числовой формат, если колонка 'pending_custom' ожидает число
+                        try:
+                            pending_value = float(pending)
+                            # Подготовка и выполнение SQL запроса на обновление
+                            update_query = """
+                                                    UPDATE manyvids.monthly_sales
+                                                    SET pending_custom = %s
+                                                    WHERE model_id = %s AND sales_month = %s;
+                                                """
+                            cursor.execute(update_query, (pending_value, model_id, month))
+                            cnx.commit()
+                        except ValueError:
+                            print(
+                                f"Невозможно преобразовать '{pending}' в число для model_id {model_id} и месяца {month}.")
+                    else:
+                        print("Strong tag not found in the 6th cell")
+    """Запись в Google Таблицу"""
+    # Подключение к базе данных и выполнение запроса
+    # cnx = mysql.connector.connect(**db_config)
+    # database_uri = f"mysql+mysqlconnector://{user}:{password}@{host}/{database}"
 
 
+
+    # Выполнение запроса и чтение данных в DataFrame
+    query = """
+        SELECT model_id, sales_month, total_sum, pending_custom FROM manyvids.monthly_sales;
+    """
+    df = pd.read_sql_query(query, engine)
+
+    # Преобразование DataFrame
+    df_pivot = df.pivot_table(index='model_id',
+                              columns='sales_month',
+                              values=['total_sum', 'pending_custom'],
+                              aggfunc='first').reset_index()
+
+    df_pivot.columns = ['_'.join(str(i) for i in col).strip() for col in df_pivot.columns.values]
+
+    # Вывод преобразованного DataFrame для проверки
+    # Запись в CSV
+    csv_file_path = 'pending_custom.csv'
+    df_pivot.to_csv(csv_file_path, index=False)
+
+    # # Создание сводной таблицы
+    # pivot_df = df.pivot_table(index='model_id', columns='sales_month', values='total_sum', fill_value=0)
+    #
+    # # Округление значений до двух знаков после запятой
+    # pivot_df = pivot_df.round(2)
+    #
+    # pivot_df.to_csv('monthly_sales.csv')
+
+
+    """Запись в Google Таблицу"""
+    # client, spreadsheet = get_google()
+    df = pd.read_csv('pending_custom.csv')
+    # Список месяцев для проверки
+    months = range(1, 13)  # От 1 до 12
+    for month in months:
+        sheet_name = f'{month:02}_monthly_sales'
+
+        # Подготовка данных для записи
+        columns = ['model_id_']
+        data_columns = []
+
+        # Добавляем колонки в список, если они существуют в DataFrame
+        pending_custom_col = f'pending_custom_{month}'
+        total_sum_col = f'total_sum_{month}'
+        if pending_custom_col in df.columns:
+            columns.append(pending_custom_col)
+            data_columns.append(pending_custom_col)
+        if total_sum_col in df.columns:
+            columns.append(total_sum_col)
+            data_columns.append(total_sum_col)
+
+        # Если нет ни одной из специфичных колонок для месяца, пропускаем итерацию
+        if not data_columns:
+            continue
+
+        df_subset = df[columns].copy()
+        df_subset.replace([np.inf, -np.inf, np.nan], 0, inplace=True)
+
+        # Получаем или создаем лист для текущего месяца
+        try:
+            worksheet = spreadsheet.worksheet(sheet_name)
+        except gspread.WorksheetNotFound:
+            worksheet = spreadsheet.add_worksheet(title=sheet_name, rows="100", cols="20")
+
+        values = [df_subset.columns.tolist()] + df_subset.values.tolist()
+
+        worksheet.clear()
+        worksheet.update(values,'A1')
+    engine.dispose()
 def get_sql_payout_history():
     cnx = mysql.connector.connect(**db_config)
     cursor = cnx.cursor()
@@ -422,6 +626,7 @@ def get_sql_payout_history():
         cnx.commit()  # Подтверждение изменений
     cursor.close()
     cnx.close()
+
     sql_data = get_sql_data_payout_history()
 
     # Подключение к базе данных
@@ -467,7 +672,54 @@ def get_sql_payout_history():
     cursor.close()
     cnx.close()
 
+def get_table_04_to_google():
+    cnx = mysql.connector.connect(**db_config)
+    cursor = cnx.cursor()
 
+    cursor.execute("""
+           SELECT 
+    buyer_stage_name, 
+    buyer_user_id,
+    ROUND(SUM(seller_commission_price), 2) AS total_commission, 
+    COUNT(*) AS total_count, 
+    ROUND(AVG(seller_commission_price), 2) AS average_commission,
+    GROUP_CONCAT(DISTINCT model_fm SEPARATOR ', ') AS all_buyer_usernames
+FROM 
+    manyvids.daily_sales
+GROUP BY 
+    buyer_stage_name, 
+    buyer_user_id
+ORDER BY 
+    total_commission DESC;
+
+
+
+
+        """)
+
+    # Получение результатов в DataFrame
+    df = pd.DataFrame(cursor.fetchall(), columns=[x[0] for x in cursor.description])
+    # Запись DataFrame в CSV файл
+    df.to_csv('withdrawals.csv', index=False)
+    """Запись в Google Таблицу"""
+
+    client, spreadsheet_id = get_google()
+    sheet_payout_history = client.open_by_key(spreadsheet_id).worksheet('clients')
+
+    # Читаем CSV файл
+    df = pd.read_csv('withdrawals.csv')
+    df.fillna(0, inplace=True)
+    df = df.astype(str)
+    # Конвертируем DataFrame в список списков
+    values = df.values.tolist()
+
+    # Добавляем заголовки столбцов в начало списка
+    values.insert(0, df.columns.tolist())
+
+    # Очистка всего листа
+    sheet_payout_history.clear()
+    # Обновляем данные в Google Sheets
+    sheet_payout_history.update(values, 'A1')
 def job():
     now = datetime.now()  # Текущие дата и время
     month = str(now.month)
@@ -481,7 +733,9 @@ def job():
     get_sql_data_day()
     get_table_01_to_google()
     get_sql_payout_history()
-    print(f'Все выполненно в {currentTime}, ждем 30мин')
+    get_table_04_to_google()
+    get_pending_to_google()
+    print(f'Все выполнено, ждем 30мин')
 
 
 # Вызов функции для немедленного выполнения задачи при запуске скрипта
