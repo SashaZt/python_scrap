@@ -11,7 +11,6 @@ import mysql.connector
 import pandas as pd
 import requests
 from oauth2client.service_account import ServiceAccountCredentials
-
 from config import db_config, use_table_daily_sales, headers
 from proxi import proxies
 
