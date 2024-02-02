@@ -3,6 +3,9 @@ import glob
 import json
 import os
 import schedule
+from datetime import datetime
+import schedule
+import time
 import datetime
 import random
 from sqlalchemy import create_engine
@@ -14,7 +17,7 @@ import mysql.connector
 import pandas as pd
 import requests
 from oauth2client.service_account import ServiceAccountCredentials
-from config import db_config, use_table_daily_sales, headers, host, user, password, database
+from config import db_config, use_table_daily_sales, headers, host, user, password, database, use_table_payout_history
 from proxi import proxies
 
 current_directory = os.getcwd()
@@ -184,7 +187,6 @@ def get_sql_data_day():
     files_json = glob.glob(folder)
     models_fms = get_id_models_csv()
 
-
     for item in files_json:
         with open(item, 'r', encoding="utf-8") as f:
             data_json = json.load(f)
@@ -307,6 +309,8 @@ def get_table_01_to_google():
     for f in files:
         if os.path.isfile(f):
             os.remove(f)
+
+
 def parsing_monthly_sales_in_daily():
     # Подключение к базе данных и выполнение запроса
     # cnx = mysql.connector.connect(**db_config)
@@ -361,27 +365,136 @@ def parsing_monthly_sales_in_daily():
             sheet.clear()
             sheet.update(values, 'A1')
 
+
+def get_sql_data_payout_history():
+    cnx = mysql.connector.connect(**db_config)
+    cursor = cnx.cursor()
+    cursor.execute("""
+        SELECT model_id,payment_date,paid  FROM manyvids.payout_history;
+    """)
+    data = {(row[0], row[1], row[2]) for row in cursor.fetchall()}
+    cursor.close()
+    cnx.close()
+    return data
+
+
+def get_sql_payout_history():
+    cnx = mysql.connector.connect(**db_config)
+    cursor = cnx.cursor()
+
+    # # Очистка таблицы перед вставкой новых данных
+    # truncate_query = f"TRUNCATE TABLE {use_table_payout_history}"
+    # cursor.execute(truncate_query)
+    # cnx.commit()  # Подтверждение изменений
+
+    folder = os.path.join(payout_history_path, '*.json')
+    files_json = glob.glob(folder)
+    id_models = get_id_models()
+    for item in files_json:
+        filename = os.path.basename(item)
+        parts = filename.split("_")
+        mvtoken = parts[0]
+
+        # Ищем, какому ключу соответствует mvtoken
+        models_id = [key for key, value in id_models.items() if value == mvtoken]
+        try:
+            model_id = models_id[0]
+        except:
+            model_id = None
+        with open(item, 'r', encoding="utf-8") as f:
+            data_json = json.load(f)
+        try:
+            payPeriodItems = data_json['payPeriodItems']
+        except:
+            continue
+        for item in payPeriodItems:
+            payment_date = item['end_period_date']
+            paid = item['paid']
+            values = [model_id, payment_date, paid]
+            # print(values)
+
+            # SQL-запрос для вставки данных
+            insert_query = f"""
+                                INSERT INTO {use_table_payout_history} (model_id, payment_date, paid)
+                                VALUES (%s, %s, %s)
+                                """
+            cursor.execute(insert_query, values)
+        cnx.commit()  # Подтверждение изменений
+    cursor.close()
+    cnx.close()
+    sql_data = get_sql_data_payout_history()
+
+    # Подключение к базе данных
+    cnx = mysql.connector.connect(**db_config)
+    cursor = cnx.cursor()
+    folder = os.path.join(payout_history_path, '*.json')
+    files_json = glob.glob(folder)
+    id_models = get_id_models()
+    for item in files_json:
+        filename = os.path.basename(item)
+        parts = filename.split("_")
+        mvtoken = parts[0]
+
+        # Ищем, какому ключу соответствует mvtoken
+        models_id = [key for key, value in id_models.items() if value == mvtoken]
+        try:
+            model_id = models_id[0]
+        except:
+            model_id = None
+        with open(item, 'r', encoding="utf-8") as f:
+            data_json = json.load(f)
+        try:
+            payPeriodItems = data_json['payPeriodItems']
+        except:
+            continue
+        for item in payPeriodItems:
+            payment_date = item['end_period_date']
+            paid = item['paid']
+            values = [model_id, payment_date, paid]
+            json_sales_date_converted = datetime.strptime(payment_date, '%Y-%m-%d').date()
+            json_seller_commission_price_converted = str(paid)
+            json_data_tuple = (model_id, json_sales_date_converted, json_seller_commission_price_converted)
+            if json_data_tuple in sql_data:
+                continue
+            else:
+                # SQL-запрос для вставки данных
+                insert_query = f"""
+                                            INSERT INTO {use_table_payout_history} (model_id, payment_date, paid)
+                                            VALUES (%s, %s, %s)
+                                            """
+                cursor.execute(insert_query, values)
+            cnx.commit()  # Подтверждение изменений
+    cursor.close()
+    cnx.close()
+
+
 def job():
-    # Получение текущего месяца и года
-    now = datetime.now()
+    now = datetime.now()  # Текущие дата и время
     month = str(now.month)
     filterYear = str(now.year)
+    currentTime = now.strftime("%H:%M:%S")  # Форматирование текущего времени
 
-    print(f"Запуск задачи для месяца {month} и года {filterYear}.")
+    print(f"[{currentTime}] Запуск задачи для месяца {month} и года {filterYear}.")
+
+    # Ваши функции здесь
     get_requests(month, filterYear)
     get_sql_data_day()
     get_table_01_to_google()
+    get_sql_payout_history()
+    print(f'Все выполненно в {currentTime}, ждем 30мин')
 
+
+# Вызов функции для немедленного выполнения задачи при запуске скрипта
+job()
 
 # Настройка расписания
 # schedule.every().hour.at(":25").do(job)  # Запуск каждый час в 00 минут
-# Начальное время
+# Настройка расписания на выполнение каждые 30 минут
 schedule.every(30).minutes.do(job)
 
 while True:
     schedule.run_pending()
     time.sleep(1)
-
 
 # if __name__ == '__main__':
 #     print("Какой месяц парсим от 1 до 12?")
