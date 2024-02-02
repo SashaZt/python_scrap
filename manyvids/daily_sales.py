@@ -111,10 +111,10 @@ def get_requests(month, filterYear):
             'month': month,
             'filterYear': filterYear,
         }
-        data_month = {
-            'mvtoken': mvtoken,
-            'year': filterYear,
-        }
+        # data_month = {
+        #     'mvtoken': mvtoken,
+        #     'year': filterYear,
+        # }
         data_payout_history = {
             'mvtoken': mvtoken,
             'year': filterYear,
@@ -125,21 +125,21 @@ def get_requests(month, filterYear):
         filterYear_value = data_day['filterYear']
 
         filename_day = os.path.join(daily_sales_path, f'{mvtoken_value}_{month_value}_{filterYear_value}.json')
-        filename_month = os.path.join(monthly_sales_path, f'{mvtoken_value}_{filterYear_value}.json')
+        # filename_month = os.path.join(monthly_sales_path, f'{mvtoken_value}_{filterYear_value}.json')
         filename_payout_history = os.path.join(payout_history_path, f'{mvtoken_value}_{filterYear_value}.json')
 
         response_day = session.post('https://www.manyvids.com/includes/get_earnings.php', headers=headers,
                                     proxies=proxi, data=data_day, cookies=cookies_dict)
-        if not os.path.exists(filename_month):
-            time.sleep(10)
-            response_month = session.post('https://www.manyvids.com/includes/get_earnings.php', headers=headers,
-                                          data=data_month, proxies=proxi)
-            json_data_month = response_month.json()
-            with open(filename_month, 'w', encoding='utf-8') as f:
-                json.dump(json_data_month, f, ensure_ascii=False, indent=4)  # Записываем в файл
+        # if not os.path.exists(filename_month):
+        #     time.sleep(5)
+        #     response_month = session.post('https://www.manyvids.com/includes/get_earnings.php', headers=headers,
+        #                                   data=data_month, proxies=proxi)
+        #     json_data_month = response_month.json()
+        #     with open(filename_month, 'w', encoding='utf-8') as f:
+        #         json.dump(json_data_month, f, ensure_ascii=False, indent=4)  # Записываем в файл
 
         if not os.path.exists(filename_payout_history):
-            time.sleep(10)
+            time.sleep(5)
             response_payout_history = session.post('https://www.manyvids.com/includes/get_payperiod_earnings.php',
                                                    headers=headers, data=data_payout_history, proxies=proxi
                                                    )
@@ -184,10 +184,6 @@ def get_sql_data_day():
     files_json = glob.glob(folder)
     models_fms = get_id_models_csv()
 
-    # # Очистка таблицы перед вставкой новых данных
-    # truncate_query = f"TRUNCATE TABLE {use_table_daily_sales}"
-    # cursor.execute(truncate_query)
-    # cnx.commit()  # Подтверждение изменений
 
     for item in files_json:
         with open(item, 'r', encoding="utf-8") as f:
