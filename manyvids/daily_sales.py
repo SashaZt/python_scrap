@@ -2,7 +2,10 @@ import csv
 import glob
 import json
 import os
+import schedule
+import datetime
 import random
+from sqlalchemy import create_engine
 import time
 from datetime import datetime, timedelta
 import schedule
@@ -11,7 +14,7 @@ import mysql.connector
 import pandas as pd
 import requests
 from oauth2client.service_account import ServiceAccountCredentials
-from config import db_config, use_table_daily_sales, headers
+from config import db_config, use_table_daily_sales, headers, host, user, password, database
 from proxi import proxies
 
 current_directory = os.getcwd()
@@ -308,7 +311,59 @@ def get_table_01_to_google():
     for f in files:
         if os.path.isfile(f):
             os.remove(f)
+def parsing_monthly_sales_in_daily():
+    # Подключение к базе данных и выполнение запроса
+    # cnx = mysql.connector.connect(**db_config)
+    database_uri = f"mysql+mysqlconnector://{user}:{password}@{host}/{database}"
 
+    # Создание движка SQLAlchemy
+    engine = create_engine(database_uri)
+
+    # Выполнение запроса и чтение данных в DataFrame
+    query = """
+            SELECT 
+                model_fm, 
+                EXTRACT(YEAR FROM sales_date) AS year, 
+                EXTRACT(MONTH FROM sales_date) AS month, 
+                ROUND(SUM(seller_commission_price), 2) AS total_seller_commission
+            FROM 
+                manyvids.daily_sales
+            GROUP BY 
+                model_fm, year, month
+            ORDER BY 
+                model_fm ASC, year ASC, month ASC;
+        """
+    df = pd.read_sql_query(query, engine)
+
+    # Создание сводной таблицы
+    pivot_df = df.pivot_table(index='model_fm', columns='month', values='total_seller_commission', fill_value=0)
+
+    # Округление значений до двух знаков после запятой
+    pivot_df = pivot_df.round(2)
+
+    pivot_df.to_csv('monthly_sales.csv')
+    engine.dispose()
+
+    """Запись в Google Таблицу"""
+    client, spreadsheet_id = get_google()
+    df = pd.read_csv('monthly_sales.csv')
+    columns_to_check = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"]  # Список колонок для проверки
+
+    for col in columns_to_check:
+        if col in df.columns:
+            # Определяем индекс листа на основе номера колонки
+            sheet_index = int(col) if col.isdigit() else 0
+            sheet = client.open_by_key(spreadsheet_id).get_worksheet(sheet_index)
+
+            # Выбираем только колонки 'model_id' и текущую колонку
+            df_subset = df[['model_fm', col]]
+
+            # Преобразуем DataFrame в список списков и вставляем заголовки колонок
+            values = [df_subset.columns.tolist()] + df_subset.values.tolist()
+
+            # Очищаем лист и записываем данные
+            sheet.clear()
+            sheet.update(values, 'A1')
 
 def job():
     # Получение текущего месяца и года
@@ -323,7 +378,9 @@ def job():
 
 
 # Настройка расписания
-schedule.every().hour.at(":55").do(job)  # Запуск каждый час в 00 минут
+# schedule.every().hour.at(":25").do(job)  # Запуск каждый час в 00 минут
+# Начальное время
+schedule.every(30).minutes.do(job)
 
 while True:
     schedule.run_pending()
