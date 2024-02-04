@@ -2,7 +2,7 @@
 import mysql.connector
 
 from config import db_config, use_bd, use_table_daily_sales, use_table_monthly_sales, use_table_payout_history, \
-    use_table_login_pass
+    use_table_login_pass,use_table_chat
 
 
 def create_sql_login_pass():
@@ -116,9 +116,34 @@ def create_sql_payout_history():
                 """)
     cnx.close()
 
+def create_sql_chat():
+    # 1. Подключаемся к серверу MySQL
+    cnx = mysql.connector.connect(**db_config)
+
+    # Создаем объект курсора, чтобы выполнять SQL-запросы
+    cursor = cnx.cursor()
+
+    # Указываем, что будем использовать эту базу данных
+    cursor.execute(f"USE {use_bd}")
+
+    # 4. Создаем необходимые колонки
+
+    cursor.execute(f"""
+                   CREATE TABLE {use_table_chat} (
+                       msg_last_id INT NOT NULL,
+                       user_id INT,
+                       sender_id INT,
+                       date_part DATE,
+                       time_part TIME,
+                       PRIMARY KEY (msg_last_id),
+                       UNIQUE (msg_last_id));
+                   """)
+    cnx.close()
+
 
 if __name__ == '__main__':
-    create_sql_login_pass()
-    create_sql_daily_sales()
-    create_sql_monthly_sales()
-    create_sql_payout_history()
+    # create_sql_login_pass()
+    # create_sql_daily_sales()
+    # create_sql_monthly_sales()
+    # create_sql_payout_history()
+    create_sql_chat()
