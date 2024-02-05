@@ -334,59 +334,6 @@ def get_table_01_to_google():
             os.remove(f)
 
 
-def parsing_monthly_sales_in_daily():
-    # Подключение к базе данных и выполнение запроса
-    # cnx = mysql.connector.connect(**db_config)
-    database_uri = f"mysql+mysqlconnector://{user}:{password}@{host}/{database}"
-
-    # Создание движка SQLAlchemy
-    engine = create_engine(database_uri)
-
-    # Выполнение запроса и чтение данных в DataFrame
-    query = """
-            SELECT model_fm,
-                EXTRACT(YEAR FROM sales_date) AS year, 
-                EXTRACT(MONTH FROM sales_date) AS month, 
-                ROUND(SUM(seller_commission_price), 2) AS total_seller_commission
-            FROM 
-                manyvids.daily_sales
-            GROUP BY 
-                model_fm, year, month
-            ORDER BY 
-                model_fm ASC, year ASC, month ASC;
-        """
-    df = pd.read_sql_query(query, engine)
-
-    # Создание сводной таблицы
-    pivot_df = df.pivot_table(index='model_fm', columns='month', values='total_seller_commission', fill_value=0)
-
-    # Округление значений до двух знаков после запятой
-    pivot_df = pivot_df.round(2)
-
-    pivot_df.to_csv('monthly_sales.csv')
-    engine.dispose()
-
-    """Запись в Google Таблицу"""
-    client, spreadsheet_id = get_google()
-    df = pd.read_csv('monthly_sales.csv')
-    columns_to_check = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"]  # Список колонок для проверки
-
-    for col in columns_to_check:
-        if col in df.columns:
-            # Определяем индекс листа на основе номера колонки
-            sheet_index = int(col) if col.isdigit() else 0
-            sheet = client.open_by_key(spreadsheet_id).get_worksheet(sheet_index)
-
-            # Выбираем только колонки 'model_id' и текущую колонку
-            df_subset = df[['model_fm', col]]
-
-            # Преобразуем DataFrame в список списков и вставляем заголовки колонок
-            values = [df_subset.columns.tolist()] + df_subset.values.tolist()
-
-            # Очищаем лист и записываем данные
-            sheet.clear()
-            sheet.update(values, 'A1')
-
 def get_pending_to_google():
     spreadsheet_id = '145mee2ZsApZXiTnASng4lTzbocYCJWM5EDksTx_FVYY'
     scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/spreadsheets',
@@ -456,6 +403,8 @@ def get_pending_to_google():
     cursor = cnx.cursor()
     now = datetime.now()  # Текущие дата и время
     month = str(now.month)
+    """Загрузка в месячную таблицу уникальных клиентов"""
+
     clear_pending_query = """
             UPDATE manyvids.monthly_sales
             SET pending_custom = NULL
@@ -465,7 +414,14 @@ def get_pending_to_google():
     cnx.commit()
     id_models = get_id_models()
     folder = os.path.join(pending_custom_path, '*.html')
+    cnx.commit()
+    update_query = """
+        UPDATE monthly_sales m
+        JOIN unique_users u ON m.model_id = u.model_id AND m.sales_month = u.sales_month
+        SET m.chat_user = u.chat_user;
+    """
 
+    cursor.execute(update_query)
     files_html = glob.glob(folder)
     for item in files_html:
         filename = os.path.basename(item)
@@ -510,6 +466,9 @@ def get_pending_to_google():
                                 f"Невозможно преобразовать '{pending}' в число для model_id {model_id} и месяца {month}.")
                     else:
                         print("Strong tag not found in the 6th cell")
+    # # Подтверждение изменений и закрытие подключения
+
+
     """Запись в Google Таблицу"""
     # Подключение к базе данных и выполнение запроса
     # cnx = mysql.connector.connect(**db_config)
@@ -518,59 +477,68 @@ def get_pending_to_google():
 
 
     # Выполнение запроса и чтение данных в DataFrame
+    #Рабочий вариант
+    # query = """
+    #     SELECT model_id, sales_month, total_sum, pending_custom FROM manyvids.monthly_sales;
+    # """
+
     query = """
-        SELECT model_id, sales_month, total_sum, pending_custom FROM manyvids.monthly_sales;
+        SELECT model_id, sales_month, total_sum, pending_custom, chat_user FROM manyvids.monthly_sales;
+
     """
     df = pd.read_sql_query(query, engine)
 
     # Преобразование DataFrame
     df_pivot = df.pivot_table(index='model_id',
                               columns='sales_month',
-                              values=['total_sum', 'pending_custom'],
+                              values=['total_sum', 'pending_custom', 'chat_user'],
                               aggfunc='first').reset_index()
 
     df_pivot.columns = ['_'.join(str(i) for i in col).strip() for col in df_pivot.columns.values]
 
+    # Замена None на 0
+    df_pivot.fillna(0, inplace=True)
     # Вывод преобразованного DataFrame для проверки
     # Запись в CSV
     csv_file_path = 'pending_custom.csv'
     df_pivot.to_csv(csv_file_path, index=False)
-
-    # # Создание сводной таблицы
-    # pivot_df = df.pivot_table(index='model_id', columns='sales_month', values='total_sum', fill_value=0)
     #
-    # # Округление значений до двух знаков после запятой
-    # pivot_df = pivot_df.round(2)
-    #
-    # pivot_df.to_csv('monthly_sales.csv')
 
-
-    """Запись в Google Таблицу"""
-    # client, spreadsheet = get_google()
     df = pd.read_csv('pending_custom.csv')
-    # Список месяцев для проверки
     months = range(1, 13)  # От 1 до 12
+
     for month in months:
         sheet_name = f'{month:02}_monthly_sales'
 
         # Подготовка данных для записи
-        columns = ['model_id_']
-        data_columns = []
+        columns = ['model_id_']  # Основной столбец
+        data_columns = []  # Столбцы данных для текущего месяца
 
         # Добавляем колонки в список, если они существуют в DataFrame
         pending_custom_col = f'pending_custom_{month}'
         total_sum_col = f'total_sum_{month}'
+        chat_user_col = f'chat_user_{month}'  # Предполагаем, что столбец chat_user существует для каждого месяца
+
+        # Проверяем наличие столбцов в DataFrame
         if pending_custom_col in df.columns:
             columns.append(pending_custom_col)
             data_columns.append(pending_custom_col)
         if total_sum_col in df.columns:
             columns.append(total_sum_col)
             data_columns.append(total_sum_col)
+        if chat_user_col in df.columns:
+            columns.append(chat_user_col)  # Добавляем chat_user в список столбцов для выборки
+        else:
+            # Если столбец chat_user отсутствует, предполагаем, что это ошибка в данных или логике
+            # print(f"Warning: Column {chat_user_col} not found in DataFrame. Adding it with default value 0.")
+            df[chat_user_col] = 0  # Добавляем столбец с 0, чтобы сохранить структуру данных
+            columns.append(chat_user_col)
 
-        # Если нет ни одной из специфичных колонок для месяца, пропускаем итерацию
-        if not data_columns:
+        # Если нет ни одной из специфичных колонок для месяца, кроме chat_user, пропускаем итерацию
+        if not data_columns and chat_user_col not in df.columns:
             continue
 
+        # Создаем подмножество DataFrame с нужными столбцами
         df_subset = df[columns].copy()
         df_subset.replace([np.inf, -np.inf, np.nan], 0, inplace=True)
 
@@ -580,11 +548,92 @@ def get_pending_to_google():
         except gspread.WorksheetNotFound:
             worksheet = spreadsheet.add_worksheet(title=sheet_name, rows="100", cols="20")
 
+        # Формируем данные для обновления листа
         values = [df_subset.columns.tolist()] + df_subset.values.tolist()
 
+        # Очистка и обновление листа
         worksheet.clear()
-        worksheet.update(values,'A1')
+        worksheet.update(values, 'A1')
+
+    # """ТЕСТОВЫЙ типа рабочий"""
+    # """Запись в Google Таблицу"""
+    # # client, spreadsheet = get_google()
+    # df = pd.read_csv('pending_custom.csv')
+    # # Список месяцев для проверки
+    # # Предполагается, что spreadsheet уже определен
+    # months = range(1, 13)  # От 1 до 12
+    #
+    # for month in months:
+    #     sheet_name = f"{month}_monthly_sales"
+    #     try:
+    #         worksheet = spreadsheet.worksheet(sheet_name)
+    #     except gspread.WorksheetNotFound:
+    #         worksheet = spreadsheet.add_worksheet(title=sheet_name, rows="100", cols="20")
+    #
+    #     # Формируем данные для обновления
+    #     values = [["model_id", "total_sum", "pending_custom", "chat_user"]]  # Заголовки столбцов
+    #
+    #     for index, row in df.iterrows():
+    #         # Ищем значения для текущего месяца
+    #         total_sum_col = f"total_sum_{month}"
+    #         pending_custom_col = f"pending_custom_{month}"
+    #         chat_user_col = f"chat_user_{month}"
+    #         # Проверяем, есть ли данные для текущего месяца
+    #         # Обратите внимание: для chat_user мы берем значение из столбца, специфичного для месяца, если ваш случай другой - адаптируйте логику
+    #         chat_user_value = row.get(chat_user_col, 0) if chat_user_col in df.columns else 0
+    #
+    #
+    #         # Добавляем строку данных: model_id, total_sum, pending_custom, chat_user
+    #         row_data = [
+    #             row['model_id_'],
+    #             row.get(total_sum_col, 0),  # Используем 0 в качестве значения по умолчанию
+    #             row.get(pending_custom_col, 0),  # Используем 0 в качестве значения по умолчанию
+    #             chat_user_value  # Уже обработали выше
+    #         ]
+    #         values.append(row_data)
+    #     # print(values)
+    #     # # Очистка и обновление листа
+    #     worksheet.clear()
+    #     worksheet.update(values, 'A1')
+
+
+    """Рабочий код"""
+    # for month in months:
+    #     sheet_name = f'{month:02}_monthly_sales'
+    #
+    #     # Подготовка данных для записи
+    #     columns = ['model_id_']
+    #     data_columns = []
+    #
+    #     # Добавляем колонки в список, если они существуют в DataFrame
+    #     pending_custom_col = f'pending_custom_{month}'
+    #     total_sum_col = f'total_sum_{month}'
+    #     if pending_custom_col in df.columns:
+    #         columns.append(pending_custom_col)
+    #         data_columns.append(pending_custom_col)
+    #     if total_sum_col in df.columns:
+    #         columns.append(total_sum_col)
+    #         data_columns.append(total_sum_col)
+    #
+    #     # Если нет ни одной из специфичных колонок для месяца, пропускаем итерацию
+    #     if not data_columns:
+    #         continue
+    #
+    #     df_subset = df[columns].copy()
+    #     df_subset.replace([np.inf, -np.inf, np.nan], 0, inplace=True)
+    #
+    #     # Получаем или создаем лист для текущего месяца
+    #     try:
+    #         worksheet = spreadsheet.worksheet(sheet_name)
+    #     except gspread.WorksheetNotFound:
+    #         worksheet = spreadsheet.add_worksheet(title=sheet_name, rows="100", cols="20")
+    #
+    #     values = [df_subset.columns.tolist()] + df_subset.values.tolist()
+    #
+    #     worksheet.clear()
+    #     worksheet.update(values,'A1')
     engine.dispose()
+
 def get_sql_payout_history():
     cnx = mysql.connector.connect(**db_config)
     cursor = cnx.cursor()
