@@ -148,7 +148,8 @@ def get_requests(month, filterYear):
         filename_pending_custom = os.path.join(pending_custom_path, f'{mvtoken_value}_{filterYear_value}.html')
 
         time.sleep(5)
-        response_pending_custom = session.get('https://www.manyvids.com/View-my-earnings/', headers=headers)
+        response_pending_custom = session.get('https://www.manyvids.com/View-my-earnings/', headers=headers,
+                                    proxies=proxi)
         src_pending_custom = response_pending_custom.text
         with open(filename_pending_custom, "w", encoding='utf-8') as file:
             file.write(src_pending_custom)
@@ -420,6 +421,8 @@ def get_pending_to_google():
     df = pd.DataFrame(cursor.fetchall(), columns=[x[0] for x in cursor.description])
     # Запись DataFrame в CSV файл
     df.to_csv('monthly_sales.csv', index=False)
+
+
     # Чтение CSV файла
     df = pd.read_csv('monthly_sales.csv')
 
