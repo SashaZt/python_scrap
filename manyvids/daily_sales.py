@@ -15,8 +15,9 @@ import schedule
 from oauth2client.service_account import ServiceAccountCredentials
 from sqlalchemy import create_engine
 from bs4 import BeautifulSoup
-from config import db_config, use_table_daily_sales, headers, host, user, password, database, use_table_payout_history,use_table_monthly_sales
+from config import db_config, use_table_daily_sales, headers, host, user, password, database, use_table_payout_history,use_table_monthly_sales,use_table_chat
 from proxi import proxies
+from collections import defaultdict
 
 current_directory = os.getcwd()
 temp_directory = 'temp'
@@ -88,13 +89,24 @@ def proxy_random():
         "https": formatted_proxy
     }
 
+def get_sql_check_chat():
+    cnx = mysql.connector.connect(**db_config)
+    cursor = cnx.cursor()
+    cursor.execute("""
+        SELECT msg_last_id, CONCAT(date_part, ' ', time_part) AS datetime FROM manyvids.chat;
+    """)
+    data = {(row[0], row[1]) for row in cursor.fetchall()}
+    cursor.close()
+    cnx.close()
+    return data
+
 
 def get_requests(month, filterYear):
     # def get_requests():
-    proxi = proxy_random()
     filename_cookies = os.path.join(cookies_path, '*.json')
     files_json = glob.glob(filename_cookies)
     for item in files_json:
+        proxi = proxy_random()
         with open(item, 'r') as f:
             cookies_list = json.load(f)
 
@@ -107,6 +119,7 @@ def get_requests(month, filterYear):
         filename = os.path.basename(item)
         parts = filename.split("_")
         mvtoken = parts[1].replace('.json', '')
+        print(f'Модель {mvtoken}')
         data_day = {
             'mvtoken': mvtoken,
             'day': '',
@@ -122,6 +135,10 @@ def get_requests(month, filterYear):
             'year': filterYear,
         }
 
+
+
+
+
         mvtoken_value = data_day['mvtoken']
         month_value = data_day['month']
         filterYear_value = data_day['filterYear']
@@ -136,7 +153,7 @@ def get_requests(month, filterYear):
         """История"""
         filename_payout_history = os.path.join(payout_history_path, f'{mvtoken_value}_{filterYear_value}.json')
         if not os.path.exists(filename_payout_history):
-            time.sleep(5)
+            time.sleep(30)
             response_payout_history = session.post('https://www.manyvids.com/includes/get_payperiod_earnings.php',
                                                    headers=headers, data=data_payout_history, proxies=proxi
                                                    )
@@ -147,7 +164,7 @@ def get_requests(month, filterYear):
         """pending"""
         filename_pending_custom = os.path.join(pending_custom_path, f'{mvtoken_value}_{filterYear_value}.html')
 
-        time.sleep(5)
+        time.sleep(30)
         response_pending_custom = session.get('https://www.manyvids.com/View-my-earnings/', headers=headers,
                                     proxies=proxi)
         src_pending_custom = response_pending_custom.text
@@ -164,8 +181,295 @@ def get_requests(month, filterYear):
         #     with open(filename_month, 'w', encoding='utf-8') as f:
         #         json.dump(json_data_month, f, ensure_ascii=False, indent=4)  # Записываем в файл
 
-        print('Пауза 10сек')
-        time.sleep(10)
+
+        sql_data = get_sql_check_chat()
+        # Используем max() для поиска кортежа с максимальной датой
+        # Для сравнения дат преобразуем их в объекты datetime
+        latest_date_tuple = max(sql_data, key=lambda x: datetime.strptime(x[1], '%Y-%m-%d %H:%M:%S'))
+        latest_date = latest_date_tuple[1]  # Извлекаем дату из кортежа
+        print(f'Последняя дата в БД {latest_date}')
+        params = {
+            'mvtoken': mvtoken,
+            'typeMessage': 'private',
+            'action': 'clc',
+            'isMobile': '0',
+        }
+        cnx = mysql.connector.connect(**db_config)
+        cursor = cnx.cursor()
+
+        session = requests.Session()
+        session.cookies.update(cookies_dict)
+        response = session.get('https://www.manyvids.com/includes/user_messages.php', params=params,
+                               headers=headers)
+        json_data = response.json()
+        data_json = json_data['conversations']
+        total_msg = int(data_json['meta']['total'])
+        total_pages = (total_msg // 13) + 2
+        offset = 0
+        data_and_time_json = []
+        should_stop = False  # Флаг для контроля выполнения цикла
+        for i in range(total_pages):
+            proxi = proxy_random()
+            print(f'Список чатов, листок {i}')
+            if i == 1:
+                params = {
+                    'mvtoken': mvtoken,
+                    'typeMessage': 'private',
+                    'action': 'clc',
+                    'isMobile': '0',
+                }
+                response = session.get('https://www.manyvids.com/includes/user_messages.php', params=params,
+                                       headers=headers, proxies=proxi)
+                json_data = response.json()
+                data_json = json_data['conversations']
+                for dj in data_json['list']:
+                    msg_last_id = dj['msg_last_id']  # id чата
+                    sender_id = dj['sender_id']  # id  модели
+                    user_id = dj['user_id']  # id  клиента
+                    msg_date = dj['msg_date']  # дата  чата
+                    msg_date = datetime.strptime(msg_date, '%Y-%m-%d %H:%M:%S').strftime('%Y-%m-%d %H:%M:%S')
+                    print(f'в Чате {msg_date} последняя дата {latest_date}')
+
+                    if msg_date == latest_date:
+                        should_stop = True  # Устанавливаем флаг в True, когда нашли совпадение
+                        print('Стоп')
+                        break  # Прерываем внутренний цикл
+                    date_part, time_part = msg_date.split(' ')
+                    json_data_chat = (msg_last_id, msg_date)
+                    values = [msg_last_id, user_id, sender_id, date_part, time_part]
+
+                    if not json_data_chat in sql_data:
+                        # SQL-запрос для вставки данных
+                        insert_query = f"""
+                            INSERT IGNORE INTO {use_table_chat} (msg_last_id, user_id, sender_id, date_part, time_part)
+                                                                   VALUES (%s, %s, %s, %s, %s)
+                                                                   """
+                        cursor.execute(insert_query, values)
+
+                        cnx.commit()  # Подтверждение изменений
+                    else:
+                        break
+            print('Пауза 30сек')
+            time.sleep(30)
+            if should_stop:  # Повторная проверка флага после обработки каждой страницы
+                break  # Прерываем внешний цикл, если флаг установлен
+
+            elif i > 1:
+                if should_stop:  # Проверяем флаг перед выполнением запроса на следующие страницы
+                    break  # Прерываем внешний цикл, если флаг установлен
+
+                offset += 13
+                params = {
+                    'mvtoken': mvtoken,
+                    'typeMessage': 'private',
+                    'action': 'cl',
+                    'offset': offset,
+                    'type': 'all',
+                    'isMobile': '0',
+                }
+                response = session.get('https://www.manyvids.com/includes/user_messages.php', params=params,
+                                       headers=headers, proxies=proxi)
+                json_data = response.json()
+                data_json = json_data['conversations']
+                for dj in data_json['list']:
+                    msg_last_id = dj['msg_last_id']  # id чата
+                    sender_id = dj['sender_id']  # id  модели
+                    user_id = dj['user_id']  # id  клиента
+                    msg_date = dj['msg_date']  # дата  чата
+                    msg_date = datetime.strptime(msg_date, '%Y-%m-%d %H:%M:%S').strftime('%Y-%m-%d %H:%M:%S')
+                    print(f'в Чате {msg_date} последняя дата {latest_date}')
+                    if msg_date == latest_date:
+                        should_stop = True  # Устанавливаем флаг в True, когда нашли совпадение
+                        print('Стоп')
+                        break  # Прерываем внутренний цикл
+                    date_part, time_part = msg_date.split(' ')
+                    json_data_chat = (msg_last_id, msg_date)
+                    values = [msg_last_id, user_id, sender_id, date_part, time_part]
+
+                    if not json_data_chat in sql_data:
+                        # SQL-запрос для вставки данных
+                        insert_query = f"""
+                                            INSERT IGNORE INTO {use_table_chat} (msg_last_id, user_id, sender_id, date_part, time_part)
+                                                                                   VALUES (%s, %s, %s, %s, %s)
+                                                                                   """
+                        cursor.execute(insert_query, values)
+
+                        cnx.commit()  # Подтверждение изменений
+                    else:
+                        break
+            """Открыть когда пущу автомат"""
+            if i == 5:
+                should_stop = True
+                break
+            if should_stop:  # Повторная проверка флага после обработки каждой страницы
+                break  # Прерываем внешний цикл, если флаг установлен
+
+        # Закрытие соединения с базой данных
+        cursor.close()
+        cnx.close()
+def unique_users_to_sql():
+    # # Подключение к базе данных
+    cnx = mysql.connector.connect(**db_config)  # Замените db_config на ваш конфигурационный словарь
+    cursor = cnx.cursor()
+    # # # Выполнение SQL запроса
+    # # cursor.execute("""
+    # #     SELECT user_id, sender_id,
+    # #            EXTRACT(YEAR FROM date_part) AS year,
+    # #            EXTRACT(MONTH FROM date_part) AS month
+    # #     FROM chat
+    # #     ORDER BY EXTRACT(YEAR FROM date_part), EXTRACT(MONTH FROM date_part);
+    # # """)
+    # #
+    # # # Получение результатов
+    # # data = cursor.fetchall()
+    # #
+    # # # Создание DataFrame
+    # # df = pd.DataFrame(data, columns=['user_id', 'sender_id', 'year', 'month'])
+    # # print(df)
+    # # # Закрытие соединения
+    # # cursor.close()
+    # # cnx.close()
+    #
+    """Тестировать"""
+    #
+    # # SQL запрос для получения списка user_id и даты (год и месяц)
+
+
+    # Предполагается, что у вас уже есть подключение к базе данных
+
+
+    # Выполнение SQL запроса для получения данных
+    query = """
+    SELECT sender_id, EXTRACT(MONTH FROM date_part) AS month, user_id
+    FROM chat
+    ORDER BY sender_id, month;
+    """
+    cursor.execute(query)
+
+    # Считывание данных в DataFrame
+    data = cursor.fetchall()
+    df = pd.DataFrame(data, columns=['sender_id', 'month', 'user_id'])
+
+    # Группировка по sender_id и месяцу, подсчет уникальных user_id
+    grouped = df.groupby(['sender_id', 'month'])['user_id'].apply(lambda x: set(x)).reset_index(name='unique_users')
+
+    # Подготовка структуры для хранения результатов
+    sender_monthly_new_users = defaultdict(dict)
+
+    # Вычисление новых уникальных user_id для каждого sender_id по месяцам
+    for sender_id, group in grouped.groupby('sender_id'):
+        all_previous_users = set()
+        for _, row in group.iterrows():
+            month, unique_users = row['month'], row['unique_users']
+            new_users = unique_users - all_previous_users
+            sender_monthly_new_users[sender_id][month] = len(new_users)
+            all_previous_users.update(new_users)
+    #
+    # # Преобразование результатов в DataFrame для удобного отображения
+    results = []
+    for sender_id, months in sender_monthly_new_users.items():
+        for month, new_users_count in months.items():
+            # Добавляем префикс к названию месяца
+            month_prefixed = f'sales_month_{month}'
+            results.append({'sender_id': sender_id, month_prefixed: new_users_count})
+
+    # Создание DataFrame из списка результатов
+    results_df = pd.DataFrame(results)
+
+    # Поскольку каждая строка теперь представляет отдельный месяц, необходимо агрегировать данные по sender_id
+    pivot_df = pd.pivot_table(results_df, index='sender_id', aggfunc='sum').fillna(0)
+
+    # Сохранение в CSV
+    pivot_df.to_csv('monthly_new_unique_users.csv', index=True)
+
+
+    cursor.close()
+    cnx.close()
+
+
+    cnx = mysql.connector.connect(**db_config)
+    cursor = cnx.cursor()
+    df = pd.read_csv('monthly_new_unique_users.csv')
+
+    # Загрузка словаря id_models
+    id_models = get_id_models_csv()  # {'FM05': '1007686262', ...}
+
+    df['sender_id'] = df['sender_id'].astype(str)  # Убедимся, что sender_id в строковом формате
+    df['model_id'] = df['sender_id'].apply(
+        lambda x: [k for k, v in id_models.items() if v == x][0] if x in id_models.values() else None)
+    df['model_id'].fillna(0, inplace=True)
+
+    # Удаление колонки sender_id
+    df.drop(columns=['sender_id'], inplace=True)
+
+    # Проверяем DataFrame после изменений
+    df_long = df.melt(id_vars=['model_id'], var_name='month', value_name='chat_users')
+
+    # Удаление строк, где model_id равно 0 (если это необходимо)
+    df_long = df_long[df_long['model_id'] != 0]
+
+    # Преобразование длинного DataFrame обратно в широкий формат с model_id в качестве строк, месяцев в качестве колонок и chat_users в качестве значений
+    df_pivot = df_long.pivot(index='model_id', columns='month', values='chat_users')
+
+    # Заполнение NaN нулями, если это необходимо
+    df_pivot.fillna(0, inplace=True)
+    # print(df_pivot)
+    # Проверяем результат преобразования
+    for index, row in df_long.iterrows():
+        model_id = row['model_id']
+        sales_month = int(row['month'].replace('sales_month_', ''))  # Преобразование в int
+        chat_users = row['chat_users']
+
+
+        # Формирование и выполнение SQL-запроса на обновление # UPDATE monthly_sales
+        # Формирование и выполнение SQL-запроса на вставку с условием обновления при дубликате
+        upsert_query = """
+            INSERT INTO unique_users (model_id, sales_month, chat_user)
+            VALUES (%s, %s, %s)
+            ON DUPLICATE KEY UPDATE chat_user = VALUES(chat_user);
+        """
+        cursor.execute(upsert_query, (model_id, sales_month, chat_users))
+
+
+
+    # # Подтверждение изменений и закрытие подключения
+    cnx.commit()
+    update_query = """
+        UPDATE monthly_sales m
+        JOIN unique_users u ON m.model_id = u.model_id AND m.sales_month = u.sales_month
+        SET m.chat_user = u.chat_user;
+    """
+
+    cursor.execute(update_query)
+    cnx.commit()
+    cursor.close()
+    cnx.close()
+
+    # # Обход каждой строки в DataFrame
+    # for index, row in df.iterrows():
+    #     model_id = row['model_id']
+    #     if model_id != 0:  # Проверяем, что model_id не равно 0
+    #         for month in range(1, 13):  # Предполагаем, что данные за месяцы с 1 по 12
+    #             if month in df.columns:
+    #                 chat_users = row[month] if not pd.isna(row[month]) else 0
+    #                 print(chat_users)
+    #             # Обновление данных в таблице
+    #             update_query = f"""
+    #             UPDATE monthly_sales
+    #             SET chat_user = %s
+    #             WHERE model_id = %s AND sales_month = %s
+    #             """
+    #             cursor.execute(update_query, (chat_users, model_id, month))
+    #
+    # # Фиксация изменений и закрытие соединения
+    # cnx.commit()
+    # Переименование столбцов в DataFrame для соответствия таблице в БД
+    # df.rename(columns={
+    #     'model_fm': 'model_id',
+    #     'year': 'sales_year',
+    #     'month': 'sales_month',  # Убедитесь, что названия столбцов соответствуют вашему CSV файлу
+    #     'total_seller_commission': 'total_sum'
+    # }, inplace=True)
 
 
 def get_sql_data_data_day():
@@ -787,6 +1091,8 @@ def job():
     get_sql_payout_history()
     get_table_04_to_google()
     get_pending_to_google()
+    unique_users_to_sql()
+
     print(f'Все выполнено, ждем 30мин')
 
 
