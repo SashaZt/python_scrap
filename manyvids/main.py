@@ -1228,31 +1228,41 @@ def get_sql_check_chat():
 
 
 def message_check():
-    """Для скачиванния"""
-
-
+    # """Для скачиванния"""
     #
     # cookies = {
+    #     'KGID': 'w53da6862v',
     #     'userPreferredContent': '1p2p3p',
-    #     'PHPSESSID': 'r5rg9qet1fej253h4cor8fkkeiog6pj1jepv06gf',
-    #     '_gid': 'GA1.2.85593227.1706965896',
-    #     'timezone': 'Europe%2FAmsterdam',
     #     'dataSectionTemp': '0',
     #     'contentPopup': 'false',
-    #     'fp_token_7c6a6574-f011-4c9a-abdd-9894a102ccef': 'mvA1hVkZx8gVlun4eAYfE/tx3WVoVcFiG1wmuOKm7zo=',
-    #     'KGID': '863f6b0b-124b-564d-8198-d3e814b10314',
-    #     '_hjSessionUser_665482': 'eyJpZCI6IjU4MjYyNjdiLWQ2MmUtNTE5MC05NGEwLTIwNWY1NzBlODI1NCIsImNyZWF0ZWQiOjE3MDY5NjU4OTY4MTEsImV4aXN0aW5nIjp0cnVlfQ==',
-    #     '_ga': 'GA1.1.1061737518.1706965896',
-    #     '_gid': 'GA1.1.85593227.1706965896',
-    #     'privacyPolicyRead': '1',
-    #     'XSRF-TOKEN': 'eyJpdiI6ImF1NzFCRWVvTW9jXC9ZWE9OK3p3NWpBPT0iLCJ2YWx1ZSI6InNvNnhEMlZqUGJKXC9NRXZqcXZETTVzYnNmQ1p1a1lUXC9lR1Y1bXZaQVwvbkE0TnR2WGp6aDRNSFwvZjJDRzF3NWVsIiwibWFjIjoiYWE2NDE5OTkxMjEzZDM2YjU2Nzg1YWUzOTEyODhhMjI5MmMzNWUzY2U1Zjg5MDFhOWRmNGJjNDk5OWM4YjQyZiJ9',
-    #     '_hjSession_665482': 'eyJpZCI6IjI3NGMzOTQxLWNmMWMtNGNiOS1iZTBiLTVjYjExOTNjMWM0NCIsImMiOjE3MDY5OTMzOTUzMTksInMiOjAsInIiOjAsInNiIjowLCJzciI6MCwic2UiOjAsImZzIjowLCJzcCI6MH0=',
-    #     '_dd_s': 'logs=1&id=657f648a-f812-4f98-b897-e45663fb2f37&created=1706993360879&expire=1706994432291',
-    #     'AWSALB': 'Vj6qUEhHE0j/+Lm4KyLXFCdZ3AapuOlEedLPNJ5uJY8G3bNVZgccFURYNelQu+wpeOxKJwuxlctAft0oO5YWoDroFHY9Y5ExMZYRoqPM5J2ob5rPw/xCM9Aac39cuFON5BvGTwSH0NBwDGHY4dTDzOXpYiGY87zJvZevFEpMBzSxT5/G4eItXxWwgUGGew==',
-    #     'AWSALBCORS': 'Vj6qUEhHE0j/+Lm4KyLXFCdZ3AapuOlEedLPNJ5uJY8G3bNVZgccFURYNelQu+wpeOxKJwuxlctAft0oO5YWoDroFHY9Y5ExMZYRoqPM5J2ob5rPw/xCM9Aac39cuFON5BvGTwSH0NBwDGHY4dTDzOXpYiGY87zJvZevFEpMBzSxT5/G4eItXxWwgUGGew==',
+    #     'fp_token_7c6a6574-f011-4c9a-abdd-9894a102ccef': '7ZUNMg94yJb0rYhr9h1xadCa0UrCSklvSZFu+l9ga0w=',
+    #     '_hjSessionUser_665482': 'eyJpZCI6IjdiODIzZjNlLTUyMGQtNTg0ZS05OWUzLWY5ZDQ2OGRhOWFmNSIsImNyZWF0ZWQiOjE3MDA1NTY2ODMxMjQsImV4aXN0aW5nIjp0cnVlfQ==',
     #     '_gat': '1',
-    #     '_ga': 'GA1.1.1061737518.1706965896',
-    #     '_ga_K93D8HD50B': 'GS1.1.1706993394.4.1.1706993533.59.0.0',
+    #     '_hjIncludedInSessionSample_665482': '0',
+    #     '_hjAbsoluteSessionInProgress': '0',
+    #     '_ga': 'GA1.1.2068449578.1700556678',
+    #     'privacyPolicyRead': '1',
+    #     '_gat_UA-45103406-1': '1',
+    #     '_hjSessionUser_665482': 'eyJpZCI6IjdiODIzZjNlLTUyMGQtNTg0ZS05OWUzLWY5ZDQ2OGRhOWFmNSIsImNyZWF0ZWQiOjE3MDA1NTY2ODMxMjQsImV4aXN0aW5nIjp0cnVlfQ==',
+    #     '_hjSession_665482': 'eyJpZCI6ImI0MjA0ODk5LTM1OGMtNGFiYS05MDE0LTM1Njk3MTE3ODdlNyIsImMiOjE3MDY2MjMxMDAxMTIsInMiOjAsInIiOjAsInNiIjowLCJzciI6MCwic2UiOjAsImZzIjowLCJzcCI6MX0=',
+    #     '_ga_K93D8HD50B': 'deleted',
+    #     'MSG_LEG_TKN': 'IZz+3rIXtQutSZzNwN+dNw==',
+    #     'KGID': 'b48c47a9-bbbc-56b8-8944-58aea17ad295',
+    #     'seenWarningPage': 'eyJpdiI6IlBSSkw2MDgrenBmTFhHQXN0UGgzWWc9PSIsInZhbHVlIjoic0J3VDNuXC9vNGU5MFU0UWl2dnFONVE9PSIsIm1hYyI6IjcwMmQ3OTUyNWUwOTg4NWI1YzYxZTU5YzY4MjU2YTYyNzQ1MWExMWU1NjcwM2I2MzFkZTlkZDM5ZDk0MTMwMTkifQ%3D%3D',
+    #     'PHPSESSID': '1tglv6futtrph0ue28mq35nukp4t9qctoj07rm6d',
+    #     'API_KEY': 'L8PiCIxCWo5ExWkUpU%2BAJt2%2BpUypuKd4SDx5Umy9T%2B1pbLWoTe%2BtoPg25lPMAknO',
+    #     'mvAnnouncement': 'hOO4ocGWnUIp%3AznWO55r6b3IP%3A5WtyRa6ByFOs%3AuAoc7dHVypWP%3A0pZdcf4j8AM7%3ArlUvKHZyXhy4%3AkVZfGcleqyVt%3AJWyKCvZPRv1W%3AaROanT5TyikV%3AeSVyu9J2xjFh%3A25iVwOy8aWq9',
+    #     '_ga_K93D8HD50B': 'deleted',
+    #     '_gid': 'GA1.2.1102768810.1707073978',
+    #     '_gid': 'GA1.1.1102768810.1707073978',
+    #     'timezone': 'Europe%2FAmsterdam',
+    #     'XSRF-TOKEN': 'eyJpdiI6Ikd1aFwvQTlXZmtcL2tRUW1cL0hsZjFmaGc9PSIsInZhbHVlIjoiVjNSOWg2YmhUNkxyYll3dFpoYXJCeXdcL3RjSkN1ZjQ0bWx5VkVWTFdKMnRTaUYzckk3bFlsU1FpcU1MMUN4NXEiLCJtYWMiOiIzNjg2Zjg0OWU0YzVlODgzZWZkYjNmNWZmNWExYWJkMTc2NDRmNGUyMjBiZjIwOWJhNmE5YjliNDY3ZWYyNDM2In0%3D',
+    #     '_hjSession_665482': 'eyJpZCI6ImE1NTE2OWExLTNhOWUtNDBjYi04MTVjLWU2Y2ZhMDJjYzk2MCIsImMiOjE3MDcwNzUxMTAyODksInMiOjAsInIiOjAsInNiIjowLCJzciI6MCwic2UiOjAsImZzIjowLCJzcCI6MH0=',
+    #     '_dd_s': 'logs=1&id=0b419de8-4220-430c-9298-92150021dbf8&created=1707073975304&expire=1707076027277',
+    #     'AWSALB': 'uJ1WixTeqaiA9Du800sm1xL7GZKmoVRUrR226AnNe6IPZfL8wiOHqOVHzNEYd/jr4cZX9CRgTyXl/A1ShUfEri5hX6E8qBo/3oM/fEXu5zdpxZg42CNAjWX7PfY0CJMDPEdTLHAaZKmb5YS0bDe3O3QmZFRFT7wfh4Ie1ioy9WRWnwk6sJXo0nHD3gmE+Q==',
+    #     'AWSALBCORS': 'uJ1WixTeqaiA9Du800sm1xL7GZKmoVRUrR226AnNe6IPZfL8wiOHqOVHzNEYd/jr4cZX9CRgTyXl/A1ShUfEri5hX6E8qBo/3oM/fEXu5zdpxZg42CNAjWX7PfY0CJMDPEdTLHAaZKmb5YS0bDe3O3QmZFRFT7wfh4Ie1ioy9WRWnwk6sJXo0nHD3gmE+Q==',
+    #     '_ga_K93D8HD50B': 'GS1.1.1707073978.27.1.1707075127.21.0.0',
+    #     '_ga': 'GA1.2.2068449578.1700556678',
     # }
     #
     # headers = {
@@ -1272,7 +1282,7 @@ def message_check():
     # }
     #
     # params = {
-    #     'mvtoken': '65b8b63281285356410513',
+    #     'mvtoken': '65ba81c2be5d2888504754',
     #     'typeMessage': 'private',
     #     'action': 'clc',
     #     'isMobile': '0',
@@ -1287,10 +1297,11 @@ def message_check():
     # total_msg = int(data_json['meta']['total'])
     # total_pages = (total_msg // 13) + 2
     # offset = 0
+    # print(f'Итого файлов будет {total_pages}')
     # for i in range(total_pages):
     #     if i == 1:
     #         params = {
-    #             'mvtoken': '65b8b63281285356410513',
+    #             'mvtoken': '65ba81c2be5d2888504754',
     #             'typeMessage': 'private',
     #             'action': 'clc',
     #             'isMobile': '0',
@@ -1304,11 +1315,11 @@ def message_check():
     #             with open(filename_day, 'w', encoding='utf-8') as f:
     #                 json.dump(json_data, f, ensure_ascii=False, indent=4)  # Записываем в файл
     #             print(f'Сохранил {filename_day}')
-    #             time.sleep(15)
+    #             time.sleep(10)
     #     if i > 1:
     #         offset += 13
     #         params = {
-    #             'mvtoken': '65b8b63281285356410513',
+    #             'mvtoken': '65ba81c2be5d2888504754',
     #             'typeMessage': 'private',
     #             'action': 'cl',
     #             'offset': offset,
@@ -1324,55 +1335,55 @@ def message_check():
     #             with open(filename_day, 'w', encoding='utf-8') as f:
     #                 json.dump(json_data, f, ensure_ascii=False, indent=4)  # Записываем в файл
     #             print(f'Сохранил {filename_day}')
-    #             time.sleep(15)
-
-
-
-
-
-
-    # """Парсинг json"""
-    # cnx = mysql.connector.connect(**db_config)
-    # cursor = cnx.cursor()
-    # folder = os.path.join(chat_path, '*.json')
+    #             time.sleep(10)
     #
-    # files_html = glob.glob(folder)
-    # heandler = ['msg_last_id','user_id','sender_id','date_part','time_part']
-    # with open('output.csv', 'w', newline='', encoding='utf-8') as file:
-    #     writer = csv.writer(file, delimiter=";")
-    #     writer.writerow(heandler)  # Записываем заголовки только один раз
-    #     for item in files_html:
-    #         with open(item, 'r', encoding='utf-8') as f:
-    #             json_data = json.load(f)
-    #         data_json = json_data['conversations']
-    #         total_msg = data_json['meta']['total']
-    #         # print(total_msg)
-    #         try:
-    #             for i in data_json['list']:
-    #                 msg_last_id = i['msg_last_id'] # id чата
-    #                 sender_id = i['sender_id'] #id  модели
-    #                 user_id = i['user_id']#id  клиента
-    #                 msg_date= i['msg_date']#дата  чата
-    #                 date_part, time_part = msg_date.split(' ')
     #
-    #                 values = [msg_last_id,user_id,sender_id,date_part,time_part]
-    #                 # SQL-запрос для вставки данных
-    #                 insert_query = f"""
-    #                                 INSERT IGNORE INTO {use_table_chat} (msg_last_id, user_id, sender_id, date_part, time_part)
-    #                                 VALUES (%s, %s, %s, %s, %s)
-    #                                 """
-    #                 cursor.execute(insert_query, values)
-    #                 cnx.commit()  # Подтверждение изменений
-    #
-    #                 cnx.commit()  # Подтверждение изменений
-    #
-    #         except mysql.connector.Error as err:
-    #             print("Ошибка при добавлении данных:", err)
-    #             break  # Прерываем цикл в случае ошибки
-    #
-    #         # Закрытие соединения с базой данных
-    #     cursor.close()
-    #     cnx.close()
+
+
+
+
+    """Парсинг json"""
+    cnx = mysql.connector.connect(**db_config)
+    cursor = cnx.cursor()
+    folder = os.path.join(chat_path, '*.json')
+
+    files_html = glob.glob(folder)
+    heandler = ['msg_last_id','user_id','sender_id','date_part','time_part']
+    with open('output.csv', 'w', newline='', encoding='utf-8') as file:
+        writer = csv.writer(file, delimiter=";")
+        writer.writerow(heandler)  # Записываем заголовки только один раз
+        for item in files_html:
+            with open(item, 'r', encoding='utf-8') as f:
+                json_data = json.load(f)
+            data_json = json_data['conversations']
+            total_msg = data_json['meta']['total']
+            # print(total_msg)
+            try:
+                for i in data_json['list']:
+                    msg_last_id = i['msg_last_id'] # id чата
+                    sender_id = i['sender_id'] #id  модели
+                    user_id = i['user_id']#id  клиента
+                    msg_date= i['msg_date']#дата  чата
+                    date_part, time_part = msg_date.split(' ')
+
+                    values = [msg_last_id,user_id,sender_id,date_part,time_part]
+                    # SQL-запрос для вставки данных
+                    insert_query = f"""
+                                    INSERT IGNORE INTO {use_table_chat} (msg_last_id, user_id, sender_id, date_part, time_part)
+                                    VALUES (%s, %s, %s, %s, %s)
+                                    """
+                    cursor.execute(insert_query, values)
+                    cnx.commit()  # Подтверждение изменений
+
+                    cnx.commit()  # Подтверждение изменений
+
+            except mysql.connector.Error as err:
+                print("Ошибка при добавлении данных:", err)
+                break  # Прерываем цикл в случае ошибки
+
+            # Закрытие соединения с базой данных
+        cursor.close()
+        cnx.close()
     cnx = mysql.connector.connect(**db_config)
     cursor = cnx.cursor()
 
@@ -1383,36 +1394,48 @@ def update_chat():
     # Для сравнения дат преобразуем их в объекты datetime
     latest_date_tuple = max(sql_data, key=lambda x: datetime.strptime(x[1], '%Y-%m-%d %H:%M:%S'))
     latest_date = latest_date_tuple[1]  # Извлекаем дату из кортежа
+    print(f'Последняя дата в БД {latest_date}')
 
 
-    #
     cookies = {
+        'KGID': 'w53da6862v',
         'userPreferredContent': '1p2p3p',
-        'PHPSESSID': 'r5rg9qet1fej253h4cor8fkkeiog6pj1jepv06gf',
-        '_gid': 'GA1.2.85593227.1706965896',
-        'timezone': 'Europe%2FAmsterdam',
         'dataSectionTemp': '0',
         'contentPopup': 'false',
-        'fp_token_7c6a6574-f011-4c9a-abdd-9894a102ccef': 'mvA1hVkZx8gVlun4eAYfE/tx3WVoVcFiG1wmuOKm7zo=',
-        'KGID': '863f6b0b-124b-564d-8198-d3e814b10314',
-        '_hjSessionUser_665482': 'eyJpZCI6IjU4MjYyNjdiLWQ2MmUtNTE5MC05NGEwLTIwNWY1NzBlODI1NCIsImNyZWF0ZWQiOjE3MDY5NjU4OTY4MTEsImV4aXN0aW5nIjp0cnVlfQ==',
-        '_ga': 'GA1.1.1061737518.1706965896',
-        '_gid': 'GA1.1.85593227.1706965896',
-        'privacyPolicyRead': '1',
-        'XSRF-TOKEN': 'eyJpdiI6ImF1NzFCRWVvTW9jXC9ZWE9OK3p3NWpBPT0iLCJ2YWx1ZSI6InNvNnhEMlZqUGJKXC9NRXZqcXZETTVzYnNmQ1p1a1lUXC9lR1Y1bXZaQVwvbkE0TnR2WGp6aDRNSFwvZjJDRzF3NWVsIiwibWFjIjoiYWE2NDE5OTkxMjEzZDM2YjU2Nzg1YWUzOTEyODhhMjI5MmMzNWUzY2U1Zjg5MDFhOWRmNGJjNDk5OWM4YjQyZiJ9',
-        '_hjSession_665482': 'eyJpZCI6IjI3NGMzOTQxLWNmMWMtNGNiOS1iZTBiLTVjYjExOTNjMWM0NCIsImMiOjE3MDY5OTMzOTUzMTksInMiOjAsInIiOjAsInNiIjowLCJzciI6MCwic2UiOjAsImZzIjowLCJzcCI6MH0=',
-        '_dd_s': 'logs=1&id=657f648a-f812-4f98-b897-e45663fb2f37&created=1706993360879&expire=1706994432291',
-        'AWSALB': 'Vj6qUEhHE0j/+Lm4KyLXFCdZ3AapuOlEedLPNJ5uJY8G3bNVZgccFURYNelQu+wpeOxKJwuxlctAft0oO5YWoDroFHY9Y5ExMZYRoqPM5J2ob5rPw/xCM9Aac39cuFON5BvGTwSH0NBwDGHY4dTDzOXpYiGY87zJvZevFEpMBzSxT5/G4eItXxWwgUGGew==',
-        'AWSALBCORS': 'Vj6qUEhHE0j/+Lm4KyLXFCdZ3AapuOlEedLPNJ5uJY8G3bNVZgccFURYNelQu+wpeOxKJwuxlctAft0oO5YWoDroFHY9Y5ExMZYRoqPM5J2ob5rPw/xCM9Aac39cuFON5BvGTwSH0NBwDGHY4dTDzOXpYiGY87zJvZevFEpMBzSxT5/G4eItXxWwgUGGew==',
+        'fp_token_7c6a6574-f011-4c9a-abdd-9894a102ccef': '7ZUNMg94yJb0rYhr9h1xadCa0UrCSklvSZFu+l9ga0w=',
+        '_hjSessionUser_665482': 'eyJpZCI6IjdiODIzZjNlLTUyMGQtNTg0ZS05OWUzLWY5ZDQ2OGRhOWFmNSIsImNyZWF0ZWQiOjE3MDA1NTY2ODMxMjQsImV4aXN0aW5nIjp0cnVlfQ==',
         '_gat': '1',
-        '_ga': 'GA1.1.1061737518.1706965896',
-        '_ga_K93D8HD50B': 'GS1.1.1706993394.4.1.1706993533.59.0.0',
+        '_hjIncludedInSessionSample_665482': '0',
+        '_hjAbsoluteSessionInProgress': '0',
+        '_ga': 'GA1.1.2068449578.1700556678',
+        'privacyPolicyRead': '1',
+        '_gat_UA-45103406-1': '1',
+        '_hjSessionUser_665482': 'eyJpZCI6IjdiODIzZjNlLTUyMGQtNTg0ZS05OWUzLWY5ZDQ2OGRhOWFmNSIsImNyZWF0ZWQiOjE3MDA1NTY2ODMxMjQsImV4aXN0aW5nIjp0cnVlfQ==',
+        '_hjSession_665482': 'eyJpZCI6ImI0MjA0ODk5LTM1OGMtNGFiYS05MDE0LTM1Njk3MTE3ODdlNyIsImMiOjE3MDY2MjMxMDAxMTIsInMiOjAsInIiOjAsInNiIjowLCJzciI6MCwic2UiOjAsImZzIjowLCJzcCI6MX0=',
+        '_ga_K93D8HD50B': 'deleted',
+        'MSG_LEG_TKN': 'IZz+3rIXtQutSZzNwN+dNw==',
+        'KGID': 'b48c47a9-bbbc-56b8-8944-58aea17ad295',
+        'seenWarningPage': 'eyJpdiI6IlBSSkw2MDgrenBmTFhHQXN0UGgzWWc9PSIsInZhbHVlIjoic0J3VDNuXC9vNGU5MFU0UWl2dnFONVE9PSIsIm1hYyI6IjcwMmQ3OTUyNWUwOTg4NWI1YzYxZTU5YzY4MjU2YTYyNzQ1MWExMWU1NjcwM2I2MzFkZTlkZDM5ZDk0MTMwMTkifQ%3D%3D',
+        'PHPSESSID': '1tglv6futtrph0ue28mq35nukp4t9qctoj07rm6d',
+        'API_KEY': 'L8PiCIxCWo5ExWkUpU%2BAJt2%2BpUypuKd4SDx5Umy9T%2B1pbLWoTe%2BtoPg25lPMAknO',
+        'mvAnnouncement': 'hOO4ocGWnUIp%3AznWO55r6b3IP%3A5WtyRa6ByFOs%3AuAoc7dHVypWP%3A0pZdcf4j8AM7%3ArlUvKHZyXhy4%3AkVZfGcleqyVt%3AJWyKCvZPRv1W%3AaROanT5TyikV%3AeSVyu9J2xjFh%3A25iVwOy8aWq9',
+        '_ga_K93D8HD50B': 'deleted',
+        '_gid': 'GA1.2.1102768810.1707073978',
+        '_gid': 'GA1.1.1102768810.1707073978',
+        'timezone': 'Europe%2FAmsterdam',
+        'XSRF-TOKEN': 'eyJpdiI6Ikd1aFwvQTlXZmtcL2tRUW1cL0hsZjFmaGc9PSIsInZhbHVlIjoiVjNSOWg2YmhUNkxyYll3dFpoYXJCeXdcL3RjSkN1ZjQ0bWx5VkVWTFdKMnRTaUYzckk3bFlsU1FpcU1MMUN4NXEiLCJtYWMiOiIzNjg2Zjg0OWU0YzVlODgzZWZkYjNmNWZmNWExYWJkMTc2NDRmNGUyMjBiZjIwOWJhNmE5YjliNDY3ZWYyNDM2In0%3D',
+        '_hjSession_665482': 'eyJpZCI6ImE1NTE2OWExLTNhOWUtNDBjYi04MTVjLWU2Y2ZhMDJjYzk2MCIsImMiOjE3MDcwNzUxMTAyODksInMiOjAsInIiOjAsInNiIjowLCJzciI6MCwic2UiOjAsImZzIjowLCJzcCI6MH0=',
+        '_dd_s': 'logs=1&id=0b419de8-4220-430c-9298-92150021dbf8&created=1707073975304&expire=1707076027277',
+        'AWSALB': 'uJ1WixTeqaiA9Du800sm1xL7GZKmoVRUrR226AnNe6IPZfL8wiOHqOVHzNEYd/jr4cZX9CRgTyXl/A1ShUfEri5hX6E8qBo/3oM/fEXu5zdpxZg42CNAjWX7PfY0CJMDPEdTLHAaZKmb5YS0bDe3O3QmZFRFT7wfh4Ie1ioy9WRWnwk6sJXo0nHD3gmE+Q==',
+        'AWSALBCORS': 'uJ1WixTeqaiA9Du800sm1xL7GZKmoVRUrR226AnNe6IPZfL8wiOHqOVHzNEYd/jr4cZX9CRgTyXl/A1ShUfEri5hX6E8qBo/3oM/fEXu5zdpxZg42CNAjWX7PfY0CJMDPEdTLHAaZKmb5YS0bDe3O3QmZFRFT7wfh4Ie1ioy9WRWnwk6sJXo0nHD3gmE+Q==',
+        '_ga_K93D8HD50B': 'GS1.1.1707073978.27.1.1707075127.21.0.0',
+        '_ga': 'GA1.2.2068449578.1700556678',
     }
 
 
 
     params = {
-        'mvtoken': '65b8b63281285356410513',
+        'mvtoken': '65ba81c2be5d2888504754',
         'typeMessage': 'private',
         'action': 'clc',
         'isMobile': '0',
@@ -1434,7 +1457,7 @@ def update_chat():
     for i in range(total_pages):
         if i == 1:
             params = {
-                'mvtoken': '65b8b63281285356410513',
+                'mvtoken': '65ba81c2be5d2888504754',
                 'typeMessage': 'private',
                 'action': 'clc',
                 'isMobile': '0',
@@ -1466,7 +1489,6 @@ def update_chat():
                                                            VALUES (%s, %s, %s, %s, %s)
                                                            """
                     cursor.execute(insert_query, values)
-                    cnx.commit()  # Подтверждение изменений
 
                     cnx.commit()  # Подтверждение изменений
                 else:
@@ -1481,7 +1503,7 @@ def update_chat():
 
             offset += 13
             params = {
-                'mvtoken': '65b8b63281285356410513',
+                'mvtoken': '65ba81c2be5d2888504754',
                 'typeMessage': 'private',
                 'action': 'cl',
                 'offset': offset,
@@ -1514,11 +1536,14 @@ def update_chat():
                                                                            VALUES (%s, %s, %s, %s, %s)
                                                                            """
                     cursor.execute(insert_query, values)
-                    cnx.commit()  # Подтверждение изменений
 
                     cnx.commit()  # Подтверждение изменений
                 else:
                     break
+                    # """Открыть когда пущу автомат"""
+        # if i == 5:
+        #     should_stop = True
+        #     break
         if should_stop:  # Повторная проверка флага после обработки каждой страницы
             break  # Прерываем внешний цикл, если флаг установлен
 
@@ -1640,13 +1665,15 @@ def unique_users_to_sql():
         sales_month = int(row['month'].replace('sales_month_', ''))  # Преобразование в int
         chat_users = row['chat_users']
 
-        # Формирование и выполнение SQL-запроса на обновление
-        update_query = """
-            UPDATE monthly_sales
-            SET chat_user = %s
-            WHERE model_id = %s AND sales_month = %s
-            """
-        cursor.execute(update_query, (chat_users, model_id, sales_month))
+
+        # Формирование и выполнение SQL-запроса на обновление # UPDATE monthly_sales
+        # Формирование и выполнение SQL-запроса на вставку с условием обновления при дубликате
+        upsert_query = """
+            INSERT INTO unique_users (model_id, sales_month, chat_user)
+            VALUES (%s, %s, %s)
+            ON DUPLICATE KEY UPDATE chat_user = VALUES(chat_user);
+        """
+        cursor.execute(upsert_query, (model_id, sales_month, chat_users))
 
 
 
@@ -1689,7 +1716,7 @@ if __name__ == '__main__':
 
     # message_check()
     # update_chat()
-    table_unique_users()
+    unique_users_to_sql()
 
 
     # delete_old_data()
