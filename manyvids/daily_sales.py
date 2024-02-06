@@ -604,11 +604,23 @@ def get_table_01_to_google():
     # Получение результатов в DataFrame
     df = pd.DataFrame(cursor.fetchall(), columns=[x[0] for x in cursor.description])
 
-    # Преобразование DataFrame
+    # Преобразование DataFrame в сводную таблицу
     pivot_df = df.pivot_table(index='model_fm', columns='sales_date', values='total_seller_commission', fill_value=0)
 
+    # Добавляем строку 'Итого' в конец сводной таблицы
+    total_row = pivot_df.sum().rename('Итого').to_frame().T
+    # Обратите внимание: мы преобразуем Series total_row в DataFrame и используем .T для транспонирования
+
+    # Используем pd.concat для добавления итоговой строки к pivot_df
+    pivot_df_with_total = pd.concat([pivot_df, total_row], axis=0)
+
     # Сохранение в CSV
-    pivot_df.to_csv('daily_sales.csv')
+    pivot_df_with_total.to_csv('daily_sales.csv', index=True)
+
+
+    # Закрытие курсора и соединения
+    cursor.close()
+    cnx.close()
 
     # Закрытие курсора и соединения
     cursor.close()
