@@ -136,9 +136,6 @@ def get_requests(month, filterYear):
         }
 
 
-
-
-
         mvtoken_value = data_day['mvtoken']
         month_value = data_day['month']
         filterYear_value = data_day['filterYear']
