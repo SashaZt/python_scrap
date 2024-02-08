@@ -2,7 +2,7 @@ import json
 import os
 import random
 import time
-
+import glob
 import mysql.connector
 from playwright.sync_api import sync_playwright
 
@@ -63,6 +63,12 @@ def login_pass():
 def run(playwright):
     proxy = proxy_random()
     data_login_pass = login_pass()
+    # Получаем список всех файлов в папке
+    files = glob.glob(os.path.join(cookies_path, '*'))
+    # Удаляем каждый файл
+    for f in files:
+        if os.path.isfile(f):
+            os.remove(f)
     for item in data_login_pass:
 
         # if not os.path.exists(filename_coockies):  # Проверка на существование файла
@@ -107,6 +113,7 @@ def run(playwright):
         print(f"Сохрани {item['identifier']}")
         browser.close()
         browser.close()
+
 
 
 with sync_playwright() as playwright:
