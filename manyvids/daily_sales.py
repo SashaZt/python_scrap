@@ -185,7 +185,7 @@ def get_requests(month, filterYear):
         latest_date_tuple = max(sql_data, key=lambda x: datetime.strptime(x[1], '%Y-%m-%d %H:%M:%S'))
         latest_date = latest_date_tuple[1]  # Извлекаем дату из кортежа
         print(f'Последняя дата в БД {latest_date}')
-        params = {
+        param_chat = {
             'mvtoken': mvtoken,
             'typeMessage': 'private',
             'action': 'clc',
@@ -194,12 +194,16 @@ def get_requests(month, filterYear):
         cnx = mysql.connector.connect(**db_config)
         cursor = cnx.cursor()
 
-        session = requests.Session()
-        session.cookies.update(cookies_dict)
-        response = session.get('https://www.manyvids.com/includes/user_messages.php', params=params,
+        response = session.get('https://www.manyvids.com/includes/user_messages.php', params=param_chat,
                                headers=headers)
         json_data = response.json()
-        data_json = json_data['conversations']
+        with open('tests.json', 'w') as f:
+            json.dump(json_data, f)
+        try:
+            data_json = json_data['conversations']
+        except:
+            print('Обнови файлы куки')
+            continue
         total_msg = int(data_json['meta']['total'])
         total_pages = (total_msg // 13) + 2
         offset = 0
