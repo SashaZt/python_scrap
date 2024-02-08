@@ -853,23 +853,57 @@ def get_pending_to_google():
         # Если нет ни одной из специфичных колонок для месяца, кроме chat_user, пропускаем итерацию
         if not data_columns and chat_user_col not in df.columns:
             continue
-
-        # Создаем подмножество DataFrame с нужными столбцами
+        #ТЕСТОВО
+        # Создаем подмножество DataFrame с нужными столбцами и заменяем плохие значения
         df_subset = df[columns].copy()
         df_subset.replace([np.inf, -np.inf, np.nan], 0, inplace=True)
 
-        # Получаем или создаем лист для текущего месяца
-        try:
-            worksheet = spreadsheet.worksheet(sheet_name)
-        except gspread.WorksheetNotFound:
-            worksheet = spreadsheet.add_worksheet(title=sheet_name, rows="100", cols="20")
+        # Проверяем, есть ли данные для total_sum_col и только тогда работаем с листом
+        if total_sum_col in data_columns and df[total_sum_col].any():
+            # Пытаемся получить лист, если он существует, иначе создаем новый
+            try:
+                worksheet = spreadsheet.worksheet(sheet_name)
+            except gspread.WorksheetNotFound:
+                worksheet = spreadsheet.add_worksheet(title=sheet_name, rows="100", cols="20")
 
-        # Формируем данные для обновления листа
-        values = [df_subset.columns.tolist()] + df_subset.values.tolist()
+            # Формируем данные для обновления листа
+            values = [df_subset.columns.tolist()] + df_subset.values.tolist()
 
-        # Очистка и обновление листа
-        worksheet.clear()
-        worksheet.update(values, 'A1')
+            # Очистка и обновление листа
+            worksheet.clear()
+            worksheet.update(values, 'A1')
+        else:
+            # Если нет данных для total_sum_col, лист не создается и пропускаем обновление
+            print(f"Skipping sheet creation and update for {sheet_name} due to no data in {total_sum_col}.")
+
+
+
+
+#Рабочая часть кода
+        # # Создаем подмножество DataFrame с нужными столбцами
+        # df_subset = df[columns].copy()
+        # df_subset.replace([np.inf, -np.inf, np.nan], 0, inplace=True)
+        #
+        # # Получаем или создаем лист для текущего месяца
+        # try:
+        #     worksheet = spreadsheet.worksheet(sheet_name)
+        # except gspread.WorksheetNotFound:
+        #     worksheet = spreadsheet.add_worksheet(title=sheet_name, rows="100", cols="20")
+        #
+        # # Формируем данные для обновления листа
+        # values = [df_subset.columns.tolist()] + df_subset.values.tolist()
+        #
+        # # Очистка и обновление листа
+        # worksheet.clear()
+        # worksheet.update(values, 'A1')
+# Рабочая часть кода
+
+
+
+
+
+
+
 
     # """ТЕСТОВЫЙ типа рабочий"""
     # """Запись в Google Таблицу"""
