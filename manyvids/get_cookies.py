@@ -1,8 +1,9 @@
+import glob
 import json
 import os
 import random
 import time
-import glob
+
 import mysql.connector
 from playwright.sync_api import sync_playwright
 
@@ -15,10 +16,24 @@ temp_directory = 'temp'
 temp_path = os.path.join(current_directory, temp_directory)
 cookies_path = os.path.join(temp_path, 'cookies')
 login_pass_path = os.path.join(temp_path, 'login_pass')
+daily_sales_path = os.path.join(temp_path, 'daily_sales')
+monthly_sales_path = os.path.join(temp_path, 'monthly_sales')
+payout_history_path = os.path.join(temp_path, 'payout_history')
+pending_custom_path = os.path.join(temp_path, 'pending_custom')
+chat_path = os.path.join(temp_path, 'chat')
 
 
 def save_cookies(page):
     return page.context.cookies()
+
+
+def creative_folders():
+    # Убедитесь, что папки существуют или создайте их
+    for folder in [temp_path, cookies_path, login_pass_path, daily_sales_path, monthly_sales_path, payout_history_path,
+                   pending_custom_path, chat_path]:
+        if not os.path.exists(folder):
+            os.makedirs(folder)
+
 
 
 def proxy_random():
@@ -61,6 +76,7 @@ def login_pass():
 
 
 def run(playwright):
+    folders = creative_folders()
     proxy = proxy_random()
     data_login_pass = login_pass()
     # Получаем список всех файлов в папке
@@ -70,7 +86,6 @@ def run(playwright):
         if os.path.isfile(f):
             os.remove(f)
     for item in data_login_pass:
-
         # if not os.path.exists(filename_coockies):  # Проверка на существование файла
         login = item['login']
         password = item['password']
@@ -113,7 +128,6 @@ def run(playwright):
         print(f"Сохрани {item['identifier']}")
         browser.close()
         browser.close()
-
 
 
 with sync_playwright() as playwright:
