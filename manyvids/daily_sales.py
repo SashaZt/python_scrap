@@ -15,7 +15,7 @@ import schedule
 from oauth2client.service_account import ServiceAccountCredentials
 from sqlalchemy import create_engine
 from bs4 import BeautifulSoup
-from config import db_config, use_table_daily_sales, headers, host, user, password, database, use_table_payout_history,use_table_monthly_sales,use_table_chat
+from config import db_config, use_table_daily_sales, headers, host, user, password, database, use_table_payout_history,use_table_monthly_sales,use_table_chat,spreadsheet_id
 from proxi import proxies
 from collections import defaultdict
 
@@ -47,10 +47,10 @@ def get_id_models_csv():
 
 
 def get_google():
-    spreadsheet_id = '145mee2ZsApZXiTnASng4lTzbocYCJWM5EDksTx_FVYY'
     scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/spreadsheets',
              'https://www.googleapis.com/auth/drive.file', 'https://www.googleapis.com/auth/drive']
-    creds = ServiceAccountCredentials.from_json_keyfile_name("C:\\scrap_tutorial-master\\manyvids\\access.json", scope)
+    creds_file = os.path.join(current_directory, 'access.json')
+    creds = ServiceAccountCredentials.from_json_keyfile_name(creds_file, scope)
     client = gspread.authorize(creds)
     return client, spreadsheet_id
 
