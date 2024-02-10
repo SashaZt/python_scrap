@@ -150,7 +150,7 @@ def get_requests(month, filterYear):
         """История"""
         filename_payout_history = os.path.join(payout_history_path, f'{mvtoken_value}_{filterYear_value}.json')
         if not os.path.exists(filename_payout_history):
-            time.sleep(30)
+            time.sleep(60)
             response_payout_history = session.post('https://www.manyvids.com/includes/get_payperiod_earnings.php',
                                                    headers=headers, data=data_payout_history, proxies=proxi
                                                    )
@@ -161,7 +161,7 @@ def get_requests(month, filterYear):
         """pending"""
         filename_pending_custom = os.path.join(pending_custom_path, f'{mvtoken_value}_{filterYear_value}.html')
 
-        time.sleep(30)
+        time.sleep(60)
         response_pending_custom = session.get('https://www.manyvids.com/View-my-earnings/', headers=headers,
                                     proxies=proxi)
         src_pending_custom = response_pending_custom.text
@@ -197,8 +197,8 @@ def get_requests(month, filterYear):
         response = session.get('https://www.manyvids.com/includes/user_messages.php', params=param_chat,
                                headers=headers)
         json_data = response.json()
-        with open('tests.json', 'w') as f:
-            json.dump(json_data, f)
+        # with open('tests.json', 'w') as f:
+        #     json.dump(json_data, f)
         try:
             data_json = json_data['conversations']
         except:
@@ -211,7 +211,7 @@ def get_requests(month, filterYear):
         should_stop = False  # Флаг для контроля выполнения цикла
         for i in range(total_pages):
             proxi = proxy_random()
-            print(f'Список чатов, листок {i}')
+            # print(f'Список чатов, листок {i}')
             if i == 1:
                 params = {
                     'mvtoken': mvtoken,
@@ -229,7 +229,7 @@ def get_requests(month, filterYear):
                     user_id = dj['user_id']  # id  клиента
                     msg_date = dj['msg_date']  # дата  чата
                     msg_date = datetime.strptime(msg_date, '%Y-%m-%d %H:%M:%S').strftime('%Y-%m-%d %H:%M:%S')
-                    print(f'в Чате {msg_date} последняя дата {latest_date}')
+                    # print(f'в Чате {msg_date} последняя дата {latest_date}')
 
                     if msg_date == latest_date:
                         should_stop = True  # Устанавливаем флаг в True, когда нашли совпадение
@@ -250,8 +250,8 @@ def get_requests(month, filterYear):
                         cnx.commit()  # Подтверждение изменений
                     else:
                         break
-            print('Пауза 30сек')
-            time.sleep(30)
+            print('Пауза 60сек')
+            time.sleep(60)
             if should_stop:  # Повторная проверка флага после обработки каждой страницы
                 break  # Прерываем внешний цикл, если флаг установлен
 
@@ -278,7 +278,7 @@ def get_requests(month, filterYear):
                     user_id = dj['user_id']  # id  клиента
                     msg_date = dj['msg_date']  # дата  чата
                     msg_date = datetime.strptime(msg_date, '%Y-%m-%d %H:%M:%S').strftime('%Y-%m-%d %H:%M:%S')
-                    print(f'в Чате {msg_date} последняя дата {latest_date}')
+                    # print(f'в Чате {msg_date} последняя дата {latest_date}')
                     if msg_date == latest_date:
                         should_stop = True  # Устанавливаем флаг в True, когда нашли совпадение
                         print('Стоп')
