@@ -5,6 +5,18 @@ from config import db_config, use_bd, use_table_daily_sales, use_table_monthly_s
     use_table_login_pass,use_table_chat,use_table_unique_users
 
 
+def create_sql_bd():
+    def create_sql_login_pass():
+        # 1. Подключаемся к серверу MySQL
+        cnx = mysql.connector.connect(**db_config)
+
+        # Создаем объект курсора, чтобы выполнять SQL-запросы
+        cursor = cnx.cursor()
+
+        # 2. Создаем базу данных с именем kupypai_com
+        cursor.execute(f"CREATE DATABASE {use_bd}")
+
+
 def create_sql_login_pass():
     # 1. Подключаемся к серверу MySQL
     cnx = mysql.connector.connect(**db_config)
@@ -164,9 +176,10 @@ def create_sql_unique_users():
 
 
 if __name__ == '__main__':
-    # create_sql_login_pass()
-    # create_sql_daily_sales()
-    # create_sql_monthly_sales()
-    # create_sql_payout_history()
-    # create_sql_chat()
+    create_sql_bd()
+    create_sql_login_pass()
+    create_sql_daily_sales()
+    create_sql_monthly_sales()
+    create_sql_payout_history()
+    create_sql_chat()
     create_sql_unique_users()
