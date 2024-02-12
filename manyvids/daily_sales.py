@@ -655,7 +655,7 @@ def get_table_01_to_google():
     current_datetime = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
     # Обновление ячейки A1 с текущей датой и временем
-    sheet_daily_sales.update([[current_datetime]], 'A1')
+    sheet_daily_sales.update(current_datetime, 'A1')
 
     # Получаем список всех файлов в папке
     files = glob.glob(os.path.join(daily_sales_path, '*'))
@@ -889,7 +889,7 @@ def get_pending_to_google():
             current_datetime = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
             # Обновление ячейки A1 с текущей датой и временем
-            worksheet.update([[current_datetime]], 'A1')
+            worksheet.update(current_datetime, 'A1')
         else:
             # Если нет данных для total_sum_col, лист не создается и пропускаем обновление
             print(f"Skipping sheet creation and update for {sheet_name} due to no data in {total_sum_col}.")
@@ -1145,7 +1145,7 @@ ORDER BY
     current_datetime = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
     # Обновление ячейки A1 с текущей датой и временем
-    sheet_payout_history.update([[current_datetime]], 'A1')
+    sheet_payout_history.update(current_datetime, 'A1')
 def job():
     now = datetime.now()  # Текущие дата и время
     month = str(now.month)
