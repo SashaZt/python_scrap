@@ -655,7 +655,7 @@ def get_table_01_to_google():
     current_datetime = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
     # Обновление ячейки A1 с текущей датой и временем
-    sheet_daily_sales.update(current_datetime, 'A1')
+    sheet_daily_sales.update([[current_datetime]], 'A1')
 
     # Получаем список всех файлов в папке
     files = glob.glob(os.path.join(daily_sales_path, '*'))
@@ -889,7 +889,7 @@ def get_pending_to_google():
             current_datetime = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
             # Обновление ячейки A1 с текущей датой и временем
-            worksheet.update(current_datetime, 'A1')
+            worksheet.update([[current_datetime]], 'A1')
         else:
             # Если нет данных для total_sum_col, лист не создается и пропускаем обновление
             print(f"Skipping sheet creation and update for {sheet_name} due to no data in {total_sum_col}.")
@@ -1091,7 +1091,44 @@ def get_sql_payout_history():
             cnx.commit()  # Подтверждение изменений
     cursor.close()
     cnx.close()
+def get_table_03_to_google():
+    # Подключение к базе данных
+    cnx = mysql.connector.connect(**db_config)
+    cursor = cnx.cursor()
 
+    cursor.execute("""
+        SELECT model_id,  payment_date, paid FROM manyvids.payout_history
+        ORDER BY model_id, payment_date;
+
+    """)
+
+    # Получение результатов в DataFrame
+    df = pd.DataFrame(cursor.fetchall(), columns=[x[0] for x in cursor.description])
+    pivot_df = df.pivot(index='model_id', columns='payment_date', values='paid')
+    pivot_df.to_csv('payout_history.csv')
+
+    # Закрытие курсора и соединения
+    cursor.close()
+    cnx.close()
+    """Запись в Google Таблицу"""
+
+    client, spreadsheet_id = get_google()
+    sheet_payout_history = client.open_by_key(spreadsheet_id).worksheet('payout_history')
+
+    # Читаем CSV файл
+    df = pd.read_csv('payout_history.csv')
+    df.fillna(0, inplace=True)
+    df = df.astype(str)
+    # Конвертируем DataFrame в список списков
+    values = df.values.tolist()
+
+    # Добавляем заголовки столбцов в начало списка
+    values.insert(0, df.columns.tolist())
+
+    # Очистка всего листа
+    sheet_payout_history.clear()
+    # Обновляем данные в Google Sheets
+    sheet_payout_history.update(values, 'A1')
 def get_table_04_to_google():
     cnx = mysql.connector.connect(**db_config)
     cursor = cnx.cursor()
@@ -1145,7 +1182,7 @@ ORDER BY
     current_datetime = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
     # Обновление ячейки A1 с текущей датой и временем
-    sheet_payout_history.update(current_datetime, 'A1')
+    sheet_payout_history.update([[current_datetime]], 'A1')
 def job():
     now = datetime.now()  # Текущие дата и время
     month = str(now.month)
@@ -1155,10 +1192,11 @@ def job():
     print(f"[{currentTime}] Запуск задачи для месяца {month} и года {filterYear}.")
 
     # Ваши функции здесь
-    get_requests(month, filterYear)
+    # get_requests(month, filterYear)
     get_sql_data_day()
     get_table_01_to_google()
     get_sql_payout_history()
+    get_table_03_to_google()
     get_table_04_to_google()
     get_pending_to_google()
     unique_users_to_sql()
