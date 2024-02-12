@@ -119,7 +119,8 @@ def get_requests(month, filterYear):
         filename = os.path.basename(item)
         parts = filename.split("_")
         mvtoken = parts[1].replace('.json', '')
-        print(f'Модель {mvtoken}')
+        current_datetime = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        print(f'[{current_datetime}] Модель {mvtoken}')
         data_day = {
             'mvtoken': mvtoken,
             'day': '',
