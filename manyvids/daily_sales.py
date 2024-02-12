@@ -15,7 +15,7 @@ import schedule
 from oauth2client.service_account import ServiceAccountCredentials
 from sqlalchemy import create_engine
 from bs4 import BeautifulSoup
-from config import db_config, use_table_daily_sales, headers, host, user, password, database, use_table_payout_history,use_table_monthly_sales,use_table_chat,spreadsheet_id
+from config import db_config, use_table_daily_sales, headers, host, user, password, database, use_table_payout_history,use_table_monthly_sales,use_table_chat,spreadsheet_id,time_a,time_b
 from proxi import proxies
 from collections import defaultdict
 
@@ -29,7 +29,7 @@ daily_sales_path = os.path.join(temp_path, 'daily_sales')
 monthly_sales_path = os.path.join(temp_path, 'monthly_sales')
 payout_history_path = os.path.join(temp_path, 'payout_history')
 pending_custom_path = os.path.join(temp_path, 'pending_custom')
-
+sleep_time = random.randint(time_a, time_b)
 
 def get_id_models_csv():
     model_dict = {}
@@ -150,7 +150,7 @@ def get_requests(month, filterYear):
         """История"""
         filename_payout_history = os.path.join(payout_history_path, f'{mvtoken_value}_{filterYear_value}.json')
         if not os.path.exists(filename_payout_history):
-            time.sleep(60)
+            time.sleep(sleep_time)
             response_payout_history = session.post('https://www.manyvids.com/includes/get_payperiod_earnings.php',
                                                    headers=headers, data=data_payout_history, proxies=proxi
                                                    )
@@ -161,7 +161,7 @@ def get_requests(month, filterYear):
         """pending"""
         filename_pending_custom = os.path.join(pending_custom_path, f'{mvtoken_value}_{filterYear_value}.html')
 
-        time.sleep(60)
+        time.sleep(sleep_time)
         response_pending_custom = session.get('https://www.manyvids.com/View-my-earnings/', headers=headers,
                                     proxies=proxi)
         src_pending_custom = response_pending_custom.text
@@ -257,8 +257,8 @@ def get_requests(month, filterYear):
                         cnx.commit()  # Подтверждение изменений
                     else:
                         break
-            print('Пауза 60сек')
-            time.sleep(60)
+            print(f'Пауза {sleep_time}сек')
+            time.sleep(sleep_time)
             if should_stop:  # Повторная проверка флага после обработки каждой страницы
                 break  # Прерываем внешний цикл, если флаг установлен
 
@@ -650,6 +650,12 @@ def get_table_01_to_google():
     sheet_daily_sales.clear()
     # Обновляем данные в Google Sheets
     sheet_daily_sales.update(values, 'A1')
+    # Форматирование текущей даты и времени
+    current_datetime = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+    # Обновление ячейки A1 с текущей датой и временем
+    sheet_daily_sales.update([[current_datetime]], 'A1')
+
     # Получаем список всех файлов в папке
     files = glob.glob(os.path.join(daily_sales_path, '*'))
     # Удаляем каждый файл
@@ -662,7 +668,8 @@ def get_pending_to_google():
     spreadsheet_id = '145mee2ZsApZXiTnASng4lTzbocYCJWM5EDksTx_FVYY'
     scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/spreadsheets',
              'https://www.googleapis.com/auth/drive.file', 'https://www.googleapis.com/auth/drive']
-    creds = ServiceAccountCredentials.from_json_keyfile_name("C:\\scrap_tutorial-master\\manyvids\\access.json", scope)
+    creds_file = os.path.join(current_directory, 'access.json')
+    creds = ServiceAccountCredentials.from_json_keyfile_name(creds_file, scope)
     client = gspread.authorize(creds)
     spreadsheet = client.open_by_key(spreadsheet_id)
     database_uri = f"mysql+mysqlconnector://{user}:{password}@{host}/{database}"
@@ -880,6 +887,12 @@ def get_pending_to_google():
             # Очистка и обновление листа
             worksheet.clear()
             worksheet.update(values, 'A1')
+
+            # Форматирование текущей даты и времени
+            current_datetime = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+            # Обновление ячейки A1 с текущей датой и временем
+            worksheet.update([[current_datetime]], 'A1')
         else:
             # Если нет данных для total_sum_col, лист не создается и пропускаем обновление
             print(f"Skipping sheet creation and update for {sheet_name} due to no data in {total_sum_col}.")
@@ -1130,6 +1143,12 @@ ORDER BY
     sheet_payout_history.clear()
     # Обновляем данные в Google Sheets
     sheet_payout_history.update(values, 'A1')
+
+    # Форматирование текущей даты и времени
+    current_datetime = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+    # Обновление ячейки A1 с текущей датой и временем
+    sheet_payout_history.update([[current_datetime]], 'A1')
 def job():
     now = datetime.now()  # Текущие дата и время
     month = str(now.month)
