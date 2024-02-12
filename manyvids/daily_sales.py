@@ -178,12 +178,19 @@ def get_requests(month, filterYear):
         #     with open(filename_month, 'w', encoding='utf-8') as f:
         #         json.dump(json_data_month, f, ensure_ascii=False, indent=4)  # Записываем в файл
 
-
         sql_data = get_sql_check_chat()
-        # Используем max() для поиска кортежа с максимальной датой
-        # Для сравнения дат преобразуем их в объекты datetime
-        latest_date_tuple = max(sql_data, key=lambda x: datetime.strptime(x[1], '%Y-%m-%d %H:%M:%S'))
-        latest_date = latest_date_tuple[1]  # Извлекаем дату из кортежа
+
+        # Проверяем, не пустой ли список
+        if sql_data:
+            # Используем max() для поиска кортежа с максимальной датой
+            # Для сравнения дат преобразуем их в объекты datetime
+            latest_date_tuple = max(sql_data, key=lambda x: datetime.strptime(x[1], '%Y-%m-%d %H:%M:%S'))
+            latest_date = latest_date_tuple[1]  # Извлекаем дату из кортежа
+        else:
+            # Если sql_data пуст, устанавливаем latest_date в None или другое значение по умолчанию
+            # Это значение можно использовать для проверки необходимости выполнения следующих шагов
+            latest_date = None
+            print("Нет данных для обработки. Продолжаем выполнение скрипта.")
         print(f'Последняя дата в БД {latest_date}')
         param_chat = {
             'mvtoken': mvtoken,
