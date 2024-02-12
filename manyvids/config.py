@@ -9,7 +9,7 @@ host = 'localhost'
 user = 'python_mysql'
 password = 'python_mysql'
 database = 'manyvids'
-
+spreadsheet_id = '145mee2ZsApZXiTnASng4lTzbocYCJWM5EDksTx_FVYY'
 use_bd = 'manyvids'
 use_table_daily_sales = 'daily_sales'
 use_table_monthly_sales = 'monthly_sales'
@@ -17,6 +17,8 @@ use_table_payout_history = 'payout_history'
 use_table_login_pass = 'login_pass'
 use_table_chat = 'chat'
 use_table_unique_users = 'unique_users'
+time_a = 10
+time_b = 30
 
 headers = {
     'authority': 'www.manyvids.com',
