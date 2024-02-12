@@ -690,10 +690,6 @@ def get_pending_to_google():
                 model_fm, year, month
             ORDER BY
                 model_fm ASC, year ASC, month ASC;
-
-
-
-
                 """)
     # Получение результатов в DataFrame
     df = pd.DataFrame(cursor.fetchall(), columns=[x[0] for x in cursor.description])
@@ -850,13 +846,13 @@ def get_pending_to_google():
         total_sum_col = f'total_sum_{month}'
         chat_user_col = f'chat_user_{month}'  # Предполагаем, что столбец chat_user существует для каждого месяца
 
+        if total_sum_col in df.columns:
+            columns.append(total_sum_col)
+            data_columns.append(total_sum_col)
         # Проверяем наличие столбцов в DataFrame
         if pending_custom_col in df.columns:
             columns.append(pending_custom_col)
             data_columns.append(pending_custom_col)
-        if total_sum_col in df.columns:
-            columns.append(total_sum_col)
-            data_columns.append(total_sum_col)
         if chat_user_col in df.columns:
             columns.append(chat_user_col)  # Добавляем chat_user в список столбцов для выборки
         else:
