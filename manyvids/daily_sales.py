@@ -29,7 +29,7 @@ daily_sales_path = os.path.join(temp_path, 'daily_sales')
 monthly_sales_path = os.path.join(temp_path, 'monthly_sales')
 payout_history_path = os.path.join(temp_path, 'payout_history')
 pending_custom_path = os.path.join(temp_path, 'pending_custom')
-sleep_time = random.randint(time_a, time_b)
+
 
 def get_id_models_csv():
     model_dict = {}
@@ -106,6 +106,7 @@ def get_requests(month, filterYear):
     filename_cookies = os.path.join(cookies_path, '*.json')
     files_json = glob.glob(filename_cookies)
     for item in files_json:
+
         proxi = proxy_random()
         with open(item, 'r') as f:
             cookies_list = json.load(f)
@@ -151,6 +152,7 @@ def get_requests(month, filterYear):
         """История"""
         filename_payout_history = os.path.join(payout_history_path, f'{mvtoken_value}_{filterYear_value}.json')
         if not os.path.exists(filename_payout_history):
+            sleep_time = random.randint(time_a, time_b)
             time.sleep(sleep_time)
             response_payout_history = session.post('https://www.manyvids.com/includes/get_payperiod_earnings.php',
                                                    headers=headers, data=data_payout_history, proxies=proxi
@@ -161,7 +163,7 @@ def get_requests(month, filterYear):
 
         """pending"""
         filename_pending_custom = os.path.join(pending_custom_path, f'{mvtoken_value}_{filterYear_value}.html')
-
+        sleep_time = random.randint(time_a, time_b)
         time.sleep(sleep_time)
         response_pending_custom = session.get('https://www.manyvids.com/View-my-earnings/', headers=headers,
                                     proxies=proxi)
@@ -259,6 +261,7 @@ def get_requests(month, filterYear):
                     else:
                         break
             print(f'Пауза {sleep_time}сек')
+            sleep_time = random.randint(time_a, time_b)
             time.sleep(sleep_time)
             if should_stop:  # Повторная проверка флага после обработки каждой страницы
                 break  # Прерываем внешний цикл, если флаг установлен
@@ -765,35 +768,61 @@ def get_pending_to_google():
             src = file.read()
         soup = BeautifulSoup(src, 'lxml')
         custom_vids_body = soup.find_all('div', id="customVidsBody")
-        for c in custom_vids_body:
-            # Извлекаем все строки таблицы внутри найденного div
-            rows = c.find_all('tr')
+        total_pending_custom = 0
 
-            # Проходимся по каждой строке и извлекаем содержимое шестой ячейки с элементом strong
+        for c in custom_vids_body:
+            rows = c.find_all('tr')
             for row in rows:
-                # Предполагая, что каждая строка содержит как минимум 6 ячеек
                 if len(row.find_all('td')) >= 6:
-                    strong_tag = row.find_all('td')[5].find(
-                        'strong')  # Индексация начинается с 0, поэтому шестая ячейка это индекс 5
+                    strong_tag = row.find_all('td')[5].find('strong')
                     if strong_tag:
                         pending = strong_tag.get_text(strip=True).replace('$', '')
-                        values = [model_id, month, pending]
-                        # Убедитесь, что 'pending' преобразуется в числовой формат, если колонка 'pending_custom' ожидает число
                         try:
                             pending_value = float(pending)
-                            # Подготовка и выполнение SQL запроса на обновление
-                            update_query = """
-                                                    UPDATE manyvids.monthly_sales
-                                                    SET pending_custom = %s
-                                                    WHERE model_id = %s AND sales_month = %s;
-                                                """
-                            cursor.execute(update_query, (pending_value, model_id, month))
-                            cnx.commit()
+                            total_pending_custom += pending_value
                         except ValueError:
-                            print(
-                                f"Невозможно преобразовать '{pending}' в число для model_id {model_id} и месяца {month}.")
-                    else:
-                        print("Strong tag not found in the 6th cell")
+                            # Обрабатываем случай, когда pending не может быть преобразовано в число
+                            continue
+
+        # После накопления суммы выполняем обновление базы данных одной строкой
+        update_query = """
+                        UPDATE manyvids.monthly_sales
+                        SET pending_custom = %s
+                        WHERE model_id = %s AND sales_month = %s;
+                        """
+        cursor.execute(update_query, (total_pending_custom, model_id, month))
+        cnx.commit()
+    cursor.close()
+    cnx.close()
+        # for c in custom_vids_body:
+        #     # Извлекаем все строки таблицы внутри найденного div
+        #     rows = c.find_all('tr')
+        #
+        #     # Проходимся по каждой строке и извлекаем содержимое шестой ячейки с элементом strong
+        #     for row in rows:
+        #         # Предполагая, что каждая строка содержит как минимум 6 ячеек
+        #         if len(row.find_all('td')) >= 6:
+        #             strong_tag = row.find_all('td')[5].find(
+        #                 'strong')  # Индексация начинается с 0, поэтому шестая ячейка это индекс 5
+        #             if strong_tag:
+        #                 pending = strong_tag.get_text(strip=True).replace('$', '')
+        #                 values = [model_id, month, pending]
+        #                 # Убедитесь, что 'pending' преобразуется в числовой формат, если колонка 'pending_custom' ожидает число
+        #                 try:
+        #                     pending_value = float(pending)
+        #                     # Подготовка и выполнение SQL запроса на обновление
+        #                     update_query = """
+        #                                             UPDATE manyvids.monthly_sales
+        #                                             SET pending_custom = %s
+        #                                             WHERE model_id = %s AND sales_month = %s;
+        #                                         """
+        #                     cursor.execute(update_query, (pending_value, model_id, month))
+        #                     cnx.commit()
+        #                 except ValueError:
+        #                     print(
+        #                         f"Невозможно преобразовать '{pending}' в число для model_id {model_id} и месяца {month}.")
+        #             else:
+        #                 print("Strong tag not found in the 6th cell")
     # # Подтверждение изменений и закрытие подключения
 
 
