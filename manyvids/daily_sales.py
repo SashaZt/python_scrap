@@ -15,7 +15,8 @@ import schedule
 from oauth2client.service_account import ServiceAccountCredentials
 from sqlalchemy import create_engine
 from bs4 import BeautifulSoup
-from config import db_config, use_table_daily_sales, headers, host, user, password, database, use_table_payout_history,use_table_monthly_sales,use_table_chat,spreadsheet_id,time_a,time_b
+from config import db_config, use_table_daily_sales, headers, host, user, password, database, use_table_payout_history, \
+    use_table_monthly_sales, use_table_chat, spreadsheet_id, time_a, time_b
 from proxi import proxies
 from collections import defaultdict
 
@@ -89,6 +90,7 @@ def proxy_random():
         "https": formatted_proxy
     }
 
+
 def get_sql_check_chat():
     cnx = mysql.connector.connect(**db_config)
     cursor = cnx.cursor()
@@ -102,6 +104,8 @@ def get_sql_check_chat():
 
 
 def get_requests(month, filterYear):
+    max_attempts = 5
+    attempts = 0
     # def get_requests():
     filename_cookies = os.path.join(cookies_path, '*.json')
     files_json = glob.glob(filename_cookies)
@@ -137,15 +141,22 @@ def get_requests(month, filterYear):
             'year': filterYear,
         }
 
-
         mvtoken_value = data_day['mvtoken']
         month_value = data_day['month']
         filterYear_value = data_day['filterYear']
         """День"""
         filename_day = os.path.join(daily_sales_path, f'{mvtoken_value}_{month_value}_{filterYear_value}.json')
-        response_day = session.post('https://www.manyvids.com/includes/get_earnings.php', headers=headers,
-                                    proxies=proxi, data=data_day)  # , cookies=cookies_dict
+        while attempts < max_attempts:
+            try:
+                response_day = session.post('https://www.manyvids.com/includes/get_earnings.php', headers=headers,
+                                            proxies=proxi, data=data_day)
+                break  # Если запрос успешен, выходим из цикла
+            except requests.exceptions.ConnectionError as e:
+                print(f"Попытка {attempts + 1} не удалась: {e}")
+                attempts += 1
+                time.sleep(sleep_time)  # Задержка перед следующей попыткой
         json_data_day = response_day.json()
+
         with open(filename_day, 'w', encoding='utf-8') as f:
             json.dump(json_data_day, f, ensure_ascii=False, indent=4)  # Записываем в файл
 
@@ -154,9 +165,16 @@ def get_requests(month, filterYear):
         if not os.path.exists(filename_payout_history):
             sleep_time = random.randint(time_a, time_b)
             time.sleep(sleep_time)
-            response_payout_history = session.post('https://www.manyvids.com/includes/get_payperiod_earnings.php',
-                                                   headers=headers, data=data_payout_history, proxies=proxi
-                                                   )
+            while attempts < max_attempts:
+                try:
+                    response_payout_history = session.post(
+                        'https://www.manyvids.com/includes/get_payperiod_earnings.php',
+                        headers=headers, data=data_payout_history, proxies=proxi)
+                    break  # Если запрос успешен, выходим из цикла
+                except requests.exceptions.ConnectionError as e:
+                    print(f"Попытка {attempts + 1} не удалась: {e}")
+                    attempts += 1
+                    time.sleep(sleep_time)  # Задержка перед следующей попыткой
             json_data_payout_history = response_payout_history.json()
             with open(filename_payout_history, 'w', encoding='utf-8') as f:
                 json.dump(json_data_payout_history, f, ensure_ascii=False, indent=4)
@@ -165,21 +183,19 @@ def get_requests(month, filterYear):
         filename_pending_custom = os.path.join(pending_custom_path, f'{mvtoken_value}_{filterYear_value}.html')
         sleep_time = random.randint(time_a, time_b)
         time.sleep(sleep_time)
-        response_pending_custom = session.get('https://www.manyvids.com/View-my-earnings/', headers=headers,
-                                    proxies=proxi)
+
+        while attempts < max_attempts:
+            try:
+                response_pending_custom = session.get('https://www.manyvids.com/View-my-earnings/', headers=headers,
+                                                      proxies=proxi)
+                break  # Если запрос успешен, выходим из цикла
+            except requests.exceptions.ConnectionError as e:
+                print(f"Попытка {attempts + 1} не удалась: {e}")
+                attempts += 1
+                time.sleep(sleep_time)  # Задержка перед следующей попыткой
         src_pending_custom = response_pending_custom.text
         with open(filename_pending_custom, "w", encoding='utf-8') as file:
             file.write(src_pending_custom)
-
-        # filename_month = os.path.join(monthly_sales_path, f'{mvtoken_value}_{filterYear_value}.json')
-
-        # if not os.path.exists(filename_month):
-        #     time.sleep(5)
-        #     response_month = session.post('https://www.manyvids.com/includes/get_earnings.php', headers=headers,
-        #                                   data=data_month, proxies=proxi)
-        #     json_data_month = response_month.json()
-        #     with open(filename_month, 'w', encoding='utf-8') as f:
-        #         json.dump(json_data_month, f, ensure_ascii=False, indent=4)  # Записываем в файл
 
         sql_data = get_sql_check_chat()
 
@@ -203,9 +219,15 @@ def get_requests(month, filterYear):
         }
         cnx = mysql.connector.connect(**db_config)
         cursor = cnx.cursor()
-
-        response = session.get('https://www.manyvids.com/includes/user_messages.php', params=param_chat,
-                               headers=headers)
+        while attempts < max_attempts:
+            try:
+                response = session.get('https://www.manyvids.com/includes/user_messages.php', params=param_chat,
+                                       headers=headers)
+                break  # Если запрос успешен, выходим из цикла
+            except requests.exceptions.ConnectionError as e:
+                print(f"Попытка {attempts + 1} не удалась: {e}")
+                attempts += 1
+                time.sleep(sleep_time)  # Задержка перед следующей попыткой
         json_data = response.json()
         # with open('tests.json', 'w') as f:
         #     json.dump(json_data, f)
@@ -229,8 +251,15 @@ def get_requests(month, filterYear):
                     'action': 'clc',
                     'isMobile': '0',
                 }
-                response = session.get('https://www.manyvids.com/includes/user_messages.php', params=params,
-                                       headers=headers, proxies=proxi)
+                while attempts < max_attempts:
+                    try:
+                        response = session.get('https://www.manyvids.com/includes/user_messages.php', params=params,
+                                               headers=headers, proxies=proxi)
+                        break  # Если запрос успешен, выходим из цикла
+                    except requests.exceptions.ConnectionError as e:
+                        print(f"Попытка {attempts + 1} не удалась: {e}")
+                        attempts += 1
+                        time.sleep(sleep_time)  # Задержка перед следующей попыткой
                 json_data = response.json()
                 data_json = json_data['conversations']
                 for dj in data_json['list']:
@@ -279,8 +308,15 @@ def get_requests(month, filterYear):
                     'type': 'all',
                     'isMobile': '0',
                 }
-                response = session.get('https://www.manyvids.com/includes/user_messages.php', params=params,
-                                       headers=headers, proxies=proxi)
+                while attempts < max_attempts:
+                    try:
+                        response = session.get('https://www.manyvids.com/includes/user_messages.php', params=params,
+                                               headers=headers, proxies=proxi)
+                        break  # Если запрос успешен, выходим из цикла
+                    except requests.exceptions.ConnectionError as e:
+                        print(f"Попытка {attempts + 1} не удалась: {e}")
+                        attempts += 1
+                        time.sleep(sleep_time)  # Задержка перед следующей попыткой
                 json_data = response.json()
                 data_json = json_data['conversations']
                 for dj in data_json['list']:
@@ -319,6 +355,8 @@ def get_requests(month, filterYear):
         # Закрытие соединения с базой данных
         cursor.close()
         cnx.close()
+
+
 def unique_users_to_sql():
     # # Подключение к базе данных
     cnx = mysql.connector.connect(**db_config)  # Замените db_config на ваш конфигурационный словарь
@@ -346,9 +384,7 @@ def unique_users_to_sql():
     #
     # # SQL запрос для получения списка user_id и даты (год и месяц)
 
-
     # Предполагается, что у вас уже есть подключение к базе данных
-
 
     # Выполнение SQL запроса для получения данных
     query = """
@@ -394,10 +430,8 @@ def unique_users_to_sql():
     # Сохранение в CSV
     pivot_df.to_csv('monthly_new_unique_users.csv', index=True)
 
-
     cursor.close()
     cnx.close()
-
 
     cnx = mysql.connector.connect(**db_config)
     cursor = cnx.cursor()
@@ -432,7 +466,6 @@ def unique_users_to_sql():
         sales_month = int(row['month'].replace('sales_month_', ''))  # Преобразование в int
         chat_users = row['chat_users']
 
-
         # Формирование и выполнение SQL-запроса на обновление # UPDATE monthly_sales
         # Формирование и выполнение SQL-запроса на вставку с условием обновления при дубликате
         upsert_query = """
@@ -441,8 +474,6 @@ def unique_users_to_sql():
             ON DUPLICATE KEY UPDATE chat_user = VALUES(chat_user);
         """
         cursor.execute(upsert_query, (model_id, sales_month, chat_users))
-
-
 
     # # Подтверждение изменений и закрытие подключения
     cnx.commit()
@@ -494,7 +525,6 @@ def get_sql_data_data_day():
     cursor.close()
     cnx.close()
     return data
-
 
 
 def get_sql_data_payout_history():
@@ -629,7 +659,6 @@ def get_table_01_to_google():
     # Сохранение в CSV
     pivot_df_with_total.to_csv('daily_sales.csv', index=True)
 
-
     # Закрытие курсора и соединения
     cursor.close()
     cnx.close()
@@ -700,7 +729,6 @@ def get_pending_to_google():
     # Запись DataFrame в CSV файл
     df.to_csv('monthly_sales.csv', index=False)
 
-
     # Чтение CSV файла
     df = pd.read_csv('monthly_sales.csv')
 
@@ -719,7 +747,6 @@ def get_pending_to_google():
 
     cnx = mysql.connector.connect(**db_config)
     cursor = cnx.cursor()
-
 
     # Очистка таблицы перед вставкой новых данных
     truncate_query = f"TRUNCATE TABLE {use_table_monthly_sales}"
@@ -794,47 +821,44 @@ def get_pending_to_google():
         cnx.commit()
     cursor.close()
     cnx.close()
-        # for c in custom_vids_body:
-        #     # Извлекаем все строки таблицы внутри найденного div
-        #     rows = c.find_all('tr')
-        #
-        #     # Проходимся по каждой строке и извлекаем содержимое шестой ячейки с элементом strong
-        #     for row in rows:
-        #         # Предполагая, что каждая строка содержит как минимум 6 ячеек
-        #         if len(row.find_all('td')) >= 6:
-        #             strong_tag = row.find_all('td')[5].find(
-        #                 'strong')  # Индексация начинается с 0, поэтому шестая ячейка это индекс 5
-        #             if strong_tag:
-        #                 pending = strong_tag.get_text(strip=True).replace('$', '')
-        #                 values = [model_id, month, pending]
-        #                 # Убедитесь, что 'pending' преобразуется в числовой формат, если колонка 'pending_custom' ожидает число
-        #                 try:
-        #                     pending_value = float(pending)
-        #                     # Подготовка и выполнение SQL запроса на обновление
-        #                     update_query = """
-        #                                             UPDATE manyvids.monthly_sales
-        #                                             SET pending_custom = %s
-        #                                             WHERE model_id = %s AND sales_month = %s;
-        #                                         """
-        #                     cursor.execute(update_query, (pending_value, model_id, month))
-        #                     cnx.commit()
-        #                 except ValueError:
-        #                     print(
-        #                         f"Невозможно преобразовать '{pending}' в число для model_id {model_id} и месяца {month}.")
-        #             else:
-        #                 print("Strong tag not found in the 6th cell")
+    # for c in custom_vids_body:
+    #     # Извлекаем все строки таблицы внутри найденного div
+    #     rows = c.find_all('tr')
+    #
+    #     # Проходимся по каждой строке и извлекаем содержимое шестой ячейки с элементом strong
+    #     for row in rows:
+    #         # Предполагая, что каждая строка содержит как минимум 6 ячеек
+    #         if len(row.find_all('td')) >= 6:
+    #             strong_tag = row.find_all('td')[5].find(
+    #                 'strong')  # Индексация начинается с 0, поэтому шестая ячейка это индекс 5
+    #             if strong_tag:
+    #                 pending = strong_tag.get_text(strip=True).replace('$', '')
+    #                 values = [model_id, month, pending]
+    #                 # Убедитесь, что 'pending' преобразуется в числовой формат, если колонка 'pending_custom' ожидает число
+    #                 try:
+    #                     pending_value = float(pending)
+    #                     # Подготовка и выполнение SQL запроса на обновление
+    #                     update_query = """
+    #                                             UPDATE manyvids.monthly_sales
+    #                                             SET pending_custom = %s
+    #                                             WHERE model_id = %s AND sales_month = %s;
+    #                                         """
+    #                     cursor.execute(update_query, (pending_value, model_id, month))
+    #                     cnx.commit()
+    #                 except ValueError:
+    #                     print(
+    #                         f"Невозможно преобразовать '{pending}' в число для model_id {model_id} и месяца {month}.")
+    #             else:
+    #                 print("Strong tag not found in the 6th cell")
     # # Подтверждение изменений и закрытие подключения
-
 
     """Запись в Google Таблицу"""
     # Подключение к базе данных и выполнение запроса
     # cnx = mysql.connector.connect(**db_config)
     # database_uri = f"mysql+mysqlconnector://{user}:{password}@{host}/{database}"
 
-
-
     # Выполнение запроса и чтение данных в DataFrame
-    #Рабочий вариант
+    # Рабочий вариант
     # query = """
     #     SELECT model_id, sales_month, total_sum, pending_custom FROM manyvids.monthly_sales;
     # """
@@ -894,7 +918,7 @@ def get_pending_to_google():
         # Если нет ни одной из специфичных колонок для месяца, кроме chat_user, пропускаем итерацию
         if not data_columns and chat_user_col not in df.columns:
             continue
-        #ТЕСТОВО
+        # ТЕСТОВО
         # Создаем подмножество DataFrame с нужными столбцами и заменяем плохие значения
         df_subset = df[columns].copy()
         df_subset.replace([np.inf, -np.inf, np.nan], 0, inplace=True)
@@ -923,34 +947,24 @@ def get_pending_to_google():
             # Если нет данных для total_sum_col, лист не создается и пропускаем обновление
             print(f"Skipping sheet creation and update for {sheet_name} due to no data in {total_sum_col}.")
 
-
-
-
-#Рабочая часть кода
-        # # Создаем подмножество DataFrame с нужными столбцами
-        # df_subset = df[columns].copy()
-        # df_subset.replace([np.inf, -np.inf, np.nan], 0, inplace=True)
-        #
-        # # Получаем или создаем лист для текущего месяца
-        # try:
-        #     worksheet = spreadsheet.worksheet(sheet_name)
-        # except gspread.WorksheetNotFound:
-        #     worksheet = spreadsheet.add_worksheet(title=sheet_name, rows="100", cols="20")
-        #
-        # # Формируем данные для обновления листа
-        # values = [df_subset.columns.tolist()] + df_subset.values.tolist()
-        #
-        # # Очистка и обновление листа
-        # worksheet.clear()
-        # worksheet.update(values, 'A1')
-# Рабочая часть кода
-
-
-
-
-
-
-
+    # Рабочая часть кода
+    # # Создаем подмножество DataFrame с нужными столбцами
+    # df_subset = df[columns].copy()
+    # df_subset.replace([np.inf, -np.inf, np.nan], 0, inplace=True)
+    #
+    # # Получаем или создаем лист для текущего месяца
+    # try:
+    #     worksheet = spreadsheet.worksheet(sheet_name)
+    # except gspread.WorksheetNotFound:
+    #     worksheet = spreadsheet.add_worksheet(title=sheet_name, rows="100", cols="20")
+    #
+    # # Формируем данные для обновления листа
+    # values = [df_subset.columns.tolist()] + df_subset.values.tolist()
+    #
+    # # Очистка и обновление листа
+    # worksheet.clear()
+    # worksheet.update(values, 'A1')
+    # Рабочая часть кода
 
     # """ТЕСТОВЫЙ типа рабочий"""
     # """Запись в Google Таблицу"""
@@ -993,7 +1007,6 @@ def get_pending_to_google():
     #     worksheet.clear()
     #     worksheet.update(values, 'A1')
 
-
     """Рабочий код"""
     # for month in months:
     #     sheet_name = f'{month:02}_monthly_sales'
@@ -1030,6 +1043,7 @@ def get_pending_to_google():
     #     worksheet.clear()
     #     worksheet.update(values,'A1')
     engine.dispose()
+
 
 def get_sql_payout_history():
     cnx = mysql.connector.connect(**db_config)
@@ -1120,6 +1134,8 @@ def get_sql_payout_history():
             cnx.commit()  # Подтверждение изменений
     cursor.close()
     cnx.close()
+
+
 def get_table_03_to_google():
     # Подключение к базе данных
     cnx = mysql.connector.connect(**db_config)
@@ -1158,6 +1174,8 @@ def get_table_03_to_google():
     sheet_payout_history.clear()
     # Обновляем данные в Google Sheets
     sheet_payout_history.update(values, 'A1')
+
+
 def get_table_04_to_google():
     cnx = mysql.connector.connect(**db_config)
     cursor = cnx.cursor()
@@ -1212,6 +1230,8 @@ ORDER BY
 
     # Обновление ячейки A1 с текущей датой и временем
     sheet_payout_history.update([[current_datetime]], 'A1')
+
+
 def job():
     now = datetime.now()  # Текущие дата и время
     month = str(now.month)
@@ -1221,11 +1241,14 @@ def job():
     print(f"[{currentTime}] Запуск задачи для месяца {month} и года {filterYear}.")
 
     # Ваши функции здесь
-    # get_requests(month, filterYear)
+    get_requests(month, filterYear)
     get_sql_data_day()
     get_table_01_to_google()
-    get_sql_payout_history()
-    get_table_03_to_google()
+
+    # Раз в месяц
+    # get_sql_payout_history()
+    # get_table_03_to_google()
+
     get_table_04_to_google()
     get_pending_to_google()
     unique_users_to_sql()
