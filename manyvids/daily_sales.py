@@ -846,40 +846,97 @@ def get_pending_to_google():
     """
     df = pd.read_sql_query(query, engine)
 
-    # Преобразование DataFrame
+    # Преобразование DataFrame в сводную таблицу
     df_pivot = df.pivot_table(index='model_id',
                               columns='sales_month',
                               values=['total_sum', 'pending_custom', 'chat_user'],
                               aggfunc='first').reset_index()
 
+    # Преобразование мультиуровневых колонок в строковые
     df_pivot.columns = ['_'.join(str(i) for i in col).strip() for col in df_pivot.columns.values]
 
-    # Замена None на 0
+    # Замена NaN на 0
     df_pivot.fillna(0, inplace=True)
-    # Вывод преобразованного DataFrame для проверки
-    # Запись в CSV
+    # Убедимся, что столбцы с 'total_sum' имеют числовой тип данных
+    for col in df_pivot.columns:
+        if 'total_sum' in col or 'chat_user' in col or 'pending_custom' in col:
+            df_pivot[col] = pd.to_numeric(df_pivot[col], errors='coerce')
 
-    # Вычисление итоговой строки
-    # Вычисление итоговой строки для числовых столбцов
-    total_row = df_pivot.select_dtypes(np.number).sum().rename('Итого')
+    # Сначала убедимся, что 'model_id' не участвует в операции суммирования
+    if 'model_id_' in df_pivot.columns:
+        numeric_cols = [col for col in df_pivot.columns if
+                        col != 'model_id_']  # Исключаем model_id_ из списка столбцов для суммирования
+        total_row = df_pivot[numeric_cols].sum(numeric_only=True)
+    else:
+        total_row = df_pivot.sum(numeric_only=True)
 
-    # Создание DataFrame для итоговой строки (для сохранения индекса 'Итого')
-    total_df = pd.DataFrame(total_row).transpose()
+    total_row.name = 'Итого'
 
-    # Добавление 'model_id' для итоговой строки, если 'model_id' является частью индекса или колонки
-    # Это условно, зависит от структуры вашего df_pivot
-    total_df['model_id'] = 'Итого'
+    # Теперь создадим итоговую строку как DataFrame для добавления к основному DataFrame
+    total_df = pd.DataFrame([total_row], index=['Итого'])
 
-    # Добавляем итоговую строку к исходному DataFrame
-    df_pivot_with_total = pd.concat([df_pivot, total_df])
+    # Установим model_id в 'Итого' для итоговой строки, если это необходимо
+    # Поскольку мы уже создали total_df с индексом 'Итого', этот шаг может быть пропущен
 
-    # Если 'model_id' у вас в колонке, а не в индексе, то следующее действие не требуется
-    # Если 'model_id' является частью индекса, то вам может потребоваться сбросить индекс:
-    # df_pivot_with_total.reset_index(inplace=True)
+    # Добавляем итоговую строку к df_pivot
+    df_pivot_with_total = pd.concat([df_pivot, total_df], axis=0)
 
-    # Сохранение результата в CSV
-    csv_file_path = 'pending_custom.csv'
-    df_pivot_with_total.to_csv(csv_file_path, index=False)
+    # Сохраняем результат в CSV, исключая индекс, если он не несет смысловой нагрузки
+    df_pivot_with_total.to_csv('pending_custom.csv', index=True)
+
+
+
+    # # Вычисление итоговой строки для числовых столбцов без удаления model_id
+    # total_row = df_pivot.select_dtypes(include=np.number).sum()
+    #
+    # # Поскольку model_id является индексом, мы создаем итоговую строку с индексом 'Итого'
+    # total_df = pd.DataFrame(total_row).transpose()
+    # total_df.index = ['Итого']
+    #
+    # # Добавляем итоговую строку к исходному DataFrame
+    # df_pivot_with_total = pd.concat([df_pivot, total_df])
+    #
+    # # Сохранение результата в CSV
+    # csv_file_path = 'pending_custom.csv'
+    # df_pivot_with_total.to_csv(csv_file_path, index=True)
+
+
+    # df = pd.read_sql_query(query, engine)
+    #
+    # # Преобразование DataFrame
+    # df_pivot = df.pivot_table(index='model_id',
+    #                           columns='sales_month',
+    #                           values=['total_sum', 'pending_custom', 'chat_user'],
+    #                           aggfunc='first').reset_index()
+    #
+    # df_pivot.columns = ['_'.join(str(i) for i in col).strip() for col in df_pivot.columns.values]
+    #
+    # # Замена None на 0
+    # df_pivot.fillna(0, inplace=True)
+    # # Вывод преобразованного DataFrame для проверки
+    # # Запись в CSV
+    #
+    # # Вычисление итоговой строки
+    # # Вычисление итоговой строки для числовых столбцов
+    # total_row = df_pivot.select_dtypes(np.number).sum().rename('Итого')
+    #
+    # # Создание DataFrame для итоговой строки (для сохранения индекса 'Итого')
+    # total_df = pd.DataFrame(total_row).transpose()
+    #
+    # # Добавление 'model_id' для итоговой строки, если 'model_id' является частью индекса или колонки
+    # # Это условно, зависит от структуры вашего df_pivot
+    # total_df['model_id'] = 'Итого'
+    #
+    # # Добавляем итоговую строку к исходному DataFrame
+    # df_pivot_with_total = pd.concat([df_pivot, total_df])
+    #
+    # # Если 'model_id' у вас в колонке, а не в индексе, то следующее действие не требуется
+    # # Если 'model_id' является частью индекса, то вам может потребоваться сбросить индекс:
+    # # df_pivot_with_total.reset_index(inplace=True)
+    #
+    # # Сохранение результата в CSV
+    # csv_file_path = 'pending_custom.csv'
+    # df_pivot_with_total.to_csv(csv_file_path, index=False)
 
     #
     # csv_file_path = 'pending_custom.csv'
