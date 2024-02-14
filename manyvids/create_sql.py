@@ -97,7 +97,9 @@ def create_sql_monthly_sales():
                         model_id VARCHAR(255),
                         sales_month INT,
                         sales_year INT,
-                        total_sum VARCHAR(255)
+                        total_sum VARCHAR(255),
+                        pending_custom float,
+                        chat_user int
 
 
                         )
@@ -176,7 +178,7 @@ def create_sql_unique_users():
 
 
 if __name__ == '__main__':
-    create_sql_bd()
+    # create_sql_bd()
     create_sql_login_pass()
     create_sql_daily_sales()
     create_sql_monthly_sales()
