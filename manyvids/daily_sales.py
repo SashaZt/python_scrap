@@ -488,32 +488,6 @@ def unique_users_to_sql():
     cursor.close()
     cnx.close()
 
-    # # Обход каждой строки в DataFrame
-    # for index, row in df.iterrows():
-    #     model_id = row['model_id']
-    #     if model_id != 0:  # Проверяем, что model_id не равно 0
-    #         for month in range(1, 13):  # Предполагаем, что данные за месяцы с 1 по 12
-    #             if month in df.columns:
-    #                 chat_users = row[month] if not pd.isna(row[month]) else 0
-    #                 print(chat_users)
-    #             # Обновление данных в таблице
-    #             update_query = f"""
-    #             UPDATE monthly_sales
-    #             SET chat_user = %s
-    #             WHERE model_id = %s AND sales_month = %s
-    #             """
-    #             cursor.execute(update_query, (chat_users, model_id, month))
-    #
-    # # Фиксация изменений и закрытие соединения
-    # cnx.commit()
-    # Переименование столбцов в DataFrame для соответствия таблице в БД
-    # df.rename(columns={
-    #     'model_fm': 'model_id',
-    #     'year': 'sales_year',
-    #     'month': 'sales_month',  # Убедитесь, что названия столбцов соответствуют вашему CSV файлу
-    #     'total_seller_commission': 'total_sum'
-    # }, inplace=True)
-
 
 def get_sql_data_data_day():
     cnx = mysql.connector.connect(**db_config)
@@ -635,12 +609,15 @@ def get_sql_data_day():
 def get_table_01_to_google():
     cnx = mysql.connector.connect(**db_config)
     cursor = cnx.cursor()
-
+    # Данные сугубо за текущий месяц
     cursor.execute("""
-        SELECT model_fm, sales_date, ROUND(SUM(seller_commission_price), 2) AS total_seller_commission
-        FROM manyvids.daily_sales
-        GROUP BY model_fm, sales_date
-        ORDER BY model_fm ASC, sales_date ASC
+        SELECT     model_fm,     sales_date, 
+    ROUND(SUM(seller_commission_price), 2) AS total_seller_commission
+    FROM     manyvids.daily_sales 
+    WHERE     YEAR(sales_date) = YEAR(CURDATE()) AND MONTH(sales_date) = MONTH(CURDATE())
+    GROUP BY     model_fm, sales_date
+    ORDER BY     model_fm ASC, sales_date ASC;
+
     """)
 
     # Получение результатов в DataFrame
@@ -881,8 +858,32 @@ def get_pending_to_google():
     df_pivot.fillna(0, inplace=True)
     # Вывод преобразованного DataFrame для проверки
     # Запись в CSV
+
+    # Вычисление итоговой строки
+    # Вычисление итоговой строки для числовых столбцов
+    total_row = df_pivot.select_dtypes(np.number).sum().rename('Итого')
+
+    # Создание DataFrame для итоговой строки (для сохранения индекса 'Итого')
+    total_df = pd.DataFrame(total_row).transpose()
+
+    # Добавление 'model_id' для итоговой строки, если 'model_id' является частью индекса или колонки
+    # Это условно, зависит от структуры вашего df_pivot
+    total_df['model_id'] = 'Итого'
+
+    # Добавляем итоговую строку к исходному DataFrame
+    df_pivot_with_total = pd.concat([df_pivot, total_df])
+
+    # Если 'model_id' у вас в колонке, а не в индексе, то следующее действие не требуется
+    # Если 'model_id' является частью индекса, то вам может потребоваться сбросить индекс:
+    # df_pivot_with_total.reset_index(inplace=True)
+
+    # Сохранение результата в CSV
     csv_file_path = 'pending_custom.csv'
-    df_pivot.to_csv(csv_file_path, index=False)
+    df_pivot_with_total.to_csv(csv_file_path, index=False)
+
+    #
+    # csv_file_path = 'pending_custom.csv'
+    # df_pivot.to_csv(csv_file_path, index=False)
     #
 
     df = pd.read_csv('pending_custom.csv')
@@ -1241,17 +1242,17 @@ def job():
     print(f"[{currentTime}] Запуск задачи для месяца {month} и года {filterYear}.")
 
     # Ваши функции здесь
-    get_requests(month, filterYear)
-    get_sql_data_day()
-    get_table_01_to_google()
+    # get_requests(month, filterYear)
+    # get_sql_data_day()
+    # get_table_01_to_google()
 
     # Раз в месяц
     # get_sql_payout_history()
     # get_table_03_to_google()
 
-    get_table_04_to_google()
+    # get_table_04_to_google()
     get_pending_to_google()
-    unique_users_to_sql()
+    # unique_users_to_sql()
 
     print(f'Все выполнено, ждем 30мин')
 
