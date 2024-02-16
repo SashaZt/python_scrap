@@ -37,3 +37,5 @@ def get_login_pass_to_sql():
     # Закрытие соединения с базой данных
     cursor.close()
     cnx.close()
+if __name__ == '__main__':
+    get_login_pass_to_sql()
