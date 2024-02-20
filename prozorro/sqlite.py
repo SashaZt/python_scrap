@@ -11,6 +11,7 @@ def crative_sql_bd():
         """CREATE TABLE IF NOT EXISTS tender (
             id INTEGER PRIMARY KEY AUTOINCREMENT,  -- Автоинкрементный ID
             tender_id TEXT UNIQUE,                 -- Уникальный ID тендера
+            url_tender TEXT,                       -- Ссылка на тендер
             customer TEXT,                         -- Заказчик
             status_tender TEXT,                    -- Статус тендера
             date_auction TEXT,                     -- Дата аукциона
@@ -23,20 +24,33 @@ def crative_sql_bd():
             award_value_customer TEXT,             -- Ставка которая победила
             date_pending TEXT,                     -- Дата победившей ставки
             time_pending TEXT,                     -- Время победившей ставки
+            award_status TEXT,                     -- Статус переможця
             guarantee_amount TEXT,                 -- Розмір надання забезпечення пропозицій учасників
-            bank_garantiy TEXT,                    -- забезпечення виконання договору
-            award_value TEXT,                      -- Пропозиція переможця
-            award_name TEXT                        -- Имя переможця 
+            bank_garantiy TEXT                     -- забезпечення виконання договору
             )"""
-)
-
+    )
 
     # Сохранение (коммит) изменений
     conn.commit()
 
     # Закрытие соединения
     conn.close()
-
+    # import sqlite3
+    #
+    # # Подключение к базе данных
+    # conn = sqlite3.connect('prozorro.db')
+    # c = conn.cursor()
+    #
+    # # Добавление столбца guarantee_amount, если он отсутствует
+    # try:
+    #     c.execute("ALTER TABLE tender ADD COLUMN guarantee_amount TEXT")
+    #     conn.commit()
+    #     print("Столбец 'guarantee_amount' успешно добавлен в таблицу 'tender'.")
+    # except sqlite3.OperationalError as e:
+    #     print("Ошибка при добавлении столбца 'guarantee_amount':", e)
+    #
+    # # Закрытие соединения
+    # conn.close()
 
 if __name__ == '__main__':
     crative_sql_bd()
