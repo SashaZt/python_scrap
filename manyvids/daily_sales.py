@@ -841,7 +841,9 @@ def get_pending_to_google():
     # """
 
     query = """
-        SELECT model_id, sales_month, total_sum, pending_custom, chat_user FROM manyvids.monthly_sales;
+        SELECT model_id,  sales_month, total_sum, pending_custom, chat_user 
+        FROM manyvids.monthly_sales
+        WHERE sales_year = YEAR(CURDATE());
 
     """
     df = pd.read_sql_query(query, engine)
@@ -1194,6 +1196,8 @@ def get_sql_payout_history():
     cnx.close()
 
 
+
+
 def get_table_03_to_google():
     # Подключение к базе данных
     cnx = mysql.connector.connect(**db_config)
@@ -1208,7 +1212,16 @@ def get_table_03_to_google():
     # Получение результатов в DataFrame
     df = pd.DataFrame(cursor.fetchall(), columns=[x[0] for x in cursor.description])
     pivot_df = df.pivot(index='model_id', columns='payment_date', values='paid')
-    pivot_df.to_csv('payout_history.csv')
+
+    for column in pivot_df.columns:
+        pivot_df[column] = pd.to_numeric(pivot_df[column], errors='coerce').fillna(0)
+
+    total_row = pivot_df.sum().rename('Итого').to_frame().T
+    pivot_df_with_total = pd.concat([pivot_df, total_row], axis=0)
+
+    # pivot_df.to_csv('payout_history.csv')
+
+    pivot_df_with_total.to_csv('payout_history.csv')
 
     # Закрытие курсора и соединения
     cursor.close()
@@ -1304,7 +1317,7 @@ def job():
     # get_table_01_to_google()
 
     # Раз в месяц
-    # get_sql_payout_history()
+    get_sql_payout_history()
     # get_table_03_to_google()
 
     # get_table_04_to_google()
