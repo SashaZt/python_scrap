@@ -6,6 +6,8 @@ import json
 import csv
 from config import cookies, headers
 from bs4 import BeautifulSoup
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
 
 current_directory = os.getcwd()
 temp_directory = 'temp'
@@ -19,6 +21,16 @@ html_path = os.path.join(temp_path, 'html')
 
 """Создание временых папок"""
 
+spreadsheet_id = '1DVFlQ_UI2JdJb-smkjKXnMa20YwhKbOzJ1UAU9MGi-E'
+
+
+def get_google():
+    scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/spreadsheets',
+             'https://www.googleapis.com/auth/drive.file', 'https://www.googleapis.com/auth/drive']
+    creds_file = os.path.join(current_directory, 'access.json')
+    creds = ServiceAccountCredentials.from_json_keyfile_name(creds_file, scope)
+    client = gspread.authorize(creds)
+    return client, spreadsheet_id
 
 def creative_temp_folders():
     # Убедитесь, что папки существуют или создайте их
@@ -92,18 +104,23 @@ def pars_product():
                         # Добавляем пару в словарь
                         dict_table_03[entry['label']] = entry['value']
 
+        img_url =json_data[0]['list'][0]['stacked_graphs_view'][0]['inventory_detail']['datasets'][0]['entries'][0]['listing']['image']['url']
+        img_url_for_google = f'=IMAGE({img_url})'
         current_object = {
             "object": {
                 "listing_id": listing_id,
-                "title": listing_title
+                "title": listing_title,
+                "img_url_for_google": img_url_for_google
             },
             "dict_table_01": dict_table_01,
             "dict_table_02": dict_table_02,
             "dict_table_03": dict_table_03
         }
         all_objects.append(current_object)
-    with open('all_product.json', 'w', encoding='utf-8') as f:
-        json.dump(all_objects, f, ensure_ascii=False, indent=4)  # Записываем в файл
+
+    print(all_objects)
+    # with open('all_product.json', 'w', encoding='utf-8') as f:
+    #     json.dump(all_objects, f, ensure_ascii=False, indent=4)  # Записываем в файл
 
     # # Объединение ключей всех словарей
     # headers = list(set(dict_table_01) | set(dict_table_02) | set(dict_table_03))
