@@ -16,6 +16,7 @@ def crative_sql_bd():
             status_tender TEXT,                    -- Статус тендера
             date_auction TEXT,                     -- Дата аукциона
             time_auction TEXT,                     -- Время аукциона
+            bids_amount TEXT,                      -- Остаточна пропозиція
             date_enquiryPeriod TEXT,               -- Звернення за роз’ясненнями дата
             time_enquiryPeriod TEXT,               -- Звернення за роз’ясненнями время
             date_auctionPeriod_auctionPeriod TEXT, -- Кінцевий строк подання тендерних пропозицій дата
