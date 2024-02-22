@@ -182,6 +182,7 @@ def pars_tender():
         date_auctionPeriod = None
         time_auctionPeriod = None
         award_status = None
+        bids_amount = None
         url_tender = f"https://prozorro.gov.ua/tender/{tenderID}"
         customer = json_data.get('procuringEntity', {}).get('name', None)
 
@@ -292,6 +293,43 @@ def pars_tender():
         """Завершена"""
         if status_tender == 'complete':
             status_tender = 'Завершена'
+
+            """Остаточна пропозиція"""
+            # Получаем список bids из json_data
+            bids = json_data.get('bids', [])
+            # Проходим по каждому bid в списке
+            for bid_index in range(len(bids)):
+                # Получаем текущий bid по индексу
+                current_bid = bids[bid_index]
+
+                # Проверяем, есть ли 'tenderers' и это список
+                tenderers = current_bid.get('tenderers', [])
+
+                # Теперь итерируем по каждому tenderer
+                for tenderer in tenderers:
+                    # Извлекаем EDRPOU код tenderer
+                    edrpou = tenderer.get('identifier', {}).get('id', None)
+
+                    # Проверяем, есть ли edrpou в вашем словаре dict_comany_edrpo
+                    if edrpou and edrpou in dict_comany_edrpo.values():
+                        # print(f'+ Найден EDRPOU код: {edrpou}')
+
+                        # После нахождения EDRPOU, получаем значение amount из lotValues
+                        if 'lotValues' in current_bid:
+                            for lotValue in current_bid['lotValues']:
+                                bids_amount = lotValue.get('value', {}).get('amount', None)
+                                if bids_amount is not None:
+                                    continue
+                                    # print(f'Сумма ставки: {bids_amount}')
+                                else:
+                                    continue
+                                    # print('Сумма ставки не указана')
+                        else:
+                            continue
+                            # print('Информация о lotValues отсутствует в данном bid')
+
+                    else:
+                        continue
             """Победитель """
             award_name_customer = json_data.get('awards', [{}])[0].get('suppliers', [{}])[0].get('name', None)
             """Победитель ЕДРПО"""
@@ -385,6 +423,7 @@ def pars_tender():
             'status_tender': status_tender,
             'date_auction': date_auctionPeriod,
             'time_auction': time_auctionPeriod,
+            'bids_amount': bids_amount,
             'date_enquiryPeriod': date_enquiryPeriod_endDate,
             'time_enquiryPeriod': time_enquiryPeriod_endDate,
             'date_auctionPeriod_auctionPeriod': date_auctionPeriod_auctionPeriod,
@@ -407,12 +446,12 @@ def pars_tender():
         if not exists:
             # Если записи не существует, выполняем вставку
             sql = '''INSERT INTO tender (
-                        tender_id, url_tender, customer, status_tender, date_auction, time_auction, date_enquiryPeriod,
+                        tender_id, url_tender, customer, status_tender, date_auction, time_auction,bids_amount, date_enquiryPeriod,
                         time_enquiryPeriod, date_auctionPeriod_auctionPeriod, time_auctionPeriod_auctionPeriod,
                         award_name_customer, award_value_customer, date_pending, time_pending, award_status, guarantee_amount,
                         bank_garantiy
                      ) VALUES (
-                        :tender_id, :url_tender, :customer, :status_tender, :date_auction, :time_auction, :date_enquiryPeriod,
+                        :tender_id, :url_tender, :customer, :status_tender, :date_auction, :time_auction, :bids_amount, :date_enquiryPeriod,
                         :time_enquiryPeriod, :date_auctionPeriod_auctionPeriod, :time_auctionPeriod_auctionPeriod,
                         :award_name_customer, :award_value_customer, :date_pending, :time_pending, :award_status, :guarantee_amount,
                         :bank_garantiy
@@ -637,7 +676,7 @@ def export_to_csv():
 
 def write_to_sheet():
     client, spreadsheet_id = get_google()
-    sheet_payout_history = client.open_by_key(spreadsheet_id).worksheet('Тендера')
+    sheet = client.open_by_key(spreadsheet_id).worksheet('Тендера')
     # Подключаемся к базе данных
     db_path = 'prozorro.db'
     conn = sqlite3.connect(db_path)
@@ -666,18 +705,18 @@ def write_to_sheet():
 
     # Обновляем данные в Google Sheets, начиная с ячейки A15
     range = 'A15'  # Укажите точный диапазон, если это необходимо
-    sheet_payout_history.update(values, range, value_input_option='USER_ENTERED')
+    sheet.update(values, range, value_input_option='USER_ENTERED')
 
 
 if __name__ == '__main__':
     # creative_temp_folders()
     # get_all_tenders()
     # pars_all_tenders()
-    get_tender()
-    get_json_tender()
+    # get_tender()
+    # get_json_tender()
     pars_tender()
     # update_tenders_from_json()
-    write_to_sheet()
+    # write_to_sheet()
     # get_all_tender_records_as_dicts()
 
     # filename_tender = os.path.join(json_path, 'tender.json')
