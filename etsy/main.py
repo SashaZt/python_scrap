@@ -7,6 +7,8 @@ import csv
 from config import cookies, headers
 from bs4 import BeautifulSoup
 import gspread
+import numpy as np
+import pandas as pd
 from oauth2client.service_account import ServiceAccountCredentials
 
 current_directory = os.getcwd()
@@ -31,6 +33,7 @@ def get_google():
     creds = ServiceAccountCredentials.from_json_keyfile_name(creds_file, scope)
     client = gspread.authorize(creds)
     return client, spreadsheet_id
+
 
 def creative_temp_folders():
     # Убедитесь, что папки существуют или создайте их
@@ -61,6 +64,9 @@ def get_product():
 
 
 def pars_product():
+    client, spreadsheet_id = get_google()
+    sheet = client.open_by_key(spreadsheet_id).worksheet('Парсинг тест')
+
     filename_tender = os.path.join(json_product, 'product*.json')
     filenames = glob.glob(filename_tender)
     all_objects = []
@@ -104,8 +110,12 @@ def pars_product():
                         # Добавляем пару в словарь
                         dict_table_03[entry['label']] = entry['value']
 
-        img_url =json_data[0]['list'][0]['stacked_graphs_view'][0]['inventory_detail']['datasets'][0]['entries'][0]['listing']['image']['url']
-        img_url_for_google = f'=IMAGE({img_url})'
+        img_url = \
+            json_data[0]['list'][0]['stacked_graphs_view'][0]['inventory_detail']['datasets'][0]['entries'][0][
+                'listing'][
+                'image']['url']
+
+        img_url_for_google = f'=IMAGE("{img_url}")'
         current_object = {
             "object": {
                 "listing_id": listing_id,
@@ -116,9 +126,54 @@ def pars_product():
             "dict_table_02": dict_table_02,
             "dict_table_03": dict_table_03
         }
-        all_objects.append(current_object)
 
-    print(all_objects)
+        all_objects.append(current_object)
+    values = []
+    for index, item in enumerate(all_objects, start=2):
+        dict_to_string = ', '.join([f"{k}: {v}" for k, v in item['dict_table_03'].items()]) if item[
+            'dict_table_03'] else ''
+        row_data = [
+            item['object']['img_url_for_google'],
+            item['object']['title'],
+            str(item['dict_table_01'].get('Visits', '')),
+            str(item['dict_table_01'].get('Total Views', '')),
+            str(item['dict_table_01'].get('Orders', '')),
+            str(item['dict_table_01'].get('Revenue', '')),
+            item['dict_table_02']['Direct & other traffic'],
+            item['dict_table_02']['Etsy app & other Etsy pages'],
+            item['dict_table_02']['Etsy Ads'],
+            item['dict_table_02']['Etsy marketing & SEO'],
+            item['dict_table_02']['Social media'],
+            item['dict_table_02']['Etsy search'],
+            dict_to_string  # Используйте преобразованный словарь
+        ]
+        values.append(row_data)
+    sheet.update(values,'A2', value_input_option='USER_ENTERED')
+
+    # with open('output.csv', 'w', newline='', encoding='utf-8') as file:
+    #     writer = csv.writer(file, delimiter=";")
+    #     for w in values:
+    #         writer.writerow(w)
+    # """Запись в Google Таблицу"""
+    # # Читаем CSV файл
+    # df = pd.read_csv('output.csv', sep=";")
+    #
+    # # Конвертируем DataFrame в список списков
+    # values = df.values.tolist()
+    #
+    # # Добавляем заголовки столбцов в начало списка
+    # values.insert(0, df.columns.tolist())
+    #
+    # # Очистка всего листа
+    # # sheet.clear()
+    # # Обновляем данные в Google Sheets
+    # sheet.update(values, 'A1')
+    # Запись данных одним запросом
+    # range = f'A2:C{1 + len(all_objects)}'  # Например, 'A2:C12'
+    # sheet.batch_update([{
+    #     'range': range,
+    #     'values': values
+    # }])
     # with open('all_product.json', 'w', encoding='utf-8') as f:
     #     json.dump(all_objects, f, ensure_ascii=False, indent=4)  # Записываем в файл
 
@@ -214,12 +269,12 @@ def par_tags():
     with open('all_tags.json', 'w', encoding='utf-8') as f:
         json.dump(all_objects, f, ensure_ascii=False, indent=4)  # Записываем в файл
     # print(all_objects)
-            # Добавляем словарь в список
-        #     all_objects.append(current_object)
-        #     values = [listing_id, title, tags]
-        #     all_tags.extend(values)
-        #     # all_products.update(dict_table_04)
-        # print(all_tags)
+    # Добавляем словарь в список
+    #     all_objects.append(current_object)
+    #     values = [listing_id, title, tags]
+    #     all_tags.extend(values)
+    #     # all_products.update(dict_table_04)
+    # print(all_tags)
 
 
 """Скачать все индетификаторы продуктов"""
