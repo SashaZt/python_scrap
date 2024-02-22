@@ -14,6 +14,7 @@ def crative_sql_bd():
             url_tender TEXT,                       -- Ссылка на тендер
             customer TEXT,                         -- Заказчик
             status_tender TEXT,                    -- Статус тендера
+            budget TEXT,                           -- Бюджет тендера
             date_auction TEXT,                     -- Дата аукциона
             time_auction TEXT,                     -- Время аукциона
             bids_amount TEXT,                      -- Остаточна пропозиція
