@@ -185,10 +185,12 @@ def pars_tender():
         bids_amount = None
         url_tender = f"https://prozorro.gov.ua/tender/{tenderID}"
         customer = json_data.get('procuringEntity', {}).get('name', None)
-
+        # budget = json_data['value']['amount']
+        budget = json_data.get('value', [{}]).get('amount', None)
         """Період уточнень"""
         if status_tender == 'active.enquiries':
             status_tender = 'Період уточнень'
+            """Бюджет"""
 
             # "Початок аукціону"
             lots = json_data.get('lots', [{}])
@@ -284,9 +286,11 @@ def pars_tender():
             award_status = json_data.get('awards', [{}])[0].get('status', None)
             if edrpo_customer in dict_comany_edrpo.values():
                 if award_status == 'pending':
-                    award_status = 'Очікує рішення'
+                    award_status = None
                 if award_status == 'active':
-                    award_status = 'Переможець'
+                    award_status = 'Победа'
+                if award_status == 'unsuccessful':
+                    award_status = None
             else:
                 award_status = None
 
@@ -347,9 +351,11 @@ def pars_tender():
             award_status = json_data.get('awards', [{}])[0].get('status', None)
             if edrpo_customer in dict_comany_edrpo.values():
                 if award_status == 'pending':
-                    award_status = 'Очікує рішення'
+                    award_status = None
                 if award_status == 'active':
-                    award_status = 'Переможець'
+                    award_status = 'Победа'
+                if award_status == 'unsuccessful':
+                    award_status = None
             else:
                 award_status = None
             """Розмір надання забезпечення пропозицій учасників"""
@@ -408,9 +414,11 @@ def pars_tender():
             award_status = json_data.get('awards', [{}])[0].get('status', None)
             if edrpo_customer in dict_comany_edrpo.values():
                 if award_status == 'pending':
-                    award_status = 'Очікує рішення'
+                    award_status = None
                 if award_status == 'active':
-                    award_status = 'Переможець'
+                    award_status = 'Победа'
+                if award_status == 'unsuccessful':
+                    award_status = None
             else:
                 award_status = None
         """Пока поставлю для всех award_value_customer = None"""
@@ -421,6 +429,7 @@ def pars_tender():
             'url_tender': url_tender,
             'customer': customer,
             'status_tender': status_tender,
+            'budget': budget,
             'date_auction': date_auctionPeriod,
             'time_auction': time_auctionPeriod,
             'bids_amount': bids_amount,
@@ -446,12 +455,12 @@ def pars_tender():
         if not exists:
             # Если записи не существует, выполняем вставку
             sql = '''INSERT INTO tender (
-                        tender_id, url_tender, customer, status_tender, date_auction, time_auction,bids_amount, date_enquiryPeriod,
+                        tender_id, url_tender, customer, status_tender,budget, date_auction, time_auction,bids_amount, date_enquiryPeriod,
                         time_enquiryPeriod, date_auctionPeriod_auctionPeriod, time_auctionPeriod_auctionPeriod,
                         award_name_customer, award_value_customer, date_pending, time_pending, award_status, guarantee_amount,
                         bank_garantiy
                      ) VALUES (
-                        :tender_id, :url_tender, :customer, :status_tender, :date_auction, :time_auction, :bids_amount, :date_enquiryPeriod,
+                        :tender_id, :url_tender, :customer, :status_tender,:budget, :date_auction, :time_auction, :bids_amount, :date_enquiryPeriod,
                         :time_enquiryPeriod, :date_auctionPeriod_auctionPeriod, :time_auctionPeriod_auctionPeriod,
                         :award_name_customer, :award_value_customer, :date_pending, :time_pending, :award_status, :guarantee_amount,
                         :bank_garantiy
@@ -563,9 +572,11 @@ def update_tenders_from_json():
                         award_status = json_data.get('awards', [{}])[0].get('status', None)
                         if edrpo_customer in dict_comany_edrpo.values():
                             if award_status == 'pending':
-                                award_status = 'Очікує рішення'
+                                award_status = None
                             if award_status == 'active':
-                                award_status = 'Переможець'
+                                award_status = 'Победа'
+                            if award_status == 'unsuccessful':
+                                award_status = None
                         else:
                             award_status = None
                         cursor.execute("""
@@ -596,9 +607,11 @@ def update_tenders_from_json():
                         award_status = json_data.get('awards', [{}])[0].get('status', None)
                         if edrpo_customer in dict_comany_edrpo.values():
                             if award_status == 'pending':
-                                award_status = 'Очікує рішення'
+                                award_status = None
                             if award_status == 'active':
-                                award_status = 'Переможець'
+                                award_status = 'Победа'
+                            if award_status == 'unsuccessful':
+                                award_status = None
                         else:
                             award_status = None
 
@@ -674,7 +687,8 @@ def export_to_csv():
     conn.close()
 
 
-def write_to_sheet():
+def clear_to_sheet():
+    """Очистить данные"""
     client, spreadsheet_id = get_google()
     sheet = client.open_by_key(spreadsheet_id).worksheet('Тендера')
     # Подключаемся к базе данных
@@ -686,7 +700,7 @@ def write_to_sheet():
     c.execute(
         '''SELECT tender_id, url_tender, customer,
         status_tender, date_auction, time_auction,
-         date_enquiryPeriod, time_enquiryPeriod,
+         bids_amount, date_enquiryPeriod, time_enquiryPeriod,
          date_auctionPeriod_auctionPeriod,
          time_auctionPeriod_auctionPeriod,
          award_name_customer, award_value_customer,
@@ -694,18 +708,49 @@ def write_to_sheet():
          guarantee_amount, bank_garantiy FROM tender''')
 
     # Получаем все строки
-    rows = c.fetchall()
+    rows_clear = c.fetchall()
     values = []
+    """Очищаем поля"""
+    for row in rows_clear:
+        new_row = [None, None, '', '', '', None, None, None, None, None,
+                   '', None, None, None, None, None, '', '', '', '',
+                   '', '', '', None, None, None, '', None, None, None]
+        # Здесь нужна логика преобразования row в соответствии с вашими правилами
+        values.append(new_row)
+    sheet.update(values, 'A15', value_input_option='USER_ENTERED')
+    time.sleep(5)
+
+
+def write_to_sheet():
+    """запись данные"""
+    client, spreadsheet_id = get_google()
+    sheet = client.open_by_key(spreadsheet_id).worksheet('Тендера')
+    db_path = 'prozorro.db'
+    conn = sqlite3.connect(db_path)
+    c = conn.cursor()
+
+    # Выполняем SQL-запрос для выбора данных
+    c.execute(
+        '''SELECT tender_id, url_tender, customer,
+        status_tender,budget, date_auction, time_auction,
+         bids_amount, date_enquiryPeriod, time_enquiryPeriod,
+         date_auctionPeriod_auctionPeriod,
+         time_auctionPeriod_auctionPeriod,
+         award_name_customer, award_value_customer,
+         date_pending, time_pending, award_status,
+         guarantee_amount, bank_garantiy FROM tender''')
+
+    values = []
+    rows = c.fetchall()
     for row in rows:
         # Создаем новую строку, начиная с двух пустых ячеек, и добавляем данные из базы данных
-        new_row = ['', '', row[1], row[2], row[3], '', '', '', '', '',
-                   '', '', '', '', '', '', row[6], row[7], row[8], row[9],
-                   row[4], row[5], row[14], '', '', '', row[11]]
+        new_row = ['', '', row[1], row[2], row[3], '', '', row[4], '', '',
+                   row[7], '', '', '', '', '', row[8], row[9], row[10], row[11],
+                   row[5], row[6], row[16], '', '', '', row[13]]
         values.append(new_row)
-
-    # Обновляем данные в Google Sheets, начиная с ячейки A15
-    range = 'A15'  # Укажите точный диапазон, если это необходимо
-    sheet.update(values, range, value_input_option='USER_ENTERED')
+    #
+    # # Обновляем данные в Google Sheets, начиная с ячейки A15
+    sheet.update(values, 'A15', value_input_option='USER_ENTERED')
 
 
 if __name__ == '__main__':
@@ -714,9 +759,10 @@ if __name__ == '__main__':
     # pars_all_tenders()
     # get_tender()
     # get_json_tender()
-    pars_tender()
+    # pars_tender()
     # update_tenders_from_json()
-    # write_to_sheet()
+    clear_to_sheet()
+    write_to_sheet()
     # get_all_tender_records_as_dicts()
 
     # filename_tender = os.path.join(json_path, 'tender.json')
