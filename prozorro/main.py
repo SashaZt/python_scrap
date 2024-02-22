@@ -499,6 +499,9 @@ def pars_tender():
 def update_tenders_from_json():
     # Получение списка текущих тендеров из базы данных
     dick_tender = get_all_tender_records_as_dicts()
+    for d in dick_tender:
+        print(d['tender_id'])
+    exit()
     # Словарь для перевода статусов из json в читаемый вид
     dict_status_tenders = {
         'active.auction': 'Аукціон',
@@ -752,17 +755,32 @@ def write_to_sheet():
     # # Обновляем данные в Google Sheets, начиная с ячейки A15
     sheet.update(values, 'A15', value_input_option='USER_ENTERED')
 
+while True:
+    # Запрос ввода от пользователя
+    print('Введите 1 для запуска get_tender(), 2 для запуска clear_to_sheet() и write_to_sheet(), любой другой символ для выхода: ')
+    user_input = input("")
 
-if __name__ == '__main__':
-    # creative_temp_folders()
-    # get_all_tenders()
-    # pars_all_tenders()
-    # get_tender()
-    # get_json_tender()
-    # pars_tender()
-    # update_tenders_from_json()
-    clear_to_sheet()
-    write_to_sheet()
+    if user_input == '1':
+        get_tender()
+    elif user_input == '2':
+        clear_to_sheet()
+        write_to_sheet()
+    else:
+        print("Выход из программы.")
+        break  # Выход из цикла, завершение программы
+
+#
+# if __name__ == '__main__':
+#
+#     # creative_temp_folders()
+#     # get_all_tenders()
+#     # pars_all_tenders()
+#     # get_tender()
+#     # get_json_tender()
+#     # pars_tender()
+#     update_tenders_from_json()
+    # clear_to_sheet()
+    # write_to_sheet()
     # get_all_tender_records_as_dicts()
 
     # filename_tender = os.path.join(json_path, 'tender.json')
