@@ -3,13 +3,15 @@ import json
 import os
 import sqlite3
 import time
+import getpass
+
 from datetime import datetime, timedelta
 import csv
 import requests
 from bs4 import BeautifulSoup
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
-
+from config import spreadsheet_id, headers, dict_comany_edrpo
 # from selenium import webdriver
 
 current_directory = os.getcwd()
@@ -19,7 +21,6 @@ temp_path = os.path.join(current_directory, temp_directory)
 json_path = os.path.join(temp_path, 'json')
 html_path = os.path.join(temp_path, 'html')
 
-spreadsheet_id = '167BcAUM74pqhlC1Xl4MD6yKRN0OlG05cbAjF4JeYjMA'
 
 
 def get_google():
@@ -41,38 +42,6 @@ def creative_temp_folders():
             os.makedirs(folder)
 
 
-dict_comany_edrpo = {
-    'ТОВ ГАМАЮНГРУП': '45159370',
-    'ТОВ Гамаюн': '31610879',
-    'ТОВ Гамаюн-Груп': '39537875',
-    'ТОВ Компанія Гамаюн»': '37726414',
-    'ФОП Волкова Наталія Іванівна': '2677614784',
-    'ФОП Копошинська Алла Володимирівна': '3067116849',
-    'ФОП Кушнарьов Дмитро Віталійович': '2632314232',
-    'ФОП Кушнарьова Віолета Віталіївна': '2895702346',
-    'ФОП Кушнарьова Олена Лоранівна': '2877203246',
-    'ФОП Нєдвига Олена Русланівна': '3375108225',
-    'ФОП Пальчиковська Наталія Олександрівна': '2635603285'
-}
-
-headers = {
-    'authority': 'prozorro.gov.ua',
-    'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
-    'accept-language': 'ru,en-US;q=0.9,en;q=0.8,uk;q=0.7,de;q=0.6',
-    'cache-control': 'no-cache',
-    # 'cookie': '_ga=GA1.3.995390387.1707986647; _gat=1',
-    'dnt': '1',
-    'pragma': 'no-cache',
-    'sec-ch-ua': '"Not A(Brand";v="99", "Google Chrome";v="121", "Chromium";v="121"',
-    'sec-ch-ua-mobile': '?0',
-    'sec-ch-ua-platform': '"Windows"',
-    'sec-fetch-dest': 'document',
-    'sec-fetch-mode': 'navigate',
-    'sec-fetch-site': 'none',
-    'sec-fetch-user': '?1',
-    'upgrade-insecure-requests': '1',
-    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
-}
 
 """Получение всех тендеров"""
 
@@ -106,10 +75,9 @@ def pars_all_tenders():
 """Получение одного тендера"""
 
 
-def get_tender():
-    url = 'https://prozorro.gov.ua/tender/UA-2023-11-09-008503-a'
-    id_url = url.split('/')[-1]
-    response = requests.get(url, headers=headers)
+def get_tender(url_tender):
+    id_url = url_tender.split('/')[-1]
+    response = requests.get(url_tender, headers=headers)
     src = response.text
     filename_tender = os.path.join(html_path, f'tender_{id_url}.html')
 
@@ -446,7 +414,8 @@ def pars_tender():
             'bank_garantiy': bank_garantiy
 
         }
-        conn = sqlite3.connect('prozorro.db')
+        filename_db = os.path.join(current_directory, 'prozorro.db')
+        conn = sqlite3.connect(filename_db)
         c = conn.cursor()
         # Проверяем, существует ли уже запись с таким tender_id
         c.execute("SELECT 1 FROM tender WHERE tender_id = ?", (tender_id,))
@@ -471,27 +440,16 @@ def pars_tender():
             print(f"Запись с tender_id {tender_id} уже существует. Пропускаем...")
 
         conn.close()
-        # sql = '''INSERT INTO tender (
-        #             tender_id, url_tender, customer, status_tender, date_auction, time_auction, date_enquiryPeriod,
-        #             time_enquiryPeriod, date_auctionPeriod_auctionPeriod, time_auctionPeriod_auctionPeriod,
-        #             award_name_customer, award_value_customer, date_pending, time_pending, award_status, guarantee_amount,
-        #             bank_garantiy
-        #          ) VALUES (
-        #             :tender_id, :url_tender, :customer, :status_tender, :date_auction, :time_auction, :date_enquiryPeriod,
-        #             :time_enquiryPeriod, :date_auctionPeriod_auctionPeriod, :time_auctionPeriod_auctionPeriod,
-        #             :award_name_customer, :award_value_customer, :date_pending, :time_pending, :award_status, :guarantee_amount,
-        #             :bank_garantiy
-        #          )'''
-        #
-        # # Выполняем запрос
-        # c.execute(sql, tender_data)
-        #
-        # # Сохраняем изменения
-        # conn.commit()
-        #
-        # # Закрываем соединение с базой данных
-        # conn.close()
 
+    files_json = glob.glob(os.path.join(json_path, '*'))
+    files_html = glob.glob(os.path.join(html_path, '*'))
+    # Объединяем списки файлов
+    all_files = files_json + files_html
+    # Удаляем каждый файл
+    # Удаляем каждый файл в объединенном списке
+    for f in all_files:
+        if os.path.isfile(f):
+            os.remove(f)
 
 """Обновление БД"""
 
@@ -500,8 +458,20 @@ def update_tenders_from_json():
     # Получение списка текущих тендеров из базы данных
     dick_tender = get_all_tender_records_as_dicts()
     for d in dick_tender:
-        print(d['tender_id'])
-    exit()
+        url_ten = d['tender_id']
+        print(f'Качаем тендер {url_ten}')
+        response = requests.get(f"https://public-api.prozorro.gov.ua/api/2.5/tenders/{url_ten}", headers=headers)
+        try:
+            json_data = response.json()
+        except:
+            print(f'Пропустили тендер {url_ten}')
+            continue
+        filename_tender = os.path.join(json_path, f'tender_{url_ten}.json')
+        with open(filename_tender, 'w', encoding='utf-8') as f:
+            json.dump(json_data, f, ensure_ascii=False, indent=4)  # Записываем в файл
+        print('Пауза 10сек')
+        time.sleep(10)
+    # exit()
     # Словарь для перевода статусов из json в читаемый вид
     dict_status_tenders = {
         'active.auction': 'Аукціон',
@@ -513,8 +483,8 @@ def update_tenders_from_json():
     }
 
     filenames = glob.glob(os.path.join(json_path, 'tender*.json'))
-    db_path = 'prozorro.db'
-    with sqlite3.connect(db_path) as conn:
+    filename_db = os.path.join(current_directory, 'prozorro.db')
+    with sqlite3.connect(filename_db) as conn:
         cursor = conn.cursor()
 
         for filename in filenames:
@@ -522,6 +492,14 @@ def update_tenders_from_json():
                 data_json = json.load(f)
             json_data = data_json.get('data', {})
             tenderID = json_data.get('tenderID')
+            """Закачка файла"""
+            url_te = f'https://prozorro.gov.ua/tender/{tenderID}'
+            response = requests.get(url_te, headers=headers)
+            src = response.text
+            filename_tender = os.path.join(html_path, f'tender_{tenderID}.html')
+
+            with open(filename_tender, "w", encoding='utf-8') as file:
+                file.write(src)
             tender_id_json = parsing_tender(tenderID)
             status_tender_json = json_data.get('status', None)
 
@@ -647,14 +625,24 @@ def update_tenders_from_json():
                     #                (new_status, tender_id_json))
                     # print(f"Статус тендера {tender_id_json} обновлен на '{new_status}'.")
                     break
-
+            print(f'Пауза 10сек')
+            time.sleep(10)
+    files_json = glob.glob(os.path.join(json_path, '*'))
+    files_html = glob.glob(os.path.join(html_path, '*'))
+    # Объединяем списки файлов
+    all_files = files_json + files_html
+    # Удаляем каждый файл
+    # Удаляем каждый файл в объединенном списке
+    for f in all_files:
+        if os.path.isfile(f):
+            os.remove(f)
 
 """Выгружает данные с БД"""
 
 
 def get_all_tender_records_as_dicts():
-    db_path = 'prozorro.db'
-    conn = sqlite3.connect(db_path)
+    filename_db = os.path.join(current_directory, 'prozorro.db')
+    conn = sqlite3.connect(filename_db)
     conn.row_factory = sqlite3.Row
     c = conn.cursor()
     c.execute("SELECT tender_id, customer, status_tender FROM tender")
@@ -665,8 +653,8 @@ def get_all_tender_records_as_dicts():
 
 def export_to_csv():
     # Подключаемся к базе данных
-    db_path = 'prozorro.db'
-    conn = sqlite3.connect(db_path)
+    filename_db = os.path.join(current_directory, 'prozorro.db')
+    conn = sqlite3.connect(filename_db)
     c = conn.cursor()
 
     # Выполняем SQL-запрос для выбора данных
@@ -694,9 +682,9 @@ def clear_to_sheet():
     """Очистить данные"""
     client, spreadsheet_id = get_google()
     sheet = client.open_by_key(spreadsheet_id).worksheet('Тендера')
-    # Подключаемся к базе данных
-    db_path = 'prozorro.db'
-    conn = sqlite3.connect(db_path)
+    filename_db = os.path.join(current_directory, 'prozorro.db')
+    # db_path = 'prozorro.db'
+    conn = sqlite3.connect(filename_db)
     c = conn.cursor()
 
     # Выполняем SQL-запрос для выбора данных
@@ -721,6 +709,7 @@ def clear_to_sheet():
         # Здесь нужна логика преобразования row в соответствии с вашими правилами
         values.append(new_row)
     sheet.update(values, 'A15', value_input_option='USER_ENTERED')
+    print('Даннные очистили')
     time.sleep(5)
 
 
@@ -728,9 +717,10 @@ def write_to_sheet():
     """запись данные"""
     client, spreadsheet_id = get_google()
     sheet = client.open_by_key(spreadsheet_id).worksheet('Тендера')
-    db_path = 'prozorro.db'
-    conn = sqlite3.connect(db_path)
+    filename_db = os.path.join(current_directory, 'prozorro.db')
+    conn = sqlite3.connect(filename_db)
     c = conn.cursor()
+    conn.execute('PRAGMA journal_mode=WAL;')
 
     # Выполняем SQL-запрос для выбора данных
     c.execute(
@@ -751,34 +741,55 @@ def write_to_sheet():
                    row[7], '', '', '', '', '', row[8], row[9], row[10], row[11],
                    row[5], row[6], row[16], '', '', '', row[13]]
         values.append(new_row)
-    #
     # # Обновляем данные в Google Sheets, начиная с ячейки A15
     sheet.update(values, 'A15', value_input_option='USER_ENTERED')
+    print('Даннные записали')
 
-while True:
-    # Запрос ввода от пользователя
-    print('Введите 1 для запуска get_tender(), 2 для запуска clear_to_sheet() и write_to_sheet(), любой другой символ для выхода: ')
-    user_input = input("")
 
-    if user_input == '1':
-        get_tender()
-    elif user_input == '2':
-        clear_to_sheet()
-        write_to_sheet()
-    else:
-        print("Выход из программы.")
-        break  # Выход из цикла, завершение программы
+print('Введите пароль')
+passw = getpass.getpass("")
+if passw == '12345677':
+    while True:
+        # Запрос ввода от пользователя
+        print('\nВведите 1 для загрузки нового тендера'
+              '\nВведите 2 для запуска обновления всех тендеров'
+              '\nВведите 3 для загрузки в Google Таблицу'
+              '\nВведите 0 для закрытия программы')
+        user_input = input("Выберите действие: ")
 
-#
+        if user_input == '1':
+            creative_temp_folders()
+            print('Вставьте ссылку на тендер:')
+            url_tender = input("")
+            get_tender(url_tender)
+            get_json_tender()
+            pars_tender()
+        elif user_input == '2':
+            update_tenders_from_json()
+        elif user_input == '3':
+            clear_to_sheet()
+            write_to_sheet()
+        elif user_input == '0':
+            print("Программа завершена.")
+            break  # Выход из цикла, завершение программы
+        else:
+            print("Неверный ввод, пожалуйста, введите корректный номер действия.")
+else:
+    print('Пароль не правильный')
+
+
+
+
+
 # if __name__ == '__main__':
-#
-#     # creative_temp_folders()
-#     # get_all_tenders()
-#     # pars_all_tenders()
-#     # get_tender()
-#     # get_json_tender()
-#     # pars_tender()
-#     update_tenders_from_json()
+
+    # creative_temp_folders()
+    # get_all_tenders()
+    # pars_all_tenders()
+    # get_tender()
+    # get_json_tender()
+    # pars_tender()
+    # update_tenders_from_json()
     # clear_to_sheet()
     # write_to_sheet()
     # get_all_tender_records_as_dicts()
