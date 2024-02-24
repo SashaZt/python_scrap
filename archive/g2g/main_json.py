@@ -347,7 +347,7 @@ def get_requests(url, params, headers, list_url, type_pars):
                 time.sleep(1)
 
 
-def parsing_gamePal(type_pars):
+def parsing_gamePal(type_pars, file_name_csv):
     if type_pars == 1:
         # Определите текущую директорию, где находится скрипт
         current_directory = os.getcwd()
@@ -365,14 +365,14 @@ def parsing_gamePal(type_pars):
 
         # Создайте множество для уникальных заголовков
         unique_headers = set(header_order)
-        print("Название файла")
-        file_name_csv = input()
+
         # Здесь мы создаем CSV файл и записываем заголовки
         with open(f'{file_name_csv}.csv', 'w', newline='', encoding='utf-8') as csvfile:
             writer = csv.writer(csvfile, delimiter=",")
             writer.writerow(header_order)
 
         for item in files_json:
+            print(item)
             with open(item, 'r', encoding="utf-8") as f:
                 data_json = json.load(f)
             datas = data_json['payload']['results']
@@ -438,8 +438,7 @@ def parsing_gamePal(type_pars):
 
         # Создайте множество для уникальных заголовков
         unique_headers = set(header_order)
-        print("Название файла")
-        file_name_csv = input()
+
         # Здесь мы создаем CSV файл и записываем заголовки
         with open(f'{file_name_csv}.csv', 'w', newline='', encoding='utf-8') as csvfile:
             writer = csv.writer(csvfile, delimiter=",")
@@ -495,18 +494,27 @@ def parsing_gamePal(type_pars):
         with open(f'{file_name_csv}.csv', 'w', newline='', encoding='utf-8') as f:
             f.writelines(lines)
 
-        # Загрузка данных из файла CSV
-        data = pd.read_csv(f'{file_name_csv}.csv', encoding='utf-8')
 
-        # Сохранение данных в файл XLSX
-        data.to_excel(f'{file_name_csv}.xlsx', index=False, engine='openpyxl')
+def csv_to_excell(file_name_csv):
+    current_directory = os.getcwd()
+    data_json_directory = 'data_json_item'
+    data_json_path = os.path.join(current_directory, data_json_directory)
+    if not os.path.exists(data_json_path):
+        os.makedirs(data_json_path)
+    folder = fr'{data_json_path}\*.json'
+    files_json = glob.glob(folder)
+    # Загрузка данных из файла CSV
+    data = pd.read_csv(f'{file_name_csv}.csv', encoding='utf-8')
 
-        # Получаем список всех файлов в папке
-        files = glob.glob(os.path.join(data_json_path, '*'))
-        # Удаляем каждый файл
-        for f in files:
-            if os.path.isfile(f):
-                os.remove(f)
+    # Сохранение данных в файл XLSX
+    data.to_excel(f'{file_name_csv}.xlsx', index=False, engine='openpyxl')
+
+    # Получаем список всех файлов в папке
+    files = glob.glob(os.path.join(data_json_path, '*'))
+    # Удаляем каждый файл
+    for f in files:
+        if os.path.isfile(f):
+            os.remove(f)
 
 
 if __name__ == '__main__':
@@ -523,6 +531,8 @@ if __name__ == '__main__':
         url, params, cookies, headers = get_cookie_header(curl_result)
 
         get_requests(url, params, headers, list_url, type_pars)
+        print("Название файла")
+        file_name_csv = input()
     else:
         type_pars = 0  # Items
         url = url_all
@@ -531,8 +541,11 @@ if __name__ == '__main__':
         server.stop()  # остановка сервера должна быть здесь
         url, params, cookies, headers = get_cookie_header(curl_result)
         get_requests(url, params, headers, list_url, type_pars)
+        print("Название файла")
+        file_name_csv = input()
     if type_pars_str == 'service':
         type_pars = 1  # GamePal
     else:
         type_pars = 0  # Items
-    parsing_gamePal(type_pars)
+    parsing_gamePal(type_pars, file_name_csv)
+    csv_to_excell(file_name_csv)
