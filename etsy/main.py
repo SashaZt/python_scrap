@@ -3,7 +3,7 @@ import glob
 import requests
 import os
 import json
-import csv
+import re
 from config import cookies, headers
 from bs4 import BeautifulSoup
 import gspread
@@ -61,6 +61,11 @@ def get_product():
         with open(filename_tender, 'w', encoding='utf-8') as f:
             json.dump(json_data, f, ensure_ascii=False, indent=4)  # Записываем в файл
         time.sleep(10)
+
+
+def split_into_words(text):
+    # Убираем знаки пунктуации и разбиваем по пробелам, приводя всё к нижнему регистру
+    return re.findall(r'\b\w+\b', text.lower())
 
 
 def pars_product():
@@ -160,40 +165,87 @@ def pars_product():
             tags_str
         ]
         values.append(row_data)
-    for v in values[5:6]:
-        products = v[12].split(", ")
-        product_names = [product.split(" : ")[0] for product in products]
-        tags = v[13].split(", ")  # Список тегов
+    new_values = []
+    for v in values:
+        matched_in_tags_set = set()
+        unmatched_in_tags_set = set()
+        matched_in_title_set = set()
+        unmatched_in_title_set = set()
+        title = v[1]
+        products = v[12]
+        tags_listing = v[13]
+        title_words = set(split_into_words(title))
+        tags_words = set(split_into_words(tags_listing))
+        products_list = re.split(r' : \d+, ?', products)
+        for product_info in products_list:
+            product_name = product_info.split(" : ")[0]
+            # print(f"\nАнализируем продукт: {product_name}")
+            # Определяем product_words заранее
+            product_words = split_into_words(product_name)
 
-        for product_name in product_names:
-            found_match = False
-            matched_words = []  # Убедитесь, что matched_words инициализирован перед использованием
-            unmatched_words = []
-
-            if product_name in tags:
-                print(f"Полное совпадение найдено в тегах: {product_name}")
-                found_match = True
+            # Шаг 1
+            if product_name.lower() in title.lower():
+                print("\nНайдено целиком в заголовке.")
             else:
-                for word in product_name.split(" "):
-                    if any(word.lower() in tag.lower() for tag in tags):
-                        matched_words.append(word)
-                        found_match = True
-                    else:
-                        unmatched_words.append(word)
+                print("\nНе найдено целиком в заголовке.")
+            # Шаг 2
+            product_words = split_into_words(product_name)
+            product_words = [re.sub(r'\d+', '', word) for word in product_words if re.sub(r'\d+', '', word)]
 
-            if matched_words:
-                print(f"Слова, найденные в тегах для '{product_name}': {', '.join(matched_words)}")
-                # Этот блок теперь должен работать без ошибок, так как matched_words определен выше
-                matching_tags = [tag for tag in tags if any(word.lower() in tag.lower() for word in matched_words)]
-                print(f"Соответствующие теги для '{product_name}': {', '.join(matching_tags)}")
-            else:
-                print(f"Нет совпадений по словам в тегах для: {product_name}")
+            matched_in_title = [word for word in product_words if word in title_words]
+            unmatched_in_title = [word for word in product_words if word not in title_words]
 
-            if unmatched_words:
-                print(f"Слова, не найденные в тегах для '{product_name}': {', '.join(unmatched_words)}")
+            matched_in_title_set.update(matched_in_title)
+            unmatched_in_title_set.update(unmatched_in_title)
 
-            if not found_match:
-                print(f"Совпадения для '{product_name}' не найдены в тегах.")
+                # Шаг 3
+            matched_in_tags = [word for word in product_words if word in tags_words]
+            unmatched_in_tags = [word for word in product_words if word not in tags_words and word]
+            matched_in_tags_set.update(matched_in_tags)
+            unmatched_in_tags_set.update(unmatched_in_tags)
+
+            #     # Обновляем множества на основе сравнения слов продукта с заголовками и тегами
+            #     matched_in_title_set.update(word for word in product_words if word in title_words)
+            #     unmatched_in_title_set.update(word for word in product_words if word not in title_words)
+            #     matched_in_tags_set.update(word for word in product_words if word in tags_words)
+            #     unmatched_in_tags_set.update(word for word in product_words if word not in tags_words)
+            #
+            # Преобразуем множества в списки и формируем строку для Google Sheets
+            # Преобразовываем множества в списки и объединяем их в одну строку для добавления
+        matched_in_tags_str = ", ".join(list(matched_in_tags_set))
+        unmatched_in_tags_str = ", ".join(list(unmatched_in_tags_set))
+        matched_in_title_str = ", ".join(list(matched_in_title_set))
+        unmatched_in_title_str = ", ".join(list(unmatched_in_title_set))
+        # print(matched_in_tags_str)
+        # print(unmatched_in_tags_str)
+        # print(matched_in_title_str)
+        # print(unmatched_in_title_str)
+        # exit()
+        # Создаем новую строку, добавляя результаты анализа к исходным данным
+        new_row = v + [matched_in_tags_str, unmatched_in_tags_str, matched_in_title_str, unmatched_in_title_str]
+        new_values.append(new_row)
+        # print(matched_in_tags_list)
+        # print(unmatched_in_tags_list)
+        # print(matched_in_title_list)
+        # print(unmatched_in_title_list)
+            #
+            # # Формируем одну строку данных для добавления в new_values
+            # new_values_row = matched_in_tags_list + unmatched_in_tags_list + matched_in_title_list + unmatched_in_title_list
+            # new_values.append([new_values_row])  # Добавляем как один элемент (строку данных)
+    # print(new_values)
+        # new_values.append(matched_in_tags_list)
+        # new_values.append(unmatched_in_tags_list)
+        # new_values.append(matched_in_title_list)
+        # new_values.append(unmatched_in_title_list)
+        # # Выводим итоговые множества
+        # print("\nИтоговые множества:")
+        # print("Слова, найденные в заголовке:", matched_in_title_set)
+        # print("Слова, не найденные в заголовке:", unmatched_in_title_set)
+        # print("Слова, найденные в тегах:", matched_in_tags_set)
+        # print("Слова, не найденные в тегах:", unmatched_in_tags_set)
+        # print("Слова, найденные в тегах:", ", ".join(matched_in_tags) if matched_in_tags else "нет совпадений")
+        # print("Слова, не найденные в тегах:",
+        #       ", ".join(unmatched_in_tags) if unmatched_in_tags else "все слова найдены")
 
         # """"Рабочий код"""
     # for v in values[5:6]:
@@ -229,23 +281,29 @@ def pars_product():
     #                 # Если совпадений не найдено, выводим сообщение об этом
     #         if not found_match:
     #             print(f"Совпадения для не найдены '{product_name}.")
-        # # Проверяем полное совпадение первого продукта
-        # if product_names[0] in v[1]:
-        #     print(f"Полное совпадение найдено: {product_names[0]}")
-        # else:
-        #     # Проверяем совпадение по словам, если полного совпадения нет
-        #     matched_words = []
-        #     for word in product_names[0].split(" "):
-        #         if word in v[1].lower():
-        #             matched_words.append(word)
-        #
-        #     print(f"Слова, найденные во второй колонке: {', '.join(matched_words)}")
+    # # Проверяем полное совпадение первого продукта
+    # if product_names[0] in v[1]:
+    #     print(f"Полное совпадение найдено: {product_names[0]}")
+    # else:
+    #     # Проверяем совпадение по словам, если полного совпадения нет
+    #     matched_words = []
+    #     for word in product_names[0].split(" "):
+    #         if word in v[1].lower():
+    #             matched_words.append(word)
+    #
+    #     print(f"Слова, найденные во второй колонке: {', '.join(matched_words)}")
 
-        # Для добавления тегов в список, если они соответствуют условиям
-        matching_tags = [tag for tag in v[13].split(", ") if any(word in tag for word in matched_words)]
-        print(f"Соответствующие теги: {', '.join(matching_tags)}")
-    exit()
-    sheet.update(values,'A2', value_input_option='USER_ENTERED')
+    # Для добавления тегов в список, если они соответствуют условиям
+    # matching_tags = [tag for tag in v[13].split(", ") if any(word in tag for word in matched_words)]
+    # print(f"Соответствующие теги: {', '.join(matching_tags)}")
+    # print(new_values)
+    try:
+        # Отправляем данные в Google Sheets, начиная с ячейки A2
+        # ВАЖНО: Убедитесь, что формат 'new_values' подходит для вашей задачи
+        # Возможно, потребуется дополнительная обработка для корректной записи в таблицу
+        sheet.update(new_values, 'A2', value_input_option='USER_ENTERED')
+    except Exception as e:
+        print(f"Произошла ошибка при обновлении Google Sheets: {e}")
 
     # with open('output.csv', 'w', newline='', encoding='utf-8') as file:
     #     writer = csv.writer(file, delimiter=";")
