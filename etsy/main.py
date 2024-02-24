@@ -70,6 +70,8 @@ def pars_product():
     filename_tender = os.path.join(json_product, 'product*.json')
     filenames = glob.glob(filename_tender)
     all_objects = []
+    all_tags = par_tags()
+
     for filename in filenames:
         with open(filename, 'r', encoding="utf-8") as f:
             data_json = json.load(f)
@@ -91,6 +93,8 @@ def pars_product():
 
         """Словари по таблицам"""
         dict_table_01 = {entry['label']: entry['total'] for entry in all_data_table_01_data}
+        dict_table_01['Revenue'] = dict_table_01['Revenue'].replace('USD ', '').replace('.', ',')
+
         dict_table_02 = {entry['label']: entry['value'] for entry in all_data_table_02_data}
         dict_table_03 = {}
 
@@ -128,8 +132,15 @@ def pars_product():
         }
 
         all_objects.append(current_object)
+
     values = []
     for index, item in enumerate(all_objects, start=2):
+        # Найдите теги, соответствующие текущему listing_id
+        tags = next((tag_item['object']['tags'] for tag_item in all_tags if
+                     tag_item['listing_id'] == item['object']['listing_id']), None)
+
+        # Преобразуйте список тегов в строку, если теги найдены
+        tags_str = ', '.join(tags) if tags else ''
         dict_to_string = ', '.join([f"{k}: {v}" for k, v in item['dict_table_03'].items()]) if item[
             'dict_table_03'] else ''
         row_data = [
@@ -145,9 +156,95 @@ def pars_product():
             item['dict_table_02']['Etsy marketing & SEO'],
             item['dict_table_02']['Social media'],
             item['dict_table_02']['Etsy search'],
-            dict_to_string  # Используйте преобразованный словарь
+            dict_to_string,  # Используйте преобразованный словарь
+            tags_str
         ]
         values.append(row_data)
+    for v in values[5:6]:
+        products = v[12].split(", ")
+        product_names = [product.split(" : ")[0] for product in products]
+        tags = v[13].split(", ")  # Список тегов
+
+        for product_name in product_names:
+            found_match = False
+            matched_words = []  # Убедитесь, что matched_words инициализирован перед использованием
+            unmatched_words = []
+
+            if product_name in tags:
+                print(f"Полное совпадение найдено в тегах: {product_name}")
+                found_match = True
+            else:
+                for word in product_name.split(" "):
+                    if any(word.lower() in tag.lower() for tag in tags):
+                        matched_words.append(word)
+                        found_match = True
+                    else:
+                        unmatched_words.append(word)
+
+            if matched_words:
+                print(f"Слова, найденные в тегах для '{product_name}': {', '.join(matched_words)}")
+                # Этот блок теперь должен работать без ошибок, так как matched_words определен выше
+                matching_tags = [tag for tag in tags if any(word.lower() in tag.lower() for word in matched_words)]
+                print(f"Соответствующие теги для '{product_name}': {', '.join(matching_tags)}")
+            else:
+                print(f"Нет совпадений по словам в тегах для: {product_name}")
+
+            if unmatched_words:
+                print(f"Слова, не найденные в тегах для '{product_name}': {', '.join(unmatched_words)}")
+
+            if not found_match:
+                print(f"Совпадения для '{product_name}' не найдены в тегах.")
+
+        # """"Рабочий код"""
+    # for v in values[5:6]:
+    #     # print(v[1]) #title
+    #     # print(v[12]) #dict_table_03
+    #     # print(v[13]) #tags_listing
+    #     # Разбиваем строку с описанием на отдельные продукты
+    #     products = v[12].split(", ")
+    #
+    #     # Извлекаем названия продуктов
+    #     product_names = [product.split(" : ")[0] for product in products]
+    #     for product_name in product_names:
+    #         # Проверка полного совпадения названия продукта с заголовком
+    #         found_match = False
+    #         if product_name in v[1]:
+    #             print(f"Полное совпадение найдено: {product_name}")
+    #         else:
+    #             # Проверяем совпадение по словам, если полного совпадения нет
+    #             matched_words = []
+    #             for word in product_name.split(" "):
+    #                 if word.lower() in v[1].lower():  # Добавлено .lower() для регистронезависимой проверки
+    #                     matched_words.append(word)
+    #
+    #             # Выводим найденные слова, если они есть
+    #             if matched_words:
+    #                 print(f"Слова, найденные в заголовке для '{product_name}': {', '.join(matched_words)}")
+    #                 # Для добавления тегов в список, если они соответствуют условиям
+    #                 matching_tags = [tag for tag in v[13].split(", ") if
+    #                                  any(word.lower() in tag.lower() for word in matched_words)]
+    #                 print(f"Соответствующие теги для '{product_name}': {', '.join(matching_tags)}")
+    #             else:
+    #                 print(f"Нет совпадений по словам для: {product_name}")
+    #                 # Если совпадений не найдено, выводим сообщение об этом
+    #         if not found_match:
+    #             print(f"Совпадения для не найдены '{product_name}.")
+        # # Проверяем полное совпадение первого продукта
+        # if product_names[0] in v[1]:
+        #     print(f"Полное совпадение найдено: {product_names[0]}")
+        # else:
+        #     # Проверяем совпадение по словам, если полного совпадения нет
+        #     matched_words = []
+        #     for word in product_names[0].split(" "):
+        #         if word in v[1].lower():
+        #             matched_words.append(word)
+        #
+        #     print(f"Слова, найденные во второй колонке: {', '.join(matched_words)}")
+
+        # Для добавления тегов в список, если они соответствуют условиям
+        matching_tags = [tag for tag in v[13].split(", ") if any(word in tag for word in matched_words)]
+        print(f"Соответствующие теги: {', '.join(matching_tags)}")
+    exit()
     sheet.update(values,'A2', value_input_option='USER_ENTERED')
 
     # with open('output.csv', 'w', newline='', encoding='utf-8') as file:
@@ -266,8 +363,9 @@ def par_tags():
                 }
             }
             all_objects.append(current_object)
-    with open('all_tags.json', 'w', encoding='utf-8') as f:
-        json.dump(all_objects, f, ensure_ascii=False, indent=4)  # Записываем в файл
+    return all_objects
+    # with open('all_tags.json', 'w', encoding='utf-8') as f:
+    #     json.dump(all_objects, f, ensure_ascii=False, indent=4)  # Записываем в файл
     # print(all_objects)
     # Добавляем словарь в список
     #     all_objects.append(current_object)
