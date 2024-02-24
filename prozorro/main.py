@@ -12,6 +12,7 @@ from bs4 import BeautifulSoup
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 from config import spreadsheet_id, headers, dict_comany_edrpo
+
 # from selenium import webdriver
 
 current_directory = os.getcwd()
@@ -20,7 +21,6 @@ temp_directory = 'temp'
 temp_path = os.path.join(current_directory, temp_directory)
 json_path = os.path.join(temp_path, 'json')
 html_path = os.path.join(temp_path, 'html')
-
 
 
 def get_google():
@@ -40,7 +40,6 @@ def creative_temp_folders():
     for folder in [temp_path, json_path, html_path]:
         if not os.path.exists(folder):
             os.makedirs(folder)
-
 
 
 """Получение всех тендеров"""
@@ -131,20 +130,8 @@ def pars_tender():
             data_json = json.load(f)
         json_data = data_json.get('data', {})
         status_tender = json_data.get('status', None)
-        url_tender = None
-        customer = None
-        date_startDate = None
-        time_startDate = None
-        date_enquiryPeriod_endDate = None
-        time_enquiryPeriod_endDate = None
         date_auctionPeriod_auctionPeriod = None
         time_auctionPeriod_auctionPeriod = None
-        guarantee_amount = None
-        bank_garantiy = None
-        award_name_customer = None
-        award_value_customer = None
-        date_pending = None
-        time_pending = None
         tenderID = json_data.get('tenderID')
         tender_id = parsing_tender(tenderID)
         date_auctionPeriod = None
@@ -153,37 +140,110 @@ def pars_tender():
         bids_amount = None
         url_tender = f"https://prozorro.gov.ua/tender/{tenderID}"
         customer = json_data.get('procuringEntity', {}).get('name', None)
-        # budget = json_data['value']['amount']
         budget = json_data.get('value', [{}]).get('amount', None)
+        # "Початок аукціону"
+        lots = json_data.get('lots', [{}])
+        # "Кінцевий строк подання тендерних пропозицій"
+        auctionPeriod_auctionPeriod = lots[0].get('auctionPeriod', {}).get('startDate')
+        if auctionPeriod_auctionPeriod:
+            datetime_obj_auctionPeriod = datetime.fromisoformat(auctionPeriod_auctionPeriod)
+
+            date_auctionPeriod = datetime_obj_auctionPeriod.strftime("%d.%m.%Y")
+            time_auctionPeriod = datetime_obj_auctionPeriod.strftime("%H:%M")
+        else:
+            date_auctionPeriod_auctionPeriod = time_auctionPeriod_auctionPeriod = None
+        # "Звернення за роз’ясненнями"
+        enquiryPeriod_endDate = json_data.get('enquiryPeriod', {}).get('endDate')
+        if enquiryPeriod_endDate:
+            datetime_obj_enquiryPeriod_endDate = datetime.fromisoformat(enquiryPeriod_endDate)
+
+            date_enquiryPeriod_endDate = datetime_obj_enquiryPeriod_endDate - timedelta(days=1)
+            date_enquiryPeriod_endDate = date_enquiryPeriod_endDate.strftime("%d.%m.%Y")
+
+            datetime_obj_minus_one_minute = datetime_obj_enquiryPeriod_endDate - timedelta(minutes=1)
+            time_enquiryPeriod_endDate = datetime_obj_minus_one_minute.strftime("%H:%M")
+        else:
+            date_enquiryPeriod_endDate = time_enquiryPeriod_endDate = None
+        """Победитель ЕДРПО"""
+        # Инициализация переменных
+        award_name_customer = None
+        award_value_customer = None
+        # edrpo_customer = None
+        time_pending = None
+        date_pending = None
+
+        # Проверяем наличие и не пустоту списка 'awards'
+        if json_data.get('awards'):
+            first_award = json_data.get('awards')[0]  # Берем первый элемент из списка 'awards'
+            dara_pending = first_award['date']
+            datetime_obj_pending = datetime.fromisoformat(dara_pending)
+            """Дата и время победившей ставки"""
+            date_pending = datetime_obj_pending.strftime("%d.%m.%Y")
+            time_pending = datetime_obj_pending.strftime("%H:%M")
+            award_status = first_award.get('status', None)
+
+            # Проверяем наличие и не пустоту списка 'suppliers'
+            if first_award.get('suppliers'):
+                first_supplier = first_award.get('suppliers')[0]  # Берем первый элемент из списка 'suppliers'
+
+                # Извлекаем имя и EDRPOU код
+                award_name_customer = first_supplier.get('name', None)  # Получаем имя
+                identifier = first_supplier.get('identifier')  # Получаем identifier
+                if identifier:  # Проверяем, что identifier существует
+                    edrpo_customer = identifier.get('id', None)  # Извлекаем 'id'
+                    if edrpo_customer in dict_comany_edrpo.values():
+                        if award_status == 'pending':
+                            award_status = None
+                        if award_status == 'active':
+                            award_status = 'Победа'
+                        if award_status == 'unsuccessful':
+                            award_status = None
+                    else:
+                        award_status = None
+            # Для стоимости предложения победителя
+            award_value = first_award.get('value')  # Получаем словарь 'value'
+            if award_value:  # Проверяем, что словарь 'value' существует
+                award_value_customer = award_value.get('amount', None)  # Получаем стоимость
+
+        # """Дата и время победившей ставки"""
+        # dara_pending = json_data['awards'][0]['date']
+        # datetime_obj_pending = datetime.fromisoformat(dara_pending)
+        # """Дата и время победившей ставки"""
+        # date_pending = datetime_obj_pending.strftime("%d.%m.%Y")
+        # time_pending = datetime_obj_pending.strftime("%H:%M")
+        # award_status = json_data.get('awards', [{}])[0].get('status', None)
+        # if edrpo_customer in dict_comany_edrpo.values():
+        #     if award_status == 'pending':
+        #         award_status = None
+        #     if award_status == 'active':
+        #         award_status = 'Победа'
+        #     if award_status == 'unsuccessful':
+        #         award_status = None
+        # else:
+        #     award_status = None
+
+        """Розмір надання забезпечення пропозицій учасників"""
+        if json_data.get('guarantee', {}):
+            guarantee_amount = json_data.get('guarantee', {}).get('amount', None)
+        else:
+            guarantee_amount = budget
+        if len(json_data.get('criteria', [])) > 10:
+            criteria = json_data.get('criteria')[10]  # Безопасно получаем элемент с индексом 10
+            requirementGroups = criteria.get('requirementGroups', [{}])[0]  # Безопасно получаем первый элемент списка
+            requirements = requirementGroups.get('requirements', [{}])[0]  # Безопасно получаем первый элемент
+            bank_garantiy = requirements.get('description', None)  # И, наконец, получаем 'description'
+
+            # Проверяем, содержит ли bank_garantiy нужный текст, только если bank_garantiy не None
+            if bank_garantiy and 'Відповідно до пункту 7 частини першої' in bank_garantiy:
+                bank_garantiy = 'Да'
+            else:
+                bank_garantiy = None
+        else:
+            bank_garantiy = None  # Если элементов в списке 'criteria' меньше 11, возвращаем None
+
         """Період уточнень"""
         if status_tender == 'active.enquiries':
             status_tender = 'Період уточнень'
-            """Бюджет"""
-
-            # "Початок аукціону"
-            lots = json_data.get('lots', [{}])
-            auctionPeriod = lots[0].get('auctionPeriod', {})
-            # "Кінцевий строк подання тендерних пропозицій"
-            auctionPeriod_auctionPeriod = lots[0].get('auctionPeriod', {}).get('startDate')
-            if auctionPeriod_auctionPeriod:
-                datetime_obj_auctionPeriod = datetime.fromisoformat(auctionPeriod_auctionPeriod)
-
-                date_auctionPeriod = datetime_obj_auctionPeriod.strftime("%d.%m.%Y")
-                time_auctionPeriod = datetime_obj_auctionPeriod.strftime("%H:%M")
-            else:
-                date_auctionPeriod_auctionPeriod = time_auctionPeriod_auctionPeriod = None
-            # "Звернення за роз’ясненнями"
-            enquiryPeriod_endDate = json_data.get('enquiryPeriod', {}).get('endDate')
-            if enquiryPeriod_endDate:
-                datetime_obj_enquiryPeriod_endDate = datetime.fromisoformat(enquiryPeriod_endDate)
-
-                date_enquiryPeriod_endDate = datetime_obj_enquiryPeriod_endDate - timedelta(days=1)
-                date_enquiryPeriod_endDate = date_enquiryPeriod_endDate.strftime("%d.%m.%Y")
-
-                datetime_obj_minus_one_minute = datetime_obj_enquiryPeriod_endDate - timedelta(minutes=1)
-                time_enquiryPeriod_endDate = datetime_obj_minus_one_minute.strftime("%H:%M")
-            else:
-                date_enquiryPeriod_endDate = time_enquiryPeriod_endDate = None
 
         """Подання пропозицій"""
         if status_tender == 'active.tendering':
@@ -191,76 +251,161 @@ def pars_tender():
 
             dateCreated = json_data.get('dateCreated', None)
 
-            # "Початок аукціону"
-            lots = json_data.get('lots', [{}])
-            auctionPeriod = lots[0].get('auctionPeriod', {})
-            # "Кінцевий строк подання тендерних пропозицій"
-            auctionPeriod_auctionPeriod = lots[0].get('auctionPeriod', {}).get('startDate')
-            if auctionPeriod_auctionPeriod:
-                datetime_obj_auctionPeriod = datetime.fromisoformat(auctionPeriod_auctionPeriod)
+            # # "Початок аукціону"
+            # lots = json_data.get('lots', [{}])
+            # # auctionPeriod = lots[0].get('auctionPeriod', {})
+            # # "Кінцевий строк подання тендерних пропозицій"
+            # auctionPeriod_auctionPeriod = lots[0].get('auctionPeriod', {}).get('startDate')
+            # if auctionPeriod_auctionPeriod:
+            #     datetime_obj_auctionPeriod = datetime.fromisoformat(auctionPeriod_auctionPeriod)
+            #
+            #     date_auctionPeriod = datetime_obj_auctionPeriod.strftime("%d.%m.%Y")
+            #     time_auctionPeriod = datetime_obj_auctionPeriod.strftime("%H:%M")
+            # else:
+            #     date_auctionPeriod_auctionPeriod = time_auctionPeriod_auctionPeriod = None
 
-                date_auctionPeriod = datetime_obj_auctionPeriod.strftime("%d.%m.%Y")
-                time_auctionPeriod = datetime_obj_auctionPeriod.strftime("%H:%M")
-            else:
-                date_auctionPeriod_auctionPeriod = time_auctionPeriod_auctionPeriod = None
-
-            # "Очікувана вартість"
-            price_tender = json_data.get('value', {}).get('amount', None)
+            # # "Очікувана вартість"
+            # price_tender = json_data.get('value', {}).get('amount', None)
 
             # "Відкриті торги з особливостями"
 
-            # "Звернення за роз’ясненнями"
-            enquiryPeriod_endDate = json_data.get('enquiryPeriod', {}).get('endDate')
-            if enquiryPeriod_endDate:
-                datetime_obj_enquiryPeriod_endDate = datetime.fromisoformat(enquiryPeriod_endDate)
-
-                date_enquiryPeriod_endDate = datetime_obj_enquiryPeriod_endDate - timedelta(days=1)
-                date_enquiryPeriod_endDate = date_enquiryPeriod_endDate.strftime("%d.%m.%Y")
-
-                datetime_obj_minus_one_minute = datetime_obj_enquiryPeriod_endDate - timedelta(minutes=1)
-                time_enquiryPeriod_endDate = datetime_obj_minus_one_minute.strftime("%H:%M")
-            else:
-                date_enquiryPeriod_endDate = time_enquiryPeriod_endDate = None
-
-            # "Кінцевий строк подання тендерних пропозицій"
-            auctionPeriod_auctionPeriod = lots[0].get('auctionPeriod', {}).get('shouldStartAfter')
-            if auctionPeriod_auctionPeriod:
-                datetime_obj_auctionPeriod_auctionPeriod = datetime.fromisoformat(auctionPeriod_auctionPeriod)
-
-                date_auctionPeriod_auctionPeriod = datetime_obj_auctionPeriod_auctionPeriod - timedelta(days=1)
-                date_auctionPeriod_auctionPeriod = date_auctionPeriod_auctionPeriod.strftime("%d.%m.%Y")
-                datetime_obj_minus_one_minute = datetime_obj_auctionPeriod_auctionPeriod - timedelta(minutes=1)
-                time_auctionPeriod_auctionPeriod = datetime_obj_minus_one_minute.strftime("%H:%M")
-            else:
-                date_auctionPeriod_auctionPeriod = time_auctionPeriod_auctionPeriod = None
+            # # "Звернення за роз’ясненнями"
+            # enquiryPeriod_endDate = json_data.get('enquiryPeriod', {}).get('endDate')
+            # if enquiryPeriod_endDate:
+            #     datetime_obj_enquiryPeriod_endDate = datetime.fromisoformat(enquiryPeriod_endDate)
+            #
+            #     date_enquiryPeriod_endDate = datetime_obj_enquiryPeriod_endDate - timedelta(days=1)
+            #     date_enquiryPeriod_endDate = date_enquiryPeriod_endDate.strftime("%d.%m.%Y")
+            #
+            #     datetime_obj_minus_one_minute = datetime_obj_enquiryPeriod_endDate - timedelta(minutes=1)
+            #     time_enquiryPeriod_endDate = datetime_obj_minus_one_minute.strftime("%H:%M")
+            # else:
+            #     date_enquiryPeriod_endDate = time_enquiryPeriod_endDate = None
+            #
+            # # "Кінцевий строк подання тендерних пропозицій"
+            # auctionPeriod_auctionPeriod = lots[0].get('auctionPeriod', {}).get('shouldStartAfter')
+            # if auctionPeriod_auctionPeriod:
+            #     datetime_obj_auctionPeriod_auctionPeriod = datetime.fromisoformat(auctionPeriod_auctionPeriod)
+            #
+            #     date_auctionPeriod_auctionPeriod = datetime_obj_auctionPeriod_auctionPeriod - timedelta(days=1)
+            #     date_auctionPeriod_auctionPeriod = date_auctionPeriod_auctionPeriod.strftime("%d.%m.%Y")
+            #     datetime_obj_minus_one_minute = datetime_obj_auctionPeriod_auctionPeriod - timedelta(minutes=1)
+            #     time_auctionPeriod_auctionPeriod = datetime_obj_minus_one_minute.strftime("%H:%M")
+            # else:
+            #     date_auctionPeriod_auctionPeriod = time_auctionPeriod_auctionPeriod = None
 
         """"Пропозиції розглянуті"""
         if status_tender == 'active.awarded':
             status_tender = 'Пропозиції розглянуті'
-            """Победитель ЕДРПО"""
-            edrpo_customer = json_data.get('awards', [{}])[0].get('suppliers', [{}])[0].get('identifier').get('id',
-                                                                                                              None)
-            """Победитель """
-            award_name_customer = json_data.get('awards', [{}])[0].get('suppliers', [{}])[0].get('name', None)
-            """Ставка которая победила"""
-            award_value_customer = json_data.get('awards', [{}])[0].get('value', [{}]).get('amount', None)
 
-            """Дата и время победившей ставки"""
-            dara_pending = json_data['awards'][0]['date']
-            datetime_obj_pending = datetime.fromisoformat(dara_pending)
-            """Дата и время победившей ставки"""
-            date_pending = datetime_obj_pending.strftime("%d.%m.%Y")
-            time_pending = datetime_obj_pending.strftime("%H:%M")
-            award_status = json_data.get('awards', [{}])[0].get('status', None)
-            if edrpo_customer in dict_comany_edrpo.values():
-                if award_status == 'pending':
-                    award_status = None
-                if award_status == 'active':
-                    award_status = 'Победа'
-                if award_status == 'unsuccessful':
-                    award_status = None
-            else:
-                award_status = None
+        """Прекваліфікація (період оскарження)"""
+        if status_tender == 'active.pre-qualification.stand-still':
+            status_tender = 'Прекваліфікація (період оскарження)'
+            # "Початок аукціону"
+            # lots = json_data.get('lots', [{}])
+            # auctionPeriod = lots[0].get('auctionPeriod', {})
+            # # "Кінцевий строк подання тендерних пропозицій"
+            # auctionPeriod_auctionPeriod = lots[0].get('auctionPeriod', {}).get('startDate')
+            # if auctionPeriod_auctionPeriod:
+            #     datetime_obj_auctionPeriod = datetime.fromisoformat(auctionPeriod_auctionPeriod)
+            #
+            #     date_auctionPeriod = datetime_obj_auctionPeriod.strftime("%d.%m.%Y")
+            #     time_auctionPeriod = datetime_obj_auctionPeriod.strftime("%H:%M")
+            # else:
+            #     date_auctionPeriod_auctionPeriod = time_auctionPeriod_auctionPeriod = None
+            # # "Звернення за роз’ясненнями"
+            # enquiryPeriod_endDate = json_data.get('enquiryPeriod', {}).get('endDate')
+            # if enquiryPeriod_endDate:
+            #     datetime_obj_enquiryPeriod_endDate = datetime.fromisoformat(enquiryPeriod_endDate)
+            #
+            #     date_enquiryPeriod_endDate = datetime_obj_enquiryPeriod_endDate - timedelta(days=1)
+            #     date_enquiryPeriod_endDate = date_enquiryPeriod_endDate.strftime("%d.%m.%Y")
+            #
+            #     datetime_obj_minus_one_minute = datetime_obj_enquiryPeriod_endDate - timedelta(minutes=1)
+            #     time_enquiryPeriod_endDate = datetime_obj_minus_one_minute.strftime("%H:%M")
+            # else:
+            #     date_enquiryPeriod_endDate = time_enquiryPeriod_endDate = None
+            #
+            # # "Кінцевий строк подання тендерних пропозицій"
+            # auctionPeriod_auctionPeriod = lots[0].get('auctionPeriod', {}).get('shouldStartAfter')
+            # if auctionPeriod_auctionPeriod:
+            #     datetime_obj_auctionPeriod_auctionPeriod = datetime.fromisoformat(auctionPeriod_auctionPeriod)
+            #
+            #     date_auctionPeriod_auctionPeriod = datetime_obj_auctionPeriod_auctionPeriod - timedelta(days=1)
+            #     date_auctionPeriod_auctionPeriod = date_auctionPeriod_auctionPeriod.strftime("%d.%m.%Y")
+            #     datetime_obj_minus_one_minute = datetime_obj_auctionPeriod_auctionPeriod - timedelta(minutes=1)
+            #     time_auctionPeriod_auctionPeriod = datetime_obj_minus_one_minute.strftime("%H:%M")
+            # else:
+            #     date_auctionPeriod_auctionPeriod = time_auctionPeriod_auctionPeriod = None
+
+        """Аукціон"""
+        if status_tender == 'active.auction':
+            status_tender = 'Аукціон'
+
+            # # "Початок аукціону"
+            # lots = json_data.get('lots', [{}])
+            # auctionPeriod = lots[0].get('auctionPeriod', {})
+            # # "Кінцевий строк подання тендерних пропозицій"
+            # auctionPeriod_auctionPeriod = lots[0].get('auctionPeriod', {}).get('startDate')
+            # if auctionPeriod_auctionPeriod:
+            #     datetime_obj_auctionPeriod = datetime.fromisoformat(auctionPeriod_auctionPeriod)
+            #
+            #     date_auctionPeriod = datetime_obj_auctionPeriod.strftime("%d.%m.%Y")
+            #     time_auctionPeriod = datetime_obj_auctionPeriod.strftime("%H:%M")
+            # else:
+            #     date_auctionPeriod_auctionPeriod = time_auctionPeriod_auctionPeriod = None
+            # # "Звернення за роз’ясненнями"
+            # enquiryPeriod_endDate = json_data.get('enquiryPeriod', {}).get('endDate')
+            # if enquiryPeriod_endDate:
+            #     datetime_obj_enquiryPeriod_endDate = datetime.fromisoformat(enquiryPeriod_endDate)
+            #
+            #     date_enquiryPeriod_endDate = datetime_obj_enquiryPeriod_endDate - timedelta(days=1)
+            #     date_enquiryPeriod_endDate = date_enquiryPeriod_endDate.strftime("%d.%m.%Y")
+            #
+            #     datetime_obj_minus_one_minute = datetime_obj_enquiryPeriod_endDate - timedelta(minutes=1)
+            #     time_enquiryPeriod_endDate = datetime_obj_minus_one_minute.strftime("%H:%M")
+            # else:
+            #     date_enquiryPeriod_endDate = time_enquiryPeriod_endDate = None
+            #
+            # # "Кінцевий строк подання тендерних пропозицій"
+            # auctionPeriod_auctionPeriod = lots[0].get('auctionPeriod', {}).get('shouldStartAfter')
+            # if auctionPeriod_auctionPeriod:
+            #     datetime_obj_auctionPeriod_auctionPeriod = datetime.fromisoformat(auctionPeriod_auctionPeriod)
+            #
+            #     date_auctionPeriod_auctionPeriod = datetime_obj_auctionPeriod_auctionPeriod - timedelta(days=1)
+            #     date_auctionPeriod_auctionPeriod = date_auctionPeriod_auctionPeriod.strftime("%d.%m.%Y")
+            #     datetime_obj_minus_one_minute = datetime_obj_auctionPeriod_auctionPeriod - timedelta(minutes=1)
+            #     time_auctionPeriod_auctionPeriod = datetime_obj_minus_one_minute.strftime("%H:%M")
+            # else:
+            #     date_auctionPeriod_auctionPeriod = time_auctionPeriod_auctionPeriod = None
+        """Кваліфікація переможця"""
+        if status_tender == 'active.qualification':
+            status_tender = 'Кваліфікація переможця'
+
+            # """Победитель """
+            # award_name_customer = json_data.get('awards', [{}])[0].get('suppliers', [{}])[0].get('name', None)
+            # """Ставка которая победила"""
+            # award_value_customer = json_data.get('awards', [{}])[0].get('value', [{}]).get('amount', None)
+            # dara_pending = json_data['awards'][0]['date']
+            # datetime_obj_pending = datetime.fromisoformat(dara_pending)
+            # """Дата и время победившей ставки"""
+            # date_pending = datetime_obj_pending.strftime("%d.%m.%Y")
+            # time_pending = datetime_obj_pending.strftime("%H:%M")
+            # """Победитель ЕДРПО"""
+            # edrpo_customer = json_data.get('awards', [{}])[0].get('suppliers', [{}])[0].get('identifier').get('id',
+            #                                                                                                   None)
+            # award_status = json_data.get('awards', [{}])[0].get('status', None)
+            # if edrpo_customer in dict_comany_edrpo.values():
+            #     if award_status == 'pending':
+            #         award_status = None
+            #     if award_status == 'active':
+            #         award_status = 'Победа'
+            #     if award_status == 'unsuccessful':
+            #         award_status = None
+            # else:
+            #     award_status = None
+        """Пока поставлю для всех award_value_customer = None"""
+        # award_name_customer = None
 
         """Завершена"""
         if status_tender == 'complete':
@@ -302,95 +447,31 @@ def pars_tender():
 
                     else:
                         continue
-            """Победитель """
-            award_name_customer = json_data.get('awards', [{}])[0].get('suppliers', [{}])[0].get('name', None)
-            """Победитель ЕДРПО"""
-            edrpo_customer = json_data.get('awards', [{}])[0].get('suppliers', [{}])[0].get('identifier').get('id',
-                                                                                                              None)
-            # edrpo_customer = json_data['awards'][0]['suppliers'][0]['identifier']['id']
+            # """Победитель """
+            # award_name_customer = json_data.get('awards', [{}])[0].get('suppliers', [{}])[0].get('name', None)
+            # """Победитель ЕДРПО"""
+            # edrpo_customer = json_data.get('awards', [{}])[0].get('suppliers', [{}])[0].get('identifier').get('id',
+            #                                                                                                   None)
+            # # edrpo_customer = json_data['awards'][0]['suppliers'][0]['identifier']['id']
 
-            """Ставка которая победила"""
-            award_value_customer = json_data.get('awards', [{}])[0].get('value', [{}]).get('amount', None)
-            dara_pending = json_data['awards'][0]['date']
-            datetime_obj_pending = datetime.fromisoformat(dara_pending)
-            """Дата и время победившей ставки"""
-            date_pending = datetime_obj_pending.strftime("%d.%m.%Y")
-            time_pending = datetime_obj_pending.strftime("%H:%M")
-            award_status = json_data.get('awards', [{}])[0].get('status', None)
-            if edrpo_customer in dict_comany_edrpo.values():
-                if award_status == 'pending':
-                    award_status = None
-                if award_status == 'active':
-                    award_status = 'Победа'
-                if award_status == 'unsuccessful':
-                    award_status = None
-            else:
-                award_status = None
-            """Розмір надання забезпечення пропозицій учасників"""
-            guarantee_amount = json_data['guarantee']['amount']
-            if len(json_data.get('criteria', [])) > 10:
-                criteria = json_data.get('criteria')[10]  # Теперь безопасно получаем элемент с индексом 10
-                requirementGroups = criteria.get('requirementGroups', [{}])[
-                    0]  # Безопасно получаем первый элемент списка
-                requirements = requirementGroups.get('requirements', [{}])[0]  # Снова безопасно получаем первый элемент
-                bank_garantiy = requirements.get('description', None)  # И, наконец, получаем 'description'
-                """забезпечення виконання договору """
-                if 'Відповідно до пункту 7 частини першої' in bank_garantiy:
-                    bank_garantiy = 'Да'
-                else:
-                    bank_garantiy = None
-            else:
-                bank_garantiy = None  # Если элементов в списке 'criteria' меньше 11, возвращаем None
+            # """Ставка которая победила"""
+            # award_value_customer = json_data.get('awards', [{}])[0].get('value', [{}]).get('amount', None)
+            # dara_pending = json_data['awards'][0]['date']
+            # datetime_obj_pending = datetime.fromisoformat(dara_pending)
+            # """Дата и время победившей ставки"""
+            # date_pending = datetime_obj_pending.strftime("%d.%m.%Y")
+            # time_pending = datetime_obj_pending.strftime("%H:%M")
+            # # award_status = json_data.get('awards', [{}])[0].get('status', None)
+            # if edrpo_customer in dict_comany_edrpo.values():
+            #     if award_status == 'pending':
+            #         award_status = None
+            #     if award_status == 'active':
+            #         award_status = 'Победа'
+            #     if award_status == 'unsuccessful':
+            #         award_status = None
+            # else:
+            #     award_status = None
 
-        """Прекваліфікація (період оскарження)"""
-        if status_tender == 'active.pre-qualification.stand-still':
-            status_tender = 'Прекваліфікація (період оскарження)'
-
-        """Аукціон"""
-        if status_tender == 'active.auction':
-            status_tender = 'Аукціон'
-
-            # "Початок аукціону"
-            lots = json_data.get('lots', [{}])
-            auctionPeriod = lots[0].get('auctionPeriod', {})
-            # "Кінцевий строк подання тендерних пропозицій"
-            auctionPeriod_auctionPeriod = lots[0].get('auctionPeriod', {}).get('startDate')
-            if auctionPeriod_auctionPeriod:
-                datetime_obj_auctionPeriod = datetime.fromisoformat(auctionPeriod_auctionPeriod)
-
-                date_auctionPeriod = datetime_obj_auctionPeriod.strftime("%d.%m.%Y")
-                time_auctionPeriod = datetime_obj_auctionPeriod.strftime("%H:%M")
-            else:
-                date_auctionPeriod_auctionPeriod = time_auctionPeriod_auctionPeriod = None
-
-        """Кваліфікація переможця"""
-        if status_tender == 'active.qualification':
-            status_tender = 'Кваліфікація переможця'
-
-            """Победитель """
-            award_name_customer = json_data.get('awards', [{}])[0].get('suppliers', [{}])[0].get('name', None)
-            """Ставка которая победила"""
-            award_value_customer = json_data.get('awards', [{}])[0].get('value', [{}]).get('amount', None)
-            dara_pending = json_data['awards'][0]['date']
-            datetime_obj_pending = datetime.fromisoformat(dara_pending)
-            """Дата и время победившей ставки"""
-            date_pending = datetime_obj_pending.strftime("%d.%m.%Y")
-            time_pending = datetime_obj_pending.strftime("%H:%M")
-            """Победитель ЕДРПО"""
-            edrpo_customer = json_data.get('awards', [{}])[0].get('suppliers', [{}])[0].get('identifier').get('id',
-                                                                                                              None)
-            award_status = json_data.get('awards', [{}])[0].get('status', None)
-            if edrpo_customer in dict_comany_edrpo.values():
-                if award_status == 'pending':
-                    award_status = None
-                if award_status == 'active':
-                    award_status = 'Победа'
-                if award_status == 'unsuccessful':
-                    award_status = None
-            else:
-                award_status = None
-        """Пока поставлю для всех award_value_customer = None"""
-        award_name_customer = None
         # Данные для вставки
         tender_data = {
             'tender_id': tender_id,
@@ -440,16 +521,17 @@ def pars_tender():
             print(f"Запись с tender_id {tender_id} уже существует. Пропускаем...")
 
         conn.close()
+    """Открыть после завершения"""
+    # files_json = glob.glob(os.path.join(json_path, '*'))
+    # files_html = glob.glob(os.path.join(html_path, '*'))
+    # # Объединяем списки файлов
+    # all_files = files_json + files_html
+    # # Удаляем каждый файл
+    # # Удаляем каждый файл в объединенном списке
+    # for f in all_files:
+    #     if os.path.isfile(f):
+    #         os.remove(f)
 
-    files_json = glob.glob(os.path.join(json_path, '*'))
-    files_html = glob.glob(os.path.join(html_path, '*'))
-    # Объединяем списки файлов
-    all_files = files_json + files_html
-    # Удаляем каждый файл
-    # Удаляем каждый файл в объединенном списке
-    for f in all_files:
-        if os.path.isfile(f):
-            os.remove(f)
 
 """Обновление БД"""
 
@@ -479,7 +561,8 @@ def update_tenders_from_json():
         'active.qualification': 'Кваліфікація переможця',
         'active.tendering': 'Подання пропозицій',
         'active.awarded': 'Пропозиції розглянуті',
-        'active.enquiries': 'Період уточнень'
+        'active.enquiries': 'Період уточнень',
+        'active.pre-qualification.stand-still': 'Прекваліфікація (період оскарження)'
     }
 
     filenames = glob.glob(os.path.join(json_path, 'tender*.json'))
@@ -513,7 +596,6 @@ def update_tenders_from_json():
 
                         # "Початок аукціону"
                         lots = json_data.get('lots', [{}])
-                        auctionPeriod = lots[0].get('auctionPeriod', {})
                         # "Кінцевий строк подання тендерних пропозицій"
                         auctionPeriod_auctionPeriod = lots[0].get('auctionPeriod', {}).get('startDate')
                         if auctionPeriod_auctionPeriod:
@@ -620,6 +702,87 @@ def update_tenders_from_json():
                             award_status, guarantee_amount, bank_garantiy,
                             tender_id_json))
 
+                    """Подання пропозицій"""
+                    if new_status == 'Подання пропозицій':
+                        budget = json_data.get('value', [{}]).get('amount', None)
+                        # "Початок аукціону"
+                        lots = json_data.get('lots', [{}])
+                        # "Кінцевий строк подання тендерних пропозицій"
+                        auctionPeriod_auctionPeriod = lots[0].get('auctionPeriod', {}).get('startDate')
+                        if auctionPeriod_auctionPeriod:
+                            datetime_obj_auctionPeriod = datetime.fromisoformat(auctionPeriod_auctionPeriod)
+
+                            date_auctionPeriod = datetime_obj_auctionPeriod.strftime("%d.%m.%Y")
+                            time_auctionPeriod = datetime_obj_auctionPeriod.strftime("%H:%M")
+                        else:
+                            date_auctionPeriod_auctionPeriod = time_auctionPeriod_auctionPeriod = None
+                        # "Звернення за роз’ясненнями"
+                        enquiryPeriod_endDate = json_data.get('enquiryPeriod', {}).get('endDate')
+                        if enquiryPeriod_endDate:
+                            datetime_obj_enquiryPeriod_endDate = datetime.fromisoformat(enquiryPeriod_endDate)
+
+                            date_enquiryPeriod_endDate = datetime_obj_enquiryPeriod_endDate - timedelta(days=1)
+                            date_enquiryPeriod_endDate = date_enquiryPeriod_endDate.strftime("%d.%m.%Y")
+
+                            datetime_obj_minus_one_minute = datetime_obj_enquiryPeriod_endDate - timedelta(minutes=1)
+                            time_enquiryPeriod_endDate = datetime_obj_minus_one_minute.strftime("%H:%M")
+                        else:
+                            date_enquiryPeriod_endDate = time_enquiryPeriod_endDate = None
+                        cursor.execute(""" UPDATE tender
+                                                SET status_tender = ?,budget = ?, date_auctionPeriod = ?, time_auctionPeriod = ?
+                                                WHERE tender_id = ?
+                                            """,
+                                       (new_status, budget, date_auctionPeriod, time_auctionPeriod, tender_id_json))
+
+                        print(
+                            f"Статус тендера {tender_id_json} обновлен на '{new_status}' с датой аукциона {date_auctionPeriod} и временем {time_auctionPeriod}.")
+
+                    if new_status == 'Пропозиції розглянуті':
+                        # Проверяем наличие и не пустоту списка 'awards'
+                        if json_data.get('awards'):
+                            first_award = json_data.get('awards')[0]  # Берем первый элемент из списка 'awards'
+                            dara_pending = first_award['date']
+                            datetime_obj_pending = datetime.fromisoformat(dara_pending)
+                            """Дата и время победившей ставки"""
+                            date_pending = datetime_obj_pending.strftime("%d.%m.%Y")
+                            time_pending = datetime_obj_pending.strftime("%H:%M")
+                            award_status = first_award.get('status', None)
+
+                            # Проверяем наличие и не пустоту списка 'suppliers'
+                            if first_award.get('suppliers'):
+                                first_supplier = first_award.get('suppliers')[
+                                    0]  # Берем первый элемент из списка 'suppliers'
+
+                                # Извлекаем имя и EDRPOU код
+                                award_name_customer = first_supplier.get('name', None)  # Получаем имя
+                                identifier = first_supplier.get('identifier')  # Получаем identifier
+                                if identifier:  # Проверяем, что identifier существует
+                                    edrpo_customer = identifier.get('id', None)  # Извлекаем 'id'
+                                    if edrpo_customer in dict_comany_edrpo.values():
+                                        if award_status == 'pending':
+                                            award_status = None
+                                        if award_status == 'active':
+                                            award_status = 'Победа'
+                                        if award_status == 'unsuccessful':
+                                            award_status = None
+                                    else:
+                                        award_status = None
+
+                            # Для стоимости предложения победителя
+                            award_value = first_award.get('value')  # Получаем словарь 'value'
+                            if award_value:  # Проверяем, что словарь 'value' существует
+                                award_value_customer = award_value.get('amount', None)  # Получаем стоимость
+                        cursor.execute(""" UPDATE tender
+                                                SET status_tender = ?,date_pending = ?,time_pending = ?,award_status = ?,award_value_customer = ?,award_name_customer = ?
+                                                WHERE tender_id = ?
+                                            """,
+                                       (new_status, date_pending, time_pending, award_status, award_value_customer,
+                                        award_name_customer, tender_id_json))
+                    if new_status == 'Період уточнень':
+                        pass
+                    if new_status == 'Прекваліфікація (період оскарження)':
+                        pass
+
                     # # Обновление статуса в базе данных
                     # cursor.execute("UPDATE tender SET status_tender = ? WHERE tender_id = ?",
                     #                (new_status, tender_id_json))
@@ -627,15 +790,17 @@ def update_tenders_from_json():
                     break
             print(f'Пауза 10сек')
             time.sleep(10)
-    files_json = glob.glob(os.path.join(json_path, '*'))
-    files_html = glob.glob(os.path.join(html_path, '*'))
-    # Объединяем списки файлов
-    all_files = files_json + files_html
-    # Удаляем каждый файл
-    # Удаляем каждый файл в объединенном списке
-    for f in all_files:
-        if os.path.isfile(f):
-            os.remove(f)
+    """Открыть после завершения"""
+    # files_json = glob.glob(os.path.join(json_path, '*'))
+    # files_html = glob.glob(os.path.join(html_path, '*'))
+    # # Объединяем списки файлов
+    # all_files = files_json + files_html
+    # # Удаляем каждый файл
+    # # Удаляем каждый файл в объединенном списке
+    # for f in all_files:
+    #     if os.path.isfile(f):
+    #         os.remove(f)
+
 
 """Выгружает данные с БД"""
 
@@ -746,54 +911,52 @@ def write_to_sheet():
     print('Даннные записали')
 
 
-print('Введите пароль')
-passw = getpass.getpass("")
-if passw == '12345677':
-    while True:
-        # Запрос ввода от пользователя
-        print('\nВведите 1 для загрузки нового тендера'
-              '\nВведите 2 для запуска обновления всех тендеров'
-              '\nВведите 3 для загрузки в Google Таблицу'
-              '\nВведите 0 для закрытия программы')
-        user_input = input("Выберите действие: ")
+#
+# print('Введите пароль')
+# passw = getpass.getpass("")
+# if passw == '12345677':
+#     while True:
+#         # Запрос ввода от пользователя
+#         print('\nВведите 1 для загрузки нового тендера'
+#               '\nВведите 2 для запуска обновления всех тендеров'
+#               '\nВведите 3 для загрузки в Google Таблицу'
+#               '\nВведите 0 для закрытия программы')
+#         user_input = input("Выберите действие: ")
+#
+#         if user_input == '1':
+#             creative_temp_folders()
+#             print('Вставьте ссылку на тендер:')
+#             url_tender = input("")
+#             get_tender(url_tender)
+#             get_json_tender()
+#             pars_tender()
+#         elif user_input == '2':
+#             update_tenders_from_json()
+#         elif user_input == '3':
+#             clear_to_sheet()
+#             write_to_sheet()
+#         elif user_input == '0':
+#             print("Программа завершена.")
+#             break  # Выход из цикла, завершение программы
+#         else:
+#             print("Неверный ввод, пожалуйста, введите корректный номер действия.")
+# else:
+#     print('Пароль не правильный')
 
-        if user_input == '1':
-            creative_temp_folders()
-            print('Вставьте ссылку на тендер:')
-            url_tender = input("")
-            get_tender(url_tender)
-            get_json_tender()
-            pars_tender()
-        elif user_input == '2':
-            update_tenders_from_json()
-        elif user_input == '3':
-            clear_to_sheet()
-            write_to_sheet()
-        elif user_input == '0':
-            print("Программа завершена.")
-            break  # Выход из цикла, завершение программы
-        else:
-            print("Неверный ввод, пожалуйста, введите корректный номер действия.")
-else:
-    print('Пароль не правильный')
-
-
-
-
-
-# if __name__ == '__main__':
-
+if __name__ == '__main__':
+    #
     # creative_temp_folders()
     # get_all_tenders()
     # pars_all_tenders()
-    # get_tender()
+    # url_tender = 'https://prozorro.gov.ua/tender/UA-2024-01-11-003133-a'
+    # get_tender(url_tender)
     # get_json_tender()
     # pars_tender()
-    # update_tenders_from_json()
+    update_tenders_from_json()
     # clear_to_sheet()
     # write_to_sheet()
     # get_all_tender_records_as_dicts()
-
+    #
     # filename_tender = os.path.join(json_path, 'tender.json')
     # # Загрузка JSON из файла
     # with open(filename_tender, 'r', encoding='utf-8') as file:
