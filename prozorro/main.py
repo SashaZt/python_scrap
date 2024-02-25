@@ -138,6 +138,7 @@ def pars_tender():
         time_auctionPeriod = None
         award_status = None
         bids_amount = None
+        tender_verification = None
         url_tender = f"https://prozorro.gov.ua/tender/{tenderID}"
         customer = json_data.get('procuringEntity', {}).get('name', None)
         budget = json_data.get('value', [{}]).get('amount', None)
@@ -244,11 +245,12 @@ def pars_tender():
         """Період уточнень"""
         if status_tender == 'active.enquiries':
             status_tender = 'Період уточнень'
+            tender_verification = "0"
 
         """Подання пропозицій"""
         if status_tender == 'active.tendering':
             status_tender = 'Подання пропозицій'
-
+            tender_verification = "0"
             dateCreated = json_data.get('dateCreated', None)
 
             # # "Початок аукціону"
@@ -297,10 +299,12 @@ def pars_tender():
         """"Пропозиції розглянуті"""
         if status_tender == 'active.awarded':
             status_tender = 'Пропозиції розглянуті'
+            tender_verification = "0"
 
         """Прекваліфікація (період оскарження)"""
         if status_tender == 'active.pre-qualification.stand-still':
             status_tender = 'Прекваліфікація (період оскарження)'
+            tender_verification = "0"
             # "Початок аукціону"
             # lots = json_data.get('lots', [{}])
             # auctionPeriod = lots[0].get('auctionPeriod', {})
@@ -341,7 +345,7 @@ def pars_tender():
         """Аукціон"""
         if status_tender == 'active.auction':
             status_tender = 'Аукціон'
-
+            tender_verification = '0'
             # # "Початок аукціону"
             # lots = json_data.get('lots', [{}])
             # auctionPeriod = lots[0].get('auctionPeriod', {})
@@ -381,7 +385,7 @@ def pars_tender():
         """Кваліфікація переможця"""
         if status_tender == 'active.qualification':
             status_tender = 'Кваліфікація переможця'
-
+            tender_verification = "0"
             # """Победитель """
             # award_name_customer = json_data.get('awards', [{}])[0].get('suppliers', [{}])[0].get('name', None)
             # """Ставка которая победила"""
@@ -410,7 +414,7 @@ def pars_tender():
         """Завершена"""
         if status_tender == 'complete':
             status_tender = 'Завершена'
-
+            tender_verification = "1"
             """Остаточна пропозиція"""
             # Получаем список bids из json_data
             bids = json_data.get('bids', [])
@@ -492,7 +496,8 @@ def pars_tender():
             'time_pending': time_pending,
             'award_status': award_status,
             'guarantee_amount': guarantee_amount,
-            'bank_garantiy': bank_garantiy
+            'bank_garantiy': bank_garantiy,
+            'tender_verification':tender_verification
 
         }
         filename_db = os.path.join(current_directory, 'prozorro.db')
@@ -508,12 +513,12 @@ def pars_tender():
                         tender_id, url_tender, customer, status_tender,budget, date_auction, time_auction,bids_amount, date_enquiryPeriod,
                         time_enquiryPeriod, date_auctionPeriod_auctionPeriod, time_auctionPeriod_auctionPeriod,
                         award_name_customer, award_value_customer, date_pending, time_pending, award_status, guarantee_amount,
-                        bank_garantiy
+                        bank_garantiy,tender_verification
                      ) VALUES (
                         :tender_id, :url_tender, :customer, :status_tender,:budget, :date_auction, :time_auction, :bids_amount, :date_enquiryPeriod,
                         :time_enquiryPeriod, :date_auctionPeriod_auctionPeriod, :time_auctionPeriod_auctionPeriod,
                         :award_name_customer, :award_value_customer, :date_pending, :time_pending, :award_status, :guarantee_amount,
-                        :bank_garantiy
+                        :bank_garantiy, :tender_verification
                      )'''
             c.execute(sql, tender_data)
             conn.commit()
@@ -522,38 +527,45 @@ def pars_tender():
 
         conn.close()
     """Открыть после завершения"""
-    # files_json = glob.glob(os.path.join(json_path, '*'))
-    # files_html = glob.glob(os.path.join(html_path, '*'))
-    # # Объединяем списки файлов
-    # all_files = files_json + files_html
-    # # Удаляем каждый файл
-    # # Удаляем каждый файл в объединенном списке
-    # for f in all_files:
-    #     if os.path.isfile(f):
-    #         os.remove(f)
+    files_json = glob.glob(os.path.join(json_path, '*'))
+    files_html = glob.glob(os.path.join(html_path, '*'))
+    # Объединяем списки файлов
+    all_files = files_json + files_html
+    # Удаляем каждый файл
+    # Удаляем каждый файл в объединенном списке
+    for f in all_files:
+        if os.path.isfile(f):
+            os.remove(f)
 
 
 """Обновление БД"""
 
 
 def update_tenders_from_json():
-    # Получение списка текущих тендеров из базы данных
+    # # Получение списка текущих тендеров из базы данных
     dick_tender = get_all_tender_records_as_dicts()
+
     for d in dick_tender:
-        url_ten = d['tender_id']
-        print(f'Качаем тендер {url_ten}')
-        response = requests.get(f"https://public-api.prozorro.gov.ua/api/2.5/tenders/{url_ten}", headers=headers)
-        try:
-            json_data = response.json()
-        except:
-            print(f'Пропустили тендер {url_ten}')
-            continue
-        filename_tender = os.path.join(json_path, f'tender_{url_ten}.json')
-        with open(filename_tender, 'w', encoding='utf-8') as f:
-            json.dump(json_data, f, ensure_ascii=False, indent=4)  # Записываем в файл
-        print('Пауза 10сек')
-        time.sleep(10)
-    # exit()
+        tender_verification_bd = d['tender_verification']
+        if tender_verification_bd != '1':
+            url_ten = d['tender_id']
+            print(f'Качаем тендер {url_ten}')
+            response = requests.get(f"https://public-api.prozorro.gov.ua/api/2.5/tenders/{url_ten}", headers=headers)
+            try:
+                json_data = response.json()
+            except:
+                print(f'Пропустили тендер {url_ten}')
+                continue
+            filename_tender = os.path.join(json_path, f'tender_{url_ten}.json')
+            with open(filename_tender, 'w', encoding='utf-8') as f:
+                json.dump(json_data, f, ensure_ascii=False, indent=4)  # Записываем в файл
+            print('Пауза 10сек')
+            time.sleep(10)
+        else:
+            print(f'Тендер {d["tender_id"]} завершен')
+
+
+
     # Словарь для перевода статусов из json в читаемый вид
     dict_status_tenders = {
         'active.auction': 'Аукціон',
@@ -575,6 +587,7 @@ def update_tenders_from_json():
                 data_json = json.load(f)
             json_data = data_json.get('data', {})
             tenderID = json_data.get('tenderID')
+
             """Закачка файла"""
             url_te = f'https://prozorro.gov.ua/tender/{tenderID}'
             response = requests.get(url_te, headers=headers)
@@ -583,6 +596,7 @@ def update_tenders_from_json():
 
             with open(filename_tender, "w", encoding='utf-8') as file:
                 file.write(src)
+
             tender_id_json = parsing_tender(tenderID)
             status_tender_json = json_data.get('status', None)
 
@@ -653,6 +667,8 @@ def update_tenders_from_json():
 
                     """Завершена"""
                     if new_status == 'Завершена':
+                        budget = json_data.get('value', [{}]).get('amount', None)
+                        tender_verification = 1
                         """Победитель """
                         award_name_customer = json_data.get('awards', [{}])[0].get('suppliers', [{}])[0].get('name',
                                                                                                              None)
@@ -679,7 +695,11 @@ def update_tenders_from_json():
                             award_status = None
 
                             """Розмір надання забезпечення пропозицій учасників"""
-                        guarantee_amount = json_data['guarantee']['amount']
+                        """Розмір надання забезпечення пропозицій учасників"""
+                        if json_data.get('guarantee', {}):
+                            guarantee_amount = json_data.get('guarantee', {}).get('amount', None)
+                        else:
+                            guarantee_amount = budget
                         if len(json_data.get('criteria', [])) > 10:
                             criteria = json_data.get('criteria')[10]  # Теперь безопасно получаем элемент с индексом 10
                             requirementGroups = criteria.get('requirementGroups', [{}])[
@@ -696,10 +716,10 @@ def update_tenders_from_json():
                             bank_garantiy = None  # Если элементов в списке 'criteria' меньше 11, возвращаем None
                         cursor.execute("""UPDATE tender
                         SET status_tender = ?, award_name_customer = ?, award_value_customer = ?,
-                        date_pending = ?, time_pending = ?, award_status = ?, guarantee_amount =?,bank_garantiy =?
+                        date_pending = ?, time_pending = ?, award_status = ?, guarantee_amount =?,bank_garantiy =?, tender_verification=?
                         WHERE tender_id = ? """, (
                             new_status, award_name_customer, award_value_customer, date_pending, time_pending,
-                            award_status, guarantee_amount, bank_garantiy,
+                            award_status, guarantee_amount, bank_garantiy,tender_verification,
                             tender_id_json))
 
                     """Подання пропозицій"""
@@ -788,18 +808,18 @@ def update_tenders_from_json():
                     #                (new_status, tender_id_json))
                     # print(f"Статус тендера {tender_id_json} обновлен на '{new_status}'.")
                     break
-            print(f'Пауза 10сек')
+
+            # print(f'Пауза 10сек')
             time.sleep(10)
     """Открыть после завершения"""
-    # files_json = glob.glob(os.path.join(json_path, '*'))
-    # files_html = glob.glob(os.path.join(html_path, '*'))
-    # # Объединяем списки файлов
-    # all_files = files_json + files_html
-    # # Удаляем каждый файл
-    # # Удаляем каждый файл в объединенном списке
-    # for f in all_files:
-    #     if os.path.isfile(f):
-    #         os.remove(f)
+    files_json = glob.glob(os.path.join(json_path, '*'))
+    files_html = glob.glob(os.path.join(html_path, '*'))
+    # Объединяем списки файлов
+    all_files = files_json + files_html
+    # Удаляем каждый файл
+    for f in all_files:
+        if os.path.isfile(f):
+            os.remove(f)
 
 
 """Выгружает данные с БД"""
@@ -810,7 +830,7 @@ def get_all_tender_records_as_dicts():
     conn = sqlite3.connect(filename_db)
     conn.row_factory = sqlite3.Row
     c = conn.cursor()
-    c.execute("SELECT tender_id, customer, status_tender FROM tender")
+    c.execute("SELECT tender_id, customer, status_tender,tender_verification FROM tender")
     records = c.fetchall()
     conn.close()
     return [dict(record) for record in records]
@@ -911,39 +931,39 @@ def write_to_sheet():
     print('Даннные записали')
 
 
-#
-# print('Введите пароль')
-# passw = getpass.getpass("")
-# if passw == '12345677':
-#     while True:
-#         # Запрос ввода от пользователя
-#         print('\nВведите 1 для загрузки нового тендера'
-#               '\nВведите 2 для запуска обновления всех тендеров'
-#               '\nВведите 3 для загрузки в Google Таблицу'
-#               '\nВведите 0 для закрытия программы')
-#         user_input = input("Выберите действие: ")
-#
-#         if user_input == '1':
-#             creative_temp_folders()
-#             print('Вставьте ссылку на тендер:')
-#             url_tender = input("")
-#             get_tender(url_tender)
-#             get_json_tender()
-#             pars_tender()
-#         elif user_input == '2':
-#             update_tenders_from_json()
-#         elif user_input == '3':
-#             clear_to_sheet()
-#             write_to_sheet()
-#         elif user_input == '0':
-#             print("Программа завершена.")
-#             break  # Выход из цикла, завершение программы
-#         else:
-#             print("Неверный ввод, пожалуйста, введите корректный номер действия.")
-# else:
-#     print('Пароль не правильный')
 
-if __name__ == '__main__':
+print('Введите пароль')
+passw = getpass.getpass("")
+if passw == '12345677':
+    while True:
+        # Запрос ввода от пользователя
+        print('\nВведите 1 для загрузки нового тендера'
+              '\nВведите 2 для запуска обновления всех тендеров'
+              '\nВведите 3 для загрузки в Google Таблицу'
+              '\nВведите 0 для закрытия программы')
+        user_input = input("Выберите действие: ")
+
+        if user_input == '1':
+            creative_temp_folders()
+            print('Вставьте ссылку на тендер:')
+            url_tender = input("")
+            get_tender(url_tender)
+            get_json_tender()
+            pars_tender()
+        elif user_input == '2':
+            update_tenders_from_json()
+        elif user_input == '3':
+            clear_to_sheet()
+            write_to_sheet()
+        elif user_input == '0':
+            print("Программа завершена.")
+            break  # Выход из цикла, завершение программы
+        else:
+            print("Неверный ввод, пожалуйста, введите корректный номер действия.")
+else:
+    print('Пароль не правильный')
+
+# if __name__ == '__main__':
     #
     # creative_temp_folders()
     # get_all_tenders()
@@ -952,7 +972,7 @@ if __name__ == '__main__':
     # get_tender(url_tender)
     # get_json_tender()
     # pars_tender()
-    update_tenders_from_json()
+    # update_tenders_from_json()
     # clear_to_sheet()
     # write_to_sheet()
     # get_all_tender_records_as_dicts()
