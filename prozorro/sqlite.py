@@ -1,9 +1,14 @@
+# -*- coding: utf-8 -*-
+"""Создание БД"""
 import sqlite3
+import os
 
-
+"""Добавление в таблицу колонки"""
 def crative_sql_bd():
+    current_directory = os.getcwd()
+    filename_db = os.path.join(current_directory, 'prozorro.db')
     # Подключение к базе данных (файлу). Если файла нет, он будет создан.
-    conn = sqlite3.connect('prozorro.db')
+    conn = sqlite3.connect(filename_db)
     c = conn.cursor()
 
     # Создание таблицы tender
