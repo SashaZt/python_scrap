@@ -4,12 +4,13 @@ import requests
 import os
 import json
 import re
-from config import cookies, headers
+from config import cookies, headers, shop, time_a, time_b
 from bs4 import BeautifulSoup
 import gspread
 import numpy as np
 import pandas as pd
 from oauth2client.service_account import ServiceAccountCredentials
+import random
 
 current_directory = os.getcwd()
 temp_directory = 'temp'
@@ -50,17 +51,20 @@ def get_product():
             'channel': 'etsy-retail',
         }
         product = a
-        response = requests.get(
-            f'https://www.etsy.com/api/v3/ajax/bespoke/shop/48000300/stats/dashboard-listing/{product}',
-            params=params,
-            cookies=cookies,
-            headers=headers,
-        )
-        json_data = response.json()
         filename_tender = os.path.join(json_product, f'product_{product}.json')
-        with open(filename_tender, 'w', encoding='utf-8') as f:
-            json.dump(json_data, f, ensure_ascii=False, indent=4)  # Записываем в файл
-        time.sleep(10)
+        if not os.path.exists(filename_tender):
+            response = requests.get(
+                f'https://www.etsy.com/api/v3/ajax/bespoke/shop/{shop}/stats/dashboard-listing/{product}',
+                params=params,
+                cookies=cookies,
+                headers=headers,
+            )
+            json_data = response.json()
+
+            with open(filename_tender, 'w', encoding='utf-8') as f:
+                json.dump(json_data, f, ensure_ascii=False, indent=4)  # Записываем в файл
+            sleep_time = random.randint(time_a, time_b)
+            time.sleep(sleep_time)
 
 
 def split_into_words(text):
@@ -123,13 +127,16 @@ def pars_product():
             json_data[0]['list'][0]['stacked_graphs_view'][0]['inventory_detail']['datasets'][0]['entries'][0][
                 'listing'][
                 'image']['url']
-
+        url_product = \
+        json_data[0]['list'][0]['stacked_graphs_view'][0]['inventory_detail']['datasets'][0]['entries'][0][
+            'listing']['url']
         img_url_for_google = f'=IMAGE("{img_url}")'
         current_object = {
             "object": {
                 "listing_id": listing_id,
                 "title": listing_title,
-                "img_url_for_google": img_url_for_google
+                "img_url_for_google": img_url_for_google,
+                "url_product": url_product
             },
             "dict_table_01": dict_table_01,
             "dict_table_02": dict_table_02,
@@ -139,6 +146,7 @@ def pars_product():
         all_objects.append(current_object)
 
     values = []
+
     for index, item in enumerate(all_objects, start=2):
         # Найдите теги, соответствующие текущему listing_id
         tags = next((tag_item['object']['tags'] for tag_item in all_tags if
@@ -151,6 +159,7 @@ def pars_product():
         row_data = [
             item['object']['img_url_for_google'],
             item['object']['title'],
+            item['object']['url_product'],
             str(item['dict_table_01'].get('Visits', '')),
             str(item['dict_table_01'].get('Total Views', '')),
             str(item['dict_table_01'].get('Orders', '')),
@@ -172,8 +181,8 @@ def pars_product():
         matched_in_title_set = set()
         unmatched_in_title_set = set()
         title = v[1]
-        products = v[12]
-        tags_listing = v[13]
+        products = v[13]
+        tags_listing = v[14]
         title_words = set(split_into_words(title))
         tags_words = set(split_into_words(tags_listing))
         products_list = re.split(r' : \d+, ?', products)
@@ -198,7 +207,7 @@ def pars_product():
             matched_in_title_set.update(matched_in_title)
             unmatched_in_title_set.update(unmatched_in_title)
 
-                # Шаг 3
+            # Шаг 3
             matched_in_tags = [word for word in product_words if word in tags_words]
             unmatched_in_tags = [word for word in product_words if word not in tags_words and word]
             matched_in_tags_set.update(matched_in_tags)
@@ -228,26 +237,26 @@ def pars_product():
         # print(unmatched_in_tags_list)
         # print(matched_in_title_list)
         # print(unmatched_in_title_list)
-            #
-            # # Формируем одну строку данных для добавления в new_values
-            # new_values_row = matched_in_tags_list + unmatched_in_tags_list + matched_in_title_list + unmatched_in_title_list
-            # new_values.append([new_values_row])  # Добавляем как один элемент (строку данных)
+        #
+        # # Формируем одну строку данных для добавления в new_values
+        # new_values_row = matched_in_tags_list + unmatched_in_tags_list + matched_in_title_list + unmatched_in_title_list
+        # new_values.append([new_values_row])  # Добавляем как один элемент (строку данных)
     # print(new_values)
-        # new_values.append(matched_in_tags_list)
-        # new_values.append(unmatched_in_tags_list)
-        # new_values.append(matched_in_title_list)
-        # new_values.append(unmatched_in_title_list)
-        # # Выводим итоговые множества
-        # print("\nИтоговые множества:")
-        # print("Слова, найденные в заголовке:", matched_in_title_set)
-        # print("Слова, не найденные в заголовке:", unmatched_in_title_set)
-        # print("Слова, найденные в тегах:", matched_in_tags_set)
-        # print("Слова, не найденные в тегах:", unmatched_in_tags_set)
-        # print("Слова, найденные в тегах:", ", ".join(matched_in_tags) if matched_in_tags else "нет совпадений")
-        # print("Слова, не найденные в тегах:",
-        #       ", ".join(unmatched_in_tags) if unmatched_in_tags else "все слова найдены")
+    # new_values.append(matched_in_tags_list)
+    # new_values.append(unmatched_in_tags_list)
+    # new_values.append(matched_in_title_list)
+    # new_values.append(unmatched_in_title_list)
+    # # Выводим итоговые множества
+    # print("\nИтоговые множества:")
+    # print("Слова, найденные в заголовке:", matched_in_title_set)
+    # print("Слова, не найденные в заголовке:", unmatched_in_title_set)
+    # print("Слова, найденные в тегах:", matched_in_tags_set)
+    # print("Слова, не найденные в тегах:", unmatched_in_tags_set)
+    # print("Слова, найденные в тегах:", ", ".join(matched_in_tags) if matched_in_tags else "нет совпадений")
+    # print("Слова, не найденные в тегах:",
+    #       ", ".join(unmatched_in_tags) if unmatched_in_tags else "все слова найдены")
 
-        # """"Рабочий код"""
+    # """"Рабочий код"""
     # for v in values[5:6]:
     #     # print(v[1]) #title
     #     # print(v[12]) #dict_table_03
@@ -384,19 +393,21 @@ def get_json_tags():
             'is_waitlisted': '',
             'has_video': '',
         }
-
-        response = requests.get(
-            'https://www.etsy.com/api/v3/ajax/shop/48000300//listings/search',
-            params=params,
-            cookies=cookies,
-            headers=headers,
-        )
-        json_data = response.json()
         filename_tender = os.path.join(json_tags, f'tags_{offset}.json')
-        with open(filename_tender, 'w', encoding='utf-8') as f:
-            json.dump(json_data, f, ensure_ascii=False, indent=4)  # Записываем в файл
-        offset += 40
-        time.sleep(10)
+        if not os.path.exists(filename_tender):
+            response = requests.get(
+                f'https://www.etsy.com/api/v3/ajax/shop/{shop}/listings/search',
+                params=params,
+                cookies=cookies,
+                headers=headers,
+            )
+            json_data = response.json()
+
+            with open(filename_tender, 'w', encoding='utf-8') as f:
+                json.dump(json_data, f, ensure_ascii=False, indent=4)  # Записываем в файл
+            offset += 40
+            sleep_time = random.randint(time_a, time_b)
+            time.sleep(sleep_time)
 
 
 def par_tags():
@@ -446,17 +457,18 @@ def get_page_statistic():
         'sort_by': 'visits',
         'selected_listings_filter': 'all',
     }
-
-    response = requests.get(
-        'https://www.etsy.com/api/v3/ajax/bespoke/shop/48000300/shop-analytics-stats/listings',
-        params=params,
-        cookies=cookies,
-        headers=headers,
-    )
-    json_data = response.json()
     filename_tender_statistic = os.path.join(json_statistic, 'statistic.json')
-    with open(filename_tender_statistic, 'w', encoding='utf-8') as f:
-        json.dump(json_data, f, ensure_ascii=False, indent=4)  # Записываем в файл
+    if not os.path.exists(filename_tender_statistic):
+        response = requests.get(
+            f'https://www.etsy.com/api/v3/ajax/bespoke/shop/{shop}/shop-analytics-stats/listings',
+            params=params,
+            cookies=cookies,
+            headers=headers,
+        )
+        json_data = response.json()
+
+        with open(filename_tender_statistic, 'w', encoding='utf-8') as f:
+            json.dump(json_data, f, ensure_ascii=False, indent=4)  # Записываем в файл
 
     with open(filename_tender_statistic, 'r', encoding="utf-8") as f:
         data_json = json.load(f)
@@ -475,20 +487,24 @@ def get_page_statistic():
             'sort_by': 'visits',
             'selected_listings_filter': 'all',
         }
-        response = requests.get(
-            'https://www.etsy.com/api/v3/ajax/bespoke/shop/48000300/shop-analytics-stats/listings',
-            params=params,
-            cookies=cookies,
-            headers=headers,
-        )
-        json_data = response.json()
-        filename_tender_statistic = os.path.join(json_path, f'statistic_{offset}.json')
-        with open(filename_tender_statistic, 'w', encoding='utf-8') as f:
-            json.dump(json_data, f, ensure_ascii=False, indent=4)  # Записываем в файл
+        filename_tender_statistic = os.path.join(json_statistic, f'statistic_{offset}.json')
+        if not os.path.exists(filename_tender_statistic):
+            response = requests.get(
+                f'https://www.etsy.com/api/v3/ajax/bespoke/shop/{shop}/shop-analytics-stats/listings',
+                params=params,
+                cookies=cookies,
+                headers=headers,
+            )
+            json_data = response.json()
+            filename_tender_statistic = os.path.join(json_statistic, f'statistic_{offset}.json')
+            with open(filename_tender_statistic, 'w', encoding='utf-8') as f:
+                json.dump(json_data, f, ensure_ascii=False, indent=4)  # Записываем в файл
 
-        offset += 5
-        print(f'Страница {p}')
-        time.sleep(10)
+            offset += 5
+            sleep_time = random.randint(time_a, time_b)
+            print(f'Страница {p}')
+
+            time.sleep(sleep_time)
 
 
 def parsing_statistic():
@@ -507,8 +523,11 @@ def parsing_statistic():
 
 if __name__ == '__main__':
     # creative_temp_folders()
-    # get_product()
-    pars_product()
-    # get_json_tags()
-    # par_tags()
     # get_page_statistic()
+    # get_product()
+
+    # get_json_tags()
+
+    pars_product()
+
+    # par_tags()
