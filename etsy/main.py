@@ -156,6 +156,23 @@ def pars_product():
         tags_str = ', '.join(tags) if tags else ''
         dict_to_string = ', '.join([f"{k}: {v}" for k, v in item['dict_table_03'].items()]) if item[
             'dict_table_03'] else ''
+        # Извлекаем числовые значения, обрабатываем случай отсутствия данных
+        visits = item['dict_table_01'].get('Visits', 0)
+        visits = visits.replace(',', '')
+        visits = float(visits)  # Преобразуем в число с плавающей точкой
+
+        # Пример с удалением запятой перед преобразованием
+        total_views_str = item['dict_table_01'].get('Total Views', '0')  # Получаем строку
+        total_views_str = total_views_str.replace(',', '')  # Удаляем запятые
+        total_views = float(total_views_str)  # Преобразуем в число с плавающей точкой
+
+        orders = float(item['dict_table_01'].get('Orders', 0))
+
+        # Обработка деления с проверкой на ноль и округлением
+        orders_to_visits_ratio = round(orders / visits, 2) if visits else None
+        visits_to_total_views_ratio = round(visits / total_views, 2) if total_views else None
+
+
         row_data = [
             item['object']['img_url_for_google'],
             item['object']['title'],
@@ -164,6 +181,8 @@ def pars_product():
             str(item['dict_table_01'].get('Total Views', '')),
             str(item['dict_table_01'].get('Orders', '')),
             str(item['dict_table_01'].get('Revenue', '')),
+            orders_to_visits_ratio,  # Используем обработанные значения
+            visits_to_total_views_ratio,  # Используем обработанные значения
             item['dict_table_02']['Direct & other traffic'],
             item['dict_table_02']['Etsy app & other Etsy pages'],
             item['dict_table_02']['Etsy Ads'],
@@ -181,8 +200,8 @@ def pars_product():
         matched_in_title_set = set()
         unmatched_in_title_set = set()
         title = v[1]
-        products = v[13]
-        tags_listing = v[14]
+        products = v[15]
+        tags_listing = v[16]
         title_words = set(split_into_words(title))
         tags_words = set(split_into_words(tags_listing))
         products_list = re.split(r' : \d+, ?', products)
