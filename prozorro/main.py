@@ -144,13 +144,25 @@ def pars_tender():
         budget = json_data.get('value', [{}]).get('amount', None)
         # "Початок аукціону"
         lots = json_data.get('lots', [{}])
-        # "Кінцевий строк подання тендерних пропозицій"
+        auctionPeriod = lots[0].get('auctionPeriod', {})
         auctionPeriod_auctionPeriod = lots[0].get('auctionPeriod', {}).get('startDate')
         if auctionPeriod_auctionPeriod:
             datetime_obj_auctionPeriod = datetime.fromisoformat(auctionPeriod_auctionPeriod)
 
             date_auctionPeriod = datetime_obj_auctionPeriod.strftime("%d.%m.%Y")
             time_auctionPeriod = datetime_obj_auctionPeriod.strftime("%H:%M")
+        else:
+            date_auctionPeriod_auctionPeriod = time_auctionPeriod_auctionPeriod = None
+
+        # "Кінцевий строк подання тендерних пропозицій"
+        auctionPeriod_auctionPeriod = lots[0].get('auctionPeriod', {}).get('shouldStartAfter')
+        if auctionPeriod_auctionPeriod:
+            datetime_obj_auctionPeriod_auctionPeriod = datetime.fromisoformat(auctionPeriod_auctionPeriod)
+
+            date_auctionPeriod_auctionPeriod = datetime_obj_auctionPeriod_auctionPeriod - timedelta(days=1)
+            date_auctionPeriod_auctionPeriod = date_auctionPeriod_auctionPeriod.strftime("%d.%m.%Y")
+            datetime_obj_minus_one_minute = datetime_obj_auctionPeriod_auctionPeriod - timedelta(minutes=1)
+            time_auctionPeriod_auctionPeriod = datetime_obj_minus_one_minute.strftime("%H:%M")
         else:
             date_auctionPeriod_auctionPeriod = time_auctionPeriod_auctionPeriod = None
         # "Звернення за роз’ясненнями"
@@ -475,7 +487,7 @@ def pars_tender():
             #         award_status = None
             # else:
             #     award_status = None
-
+        print(date_auctionPeriod_auctionPeriod)
         # Данные для вставки
         tender_data = {
             'tender_id': tender_id,
