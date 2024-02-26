@@ -1,19 +1,19 @@
+import csv
+import getpass
 import glob
 import json
 import os
 import sqlite3
 import time
-import getpass
-
 from datetime import datetime, timedelta
-import csv
+
+import gspread
 import requests
 from bs4 import BeautifulSoup
-import gspread
 from oauth2client.service_account import ServiceAccountCredentials
-from config import spreadsheet_id, headers, dict_comany_edrpo,sheet_value
 
-# from selenium import webdriver
+from config import spreadsheet_id, headers, dict_comany_edrpo, sheet_value
+
 
 current_directory = os.getcwd()
 temp_directory = 'temp'
@@ -122,11 +122,13 @@ def get_json_tender():
             json.dump(json_data, f, ensure_ascii=False, indent=4)  # Записываем в файл
         time.sleep(10)
 
+
 """Функции которые будут извлекать значения"""
 
 """Аукцион дата и время"""
-def extract_auction_period_dates(json_data):
 
+
+def extract_auction_period_dates(json_data):
     # Получаем список лотов, по умолчанию используем пустой список, если 'lots' не существует
     lots = json_data.get('lots', [{}])
 
@@ -146,7 +148,10 @@ def extract_auction_period_dates(json_data):
 
     return date_auctionPeriod, time_auctionPeriod
 
+
 """Кінцевий строк подання тендерних пропозицій"""
+
+
 def extract_auction_start_dates(json_data):
     lots = json_data.get('lots', [{}])
     try:
@@ -167,7 +172,10 @@ def extract_auction_start_dates(json_data):
 
     return date_auctionPeriod_auctionPeriod, time_auctionPeriod_auctionPeriod
 
+
 """Звернення за роз’ясненням"""
+
+
 def enquiryPeriod_endDate(json_data):
     enquiryPeriod_endDate = json_data.get('enquiryPeriod', {}).get('endDate')
     if enquiryPeriod_endDate:
@@ -183,7 +191,10 @@ def enquiryPeriod_endDate(json_data):
 
     return date_enquiryPeriod_endDate, time_enquiryPeriod_endDate
 
+
 """Розмір надання забезпечення пропозицій учасників"""
+
+
 def guarantee_bank(json_data):
     if json_data.get('guarantee', {}):
         guarantee_amount = json_data.get('guarantee', {}).get('amount', None)
@@ -202,7 +213,7 @@ def guarantee_bank(json_data):
             bank_garantiy = None
     else:
         bank_garantiy = None  # Если элементов в списке 'criteria' меньше 11, возвращаем None
-    return guarantee_amount,  bank_garantiy
+    return guarantee_amount, bank_garantiy
 
 
 """Парсинг одного тендера json"""
@@ -277,7 +288,6 @@ def pars_tender():
             if award_value:  # Проверяем, что словарь 'value' существует
                 award_value_customer = award_value.get('amount', None)  # Получаем стоимость
 
-
         """Період уточнень"""
         if status_tender == 'active.enquiries':
             status_tender = 'Період уточнень'
@@ -288,7 +298,6 @@ def pars_tender():
             status_tender = 'Подання пропозицій'
             tender_verification = "0"
 
-
         """"Пропозиції розглянуті"""
         if status_tender == 'active.awarded':
             status_tender = 'Пропозиції розглянуті'
@@ -298,7 +307,6 @@ def pars_tender():
         if status_tender == 'active.pre-qualification.stand-still':
             status_tender = 'Прекваліфікація (період оскарження)'
             tender_verification = "0"
-
 
         """Аукціон"""
         if status_tender == 'active.auction':
@@ -375,7 +383,7 @@ def pars_tender():
             'award_status': award_status,
             'guarantee_amount': guarantee_amount,
             'bank_garantiy': bank_garantiy,
-            'tender_verification':tender_verification
+            'tender_verification': tender_verification
 
         }
         filename_db = os.path.join(current_directory, 'prozorro.db')
@@ -439,8 +447,6 @@ def update_tenders_from_json():
             time.sleep(10)
         else:
             print(f'Тендер {d["tender_id"]} завершен')
-
-
 
     # Словарь для перевода статусов из json в читаемый вид
     dict_status_tenders = {
@@ -573,7 +579,7 @@ def update_tenders_from_json():
                         date_pending = ?, time_pending = ?, award_status = ?, guarantee_amount =?,bank_garantiy =?, tender_verification=?
                         WHERE tender_id = ? """, (
                             new_status, award_name_customer, award_value_customer, date_pending, time_pending,
-                            award_status, guarantee_amount, bank_garantiy,tender_verification,
+                            award_status, guarantee_amount, bank_garantiy, tender_verification,
                             tender_id_json))
 
                     """Подання пропозицій"""
@@ -702,9 +708,11 @@ def export_to_csv():
     # Закрываем соединение с базой данных
     conn.close()
 
-"""Очистить данные"""
-def clear_to_sheet():
 
+"""Очистить данные"""
+
+
+def clear_to_sheet():
     client, spreadsheet_id = get_google()
     sheet = client.open_by_key(spreadsheet_id).worksheet('Тендера')
     filename_db = os.path.join(current_directory, 'prozorro.db')
@@ -727,19 +735,21 @@ def clear_to_sheet():
     rows_clear = c.fetchall()
     values = []
     """Очищаем поля"""
-    for row in rows_clear:
-        new_row = [None, None, '', '', '', None, None, None, None, None,
-                   '', None, None, None, '', '', '', '', '', '',
-                   '', '', '', None, None, None, '', None, None, None]
+    for row in range(32):
+        # for row in rows_clear:
+        new_row = [None, None, '', '', '', None, None, '', None, None, None, None, None, None, '', '', '', '', '', '',
+                   '', '', '', None, None, None, '', None, None, None, None]
         # Здесь нужна логика преобразования row в соответствии с вашими правилами
         values.append(new_row)
     sheet.update(values, sheet_value, value_input_option='USER_ENTERED')
     print('Даннные очистили')
     time.sleep(5)
 
-"""запись данные"""
-def write_to_sheet():
 
+"""запись данные"""
+
+
+def write_to_sheet():
     client, spreadsheet_id = get_google()
     sheet = client.open_by_key(spreadsheet_id).worksheet('Тендера')
     filename_db = os.path.join(current_directory, 'prozorro.db')
@@ -750,26 +760,48 @@ def write_to_sheet():
     # Выполняем SQL-запрос для выбора данных
     c.execute(
         '''SELECT tender_id, url_tender, customer,
-        status_tender,budget, date_auction, time_auction,
-         bids_amount, date_enquiryPeriod, time_enquiryPeriod,
-         date_auctionPeriod_auctionPeriod,
-         time_auctionPeriod_auctionPeriod,
-         award_name_customer, award_value_customer,
-         date_pending, time_pending, award_status,
-         guarantee_amount, bank_garantiy FROM tender''')
-
+        status_tender,budget,guarantee_amount,bank_garantiy,
+        date_enquiryPeriod,time_enquiryPeriod,
+        date_auctionPeriod_auctionPeriod,
+        time_auctionPeriod_auctionPeriod,
+         date_auction, time_auction,award_status,
+         award_value_customer
+         FROM tender''')
+    """         award_name_customer, award_value_customer,
+             date_pending, time_pending, award_status"""
     values = []
     rows = c.fetchall()
+    # for row in range(32):
     for row in rows:
-        # Создаем новую строку, начиная с двух пустых ячеек, и добавляем данные из базы данных
-        new_row = ['', '', row[1], row[2], row[3], '', '', row[4], '', '',
-                   row[7], '', '', '', row[17], row[18], row[8], row[9], row[10], row[11],
-                   row[5], row[6], row[16], '', '', '', row[13]]
+        print(row[14])
+        # Создаем список из 32 элементов, заполненных None
+        new_row = [None] * 32
+        new_row[2] = row[1]  # url_tender
+        new_row[3] = row[2]  # customer
+        new_row[4] = row[3]  # status_tender
+        new_row[7] = row[4]  # budget
+        new_row[14] = row[5]  # guarantee_amount
+        new_row[15] = row[6]  # bank_garantiy
+        new_row[16] = row[7]  # date_enquiryPeriod
+        new_row[17] = row[8]  # time_enquiryPeriod
+        new_row[18] = row[9]  # date_auctionPeriod_auctionPeriod
+        new_row[19] = row[10]  # time_auctionPeriod_auctionPeriod
+        new_row[20] = row[11]  # date_auction
+        new_row[21] = row[12]  # time_auction
+        new_row[22] = row[13]  # award_status
+        new_row[26] = row[14]  # award_value_customer
+
+        # new_row = [None, None, '', '', '', None, None, '', None, None, None, None, None, None, '', '', '', '', '', '',
+        #            '', '', '', None, None, None, '', None, None, None, None]
+        # new_row = [None, None, row[1], row[2], row[3], None, None, row[4], None, None,
+        #            row[7], '', '', '', row[17], row[18], row[8], row[9], row[10], row[11],
+        #            row[5], row[6], row[16], '', '', '', row[13]]
+        # new_row = [None, None, row[1], row[2], row[3], None, None, row[4], None, None, None, None, None, None, row[7], '', '', '', '', '', '',
+        #            '', '', None, None, None, '', None, None, None, None]
         values.append(new_row)
     # # Обновляем данные в Google Sheets, начиная с ячейки A15
     sheet.update(values, sheet_value, value_input_option='USER_ENTERED')
     print('Даннные записали')
-
 
 
 print('Введите пароль')
@@ -804,24 +836,24 @@ if passw == '12345677':
             print("Неверный ввод, пожалуйста, введите корректный номер действия.")
 else:
     print('Пароль не правильный')
-#
+
 # if __name__ == '__main__':
-#     #
-#     # creative_temp_folders()
-#     # get_all_tenders()
-#     # pars_all_tenders()
-#     # url_tender = 'https://prozorro.gov.ua/tender/UA-2024-02-26-001036-a'
-#     # get_tender(url_tender)
-#     # get_json_tender()
-#     pars_tender()
-#     # update_tenders_from_json()
-#     # clear_to_sheet()
-#     # write_to_sheet()
-#     # get_all_tender_records_as_dicts()
-#     #
-#     # filename_tender = os.path.join(json_path, 'tender.json')
-#     # # Загрузка JSON из файла
-#     # with open(filename_tender, 'r', encoding='utf-8') as file:
-#     #     data = json.load(file)
-#     #
-#     # print_key_value_pairs(data)
+#
+# creative_temp_folders()
+# get_all_tenders()
+# pars_all_tenders()
+# url_tender = 'https://prozorro.gov.ua/tender/UA-2024-01-09-001888-a'
+# get_tender(url_tender)
+# get_json_tender()
+# pars_tender()
+# update_tenders_from_json()
+# clear_to_sheet()
+# write_to_sheet()
+# get_all_tender_records_as_dicts()
+#
+# filename_tender = os.path.join(json_path, 'tender.json')
+# # Загрузка JSON из файла
+# with open(filename_tender, 'r', encoding='utf-8') as file:
+#     data = json.load(file)
+#
+# print_key_value_pairs(data)
