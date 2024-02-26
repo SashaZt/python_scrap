@@ -389,6 +389,7 @@ def pars_tender():
         filename_db = os.path.join(current_directory, 'prozorro.db')
         conn = sqlite3.connect(filename_db)
         c = conn.cursor()
+        conn.execute('PRAGMA journal_mode=WAL;')
         # Проверяем, существует ли уже запись с таким tender_id
         c.execute("SELECT 1 FROM tender WHERE tender_id = ?", (tender_id,))
         exists = c.fetchone()
@@ -463,7 +464,7 @@ def update_tenders_from_json():
     filename_db = os.path.join(current_directory, 'prozorro.db')
     with sqlite3.connect(filename_db) as conn:
         cursor = conn.cursor()
-
+        conn.execute('PRAGMA journal_mode=WAL;')
         for filename in filenames:
             with open(filename, 'r', encoding="utf-8") as f:
                 data_json = json.load(f)
@@ -773,7 +774,6 @@ def write_to_sheet():
     rows = c.fetchall()
     # for row in range(32):
     for row in rows:
-        print(row[14])
         # Создаем список из 32 элементов, заполненных None
         new_row = [None] * 32
         new_row[2] = row[1]  # url_tender
@@ -804,6 +804,21 @@ def write_to_sheet():
     print('Даннные записали')
 
 
+def clean_sql_table():
+    filename_db = os.path.join(current_directory, 'prozorro.db')
+    conn = sqlite3.connect(filename_db)
+    c = conn.cursor()
+
+    # Выполнение запроса на удаление всех записей из таблицы
+    c.execute("DELETE FROM tender")
+
+    # Сохранение изменений в базе данных
+    conn.commit()
+
+    # Закрываем соединение с базой данных
+    conn.close()
+
+
 print('Введите пароль')
 passw = getpass.getpass("")
 if passw == '12345677':
@@ -811,6 +826,7 @@ if passw == '12345677':
         # Запрос ввода от пользователя
         print('\nВведите 1 для загрузки нового тендера'
               '\nВведите 2 для запуска обновления всех тендеров'
+              '\nВведите 13 очистки таблицы БД, только если знаешь пароль'
               # '\nВведите 3 для загрузки в Google Таблицу'
               '\nВведите 0 для закрытия программы')
         user_input = input("Выберите действие: ")
@@ -824,6 +840,11 @@ if passw == '12345677':
             pars_tender()
             clear_to_sheet()
             write_to_sheet()
+        elif user_input == '13':
+            print('Введите пароль для очистки таблицы')
+            passw = getpass.getpass("")
+            if passw == 'DbrnjhbZ88':
+                clean_sql_table()
         elif user_input == '2':
             update_tenders_from_json()
         # elif user_input == '3':
