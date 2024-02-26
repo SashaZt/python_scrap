@@ -47,7 +47,7 @@ def get_product():
     all_products_keys = parsing_statistic()
     for a in all_products_keys:
         params = {
-            'date_range': 'all_time',
+            'date_range': 'this_year', #За все время,  'this_year' - Этот год, 'this_month' - Этот месяц,'last_7' - последние 7дней,  'last_30' -последние 30 дней
             'channel': 'etsy-retail',
         }
         product = a
@@ -81,7 +81,7 @@ def pars_product():
     all_objects = []
     all_tags = par_tags()
 
-    for filename in filenames:
+    for filename in filenames[24:25]:
         with open(filename, 'r', encoding="utf-8") as f:
             data_json = json.load(f)
         json_data = data_json['pages']
@@ -144,7 +144,6 @@ def pars_product():
         }
 
         all_objects.append(current_object)
-
     values = []
 
     for index, item in enumerate(all_objects, start=2):
@@ -382,9 +381,8 @@ def pars_product():
 
 
 def get_json_tags():
-    search_pattern = os.path.join(json_tags, f'product_*.json')
+    search_pattern = os.path.join(json_product, f'product_*.json')
     matching_files = glob.glob(search_pattern)
-
     # Подсчёт количества найденных файлов
     number_of_files = (len(matching_files) // 40) + 1
     offset = 0
@@ -413,20 +411,20 @@ def get_json_tags():
             'has_video': '',
         }
         filename_tender = os.path.join(json_tags, f'tags_{offset}.json')
-        if not os.path.exists(filename_tender):
-            response = requests.get(
-                f'https://www.etsy.com/api/v3/ajax/shop/{shop}/listings/search',
-                params=params,
-                cookies=cookies,
-                headers=headers,
-            )
-            json_data = response.json()
+        response = requests.get(
+            f'https://www.etsy.com/api/v3/ajax/shop/{shop}/listings/search',
+            params=params,
+            cookies=cookies,
+            headers=headers,
+        )
+        json_data = response.json()
 
-            with open(filename_tender, 'w', encoding='utf-8') as f:
-                json.dump(json_data, f, ensure_ascii=False, indent=4)  # Записываем в файл
-            offset += 40
-            sleep_time = random.randint(time_a, time_b)
-            time.sleep(sleep_time)
+        with open(filename_tender, 'w', encoding='utf-8') as f:
+            json.dump(json_data, f, ensure_ascii=False, indent=4)  # Записываем в файл
+        offset += 40
+        sleep_time = random.randint(time_a, time_b)
+        time.sleep(sleep_time)
+        print(p)
 
 
 def par_tags():
@@ -468,7 +466,7 @@ def par_tags():
 
 def get_page_statistic():
     params = {
-        'date_range': 'all_time',
+        'date_range': 'this_year',
         'channel': 'etsy-retail',
         'limit': '5',
         'offset': '0',
@@ -498,7 +496,7 @@ def get_page_statistic():
     offset = 5
     for p in range(2, pages):
         params = {
-            'date_range': 'all_time',
+            'date_range': 'this_year',
             'channel': 'etsy-retail',
             'limit': '5',
             'offset': offset,
@@ -544,9 +542,9 @@ if __name__ == '__main__':
     # creative_temp_folders()
     # get_page_statistic()
     # get_product()
-
-    # get_json_tags()
-
-    pars_product()
+    #
+    get_json_tags()
+    #
+    # pars_product()
 
     # par_tags()
