@@ -14,7 +14,6 @@ from oauth2client.service_account import ServiceAccountCredentials
 
 from config import spreadsheet_id, headers, dict_comany_edrpo, sheet_value
 
-
 current_directory = os.getcwd()
 temp_directory = 'temp'
 # Создайте полный путь к папке temp
@@ -772,14 +771,13 @@ def write_to_sheet():
              date_pending, time_pending, award_status"""
     values = []
     rows = c.fetchall()
-    # for row in range(32):
     for row in rows:
         # Создаем список из 32 элементов, заполненных None
         new_row = [None] * 32
         new_row[2] = row[1]  # url_tender
         new_row[3] = row[2]  # customer
         new_row[4] = row[3]  # status_tender
-        new_row[7] = row[4]  # budget
+        new_row[7] = row[4].replace('.', ',')  # budget
         new_row[14] = row[5]  # guarantee_amount
         new_row[15] = row[6]  # bank_garantiy
         new_row[16] = row[7]  # date_enquiryPeriod
@@ -789,8 +787,7 @@ def write_to_sheet():
         new_row[20] = row[11]  # date_auction
         new_row[21] = row[12]  # time_auction
         new_row[22] = row[13]  # award_status
-        new_row[26] = row[14]  # award_value_customer
-
+        new_row[26] = row[14].replace('.', ',')  # award_value_customer
         # new_row = [None, None, '', '', '', None, None, '', None, None, None, None, None, None, '', '', '', '', '', '',
         #            '', '', '', None, None, None, '', None, None, None, None]
         # new_row = [None, None, row[1], row[2], row[3], None, None, row[4], None, None,
@@ -799,7 +796,8 @@ def write_to_sheet():
         # new_row = [None, None, row[1], row[2], row[3], None, None, row[4], None, None, None, None, None, None, row[7], '', '', '', '', '', '',
         #            '', '', None, None, None, '', None, None, None, None]
         values.append(new_row)
-    # # Обновляем данные в Google Sheets, начиная с ячейки A15
+
+    # Обновляем данные в Google Sheets, начиная с ячейки A15
     sheet.update(values, sheet_value, value_input_option='USER_ENTERED')
     print('Даннные записали')
 
@@ -861,22 +859,21 @@ else:
     print('Пароль не правильный')
 
 # if __name__ == '__main__':
-#
-# creative_temp_folders()
-# get_all_tenders()
-# pars_all_tenders()
-# url_tender = 'https://prozorro.gov.ua/tender/UA-2024-01-09-001888-a'
-# get_tender(url_tender)
-# get_json_tender()
-# pars_tender()
-# update_tenders_from_json()
-# clear_to_sheet()
-# write_to_sheet()
-# get_all_tender_records_as_dicts()
-#
-# filename_tender = os.path.join(json_path, 'tender.json')
-# # Загрузка JSON из файла
-# with open(filename_tender, 'r', encoding='utf-8') as file:
-#     data = json.load(file)
-#
-# print_key_value_pairs(data)
+    # creative_temp_folders()
+    # get_all_tenders()
+    # pars_all_tenders()
+    # url_tender = 'https://prozorro.gov.ua/tender/UA-2024-01-09-001888-a'
+    # get_tender(url_tender)
+    # get_json_tender()
+    # pars_tender()
+    # update_tenders_from_json()
+    # clear_to_sheet()
+    # write_to_sheet()
+    # get_all_tender_records_as_dicts()
+    #
+    # filename_tender = os.path.join(json_path, 'tender.json')
+    # # Загрузка JSON из файла
+    # with open(filename_tender, 'r', encoding='utf-8') as file:
+    #     data = json.load(file)
+    #
+    # print_key_value_pairs(data)
