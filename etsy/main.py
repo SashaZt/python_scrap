@@ -47,7 +47,8 @@ def get_product():
     all_products_keys = parsing_statistic()
     for a in all_products_keys:
         params = {
-            'date_range': 'this_year', #За все время,  'this_year' - Этот год, 'this_month' - Этот месяц,'last_7' - последние 7дней,  'last_30' -последние 30 дней
+            'date_range': 'this_year',
+            # За все время,  'this_year' - Этот год, 'this_month' - Этот месяц,'last_7' - последние 7дней,  'last_30' -последние 30 дней
             'channel': 'etsy-retail',
         }
         product = a
@@ -81,7 +82,7 @@ def pars_product():
     all_objects = []
     all_tags = par_tags()
 
-    for filename in filenames[24:25]:
+    for filename in filenames:
         with open(filename, 'r', encoding="utf-8") as f:
             data_json = json.load(f)
         json_data = data_json['pages']
@@ -128,8 +129,8 @@ def pars_product():
                 'listing'][
                 'image']['url']
         url_product = \
-        json_data[0]['list'][0]['stacked_graphs_view'][0]['inventory_detail']['datasets'][0]['entries'][0][
-            'listing']['url']
+            json_data[0]['list'][0]['stacked_graphs_view'][0]['inventory_detail']['datasets'][0]['entries'][0][
+                'listing']['url']
         img_url_for_google = f'=IMAGE("{img_url}")'
         current_object = {
             "object": {
@@ -170,7 +171,6 @@ def pars_product():
         # Обработка деления с проверкой на ноль и округлением
         orders_to_visits_ratio = round(orders / visits, 2) if visits else None
         visits_to_total_views_ratio = round(visits / total_views, 2) if total_views else None
-
 
         row_data = [
             item['object']['img_url_for_google'],
@@ -380,51 +380,61 @@ def pars_product():
     #     writer.writerow(combined_data)
 
 
-def get_json_tags():
+def get_tags():
     search_pattern = os.path.join(json_product, f'product_*.json')
     matching_files = glob.glob(search_pattern)
     # Подсчёт количества найденных файлов
     number_of_files = (len(matching_files) // 40) + 1
-    offset = 0
-    for p in range(0, number_of_files):
-        params = {
-            'limit': '40',
-            'offset': offset,
-            'sort_field': 'ending_date',
-            'sort_order': 'descending',
-            'state': 'inactive',
-            'language_id': '0',
-            'query': '',
-            'shop_section_id': '',
-            'listing_tag': '',
-            'is_featured': '',
-            'shipping_profile_id': '',
-            'return_policy_id': '',
-            'production_partner_id': '',
-            'is_retail': 'true',
-            'is_retail_only': '',
-            'is_pattern': '',
-            'is_pattern_only': '',
-            'is_digital': '',
-            'channels': '',
-            'is_waitlisted': '',
-            'has_video': '',
-        }
-        filename_tender = os.path.join(json_tags, f'tags_{offset}.json')
-        response = requests.get(
-            f'https://www.etsy.com/api/v3/ajax/shop/{shop}/listings/search',
-            params=params,
-            cookies=cookies,
-            headers=headers,
-        )
-        json_data = response.json()
 
-        with open(filename_tender, 'w', encoding='utf-8') as f:
-            json.dump(json_data, f, ensure_ascii=False, indent=4)  # Записываем в файл
-        offset += 40
+    list_state = ['active', 'draft', 'expired', 'sold_out', 'inactive']
+    for l in list_state:
+        offset = 0
+        skip_to_next_state = False  # Флаг для перехода к следующему состоянию
+        for p in range(0, number_of_files):
+            if skip_to_next_state:  # Проверяем флаг перед выполнением запроса
+                break
+            params = {
+                'limit': '40',
+                'offset': offset,
+                'sort_field': 'ending_date',
+                'sort_order': 'descending',
+                'state': l,
+                'language_id': '0',
+                'query': '',
+                'shop_section_id': '',
+                'listing_tag': '',
+                'is_featured': '',
+                'shipping_profile_id': '',
+                'return_policy_id': '',
+                'production_partner_id': '',
+                'is_retail': 'true',
+                'is_retail_only': '',
+                'is_pattern': '',
+                'is_pattern_only': '',
+                'is_digital': '',
+                'channels': '',
+                'is_waitlisted': '',
+                'has_video': '',
+            }
+            filename_tender = os.path.join(json_tags, f'tags_{offset}_{l}.json')
+            response = requests.get(
+                f'https://www.etsy.com/api/v3/ajax/shop/{shop}/listings/search',
+                params=params,
+                cookies=cookies,
+                headers=headers,
+            )
+            json_data = response.json()
+            if not json_data:
+                skip_to_next_state = True  # Устанавливаем флаг, чтобы пропустить оставшиеся итерации
+                continue  # Пропускаем оставшуюся часть текущей итерации
+
+                # Если json_data не пуст, выполняем запись в файл
+            with open(filename_tender, 'w', encoding='utf-8') as f:
+                json.dump(json_data, f, ensure_ascii=False, indent=4)
+            offset += 40
+
         sleep_time = random.randint(time_a, time_b)
         time.sleep(sleep_time)
-        print(p)
 
 
 def par_tags():
@@ -441,10 +451,10 @@ def par_tags():
             title = entry['title']
             tags = entry['tags']
             current_object = {
-                "listing_id": entry['listing_id'],
+                "listing_id": listing_id,
                 "object": {
-                    "title": entry['title'],
-                    "tags": entry['tags']
+                    "title": title,
+                    "tags": tags
                     # Обратите внимание, что здесь должно быть "tags": entry['tags'], а не просто tags: entry['tags']
                 }
             }
@@ -543,8 +553,8 @@ if __name__ == '__main__':
     # get_page_statistic()
     # get_product()
     #
-    get_json_tags()
+    # get_tags()
     #
-    # pars_product()
+    pars_product()
 
     # par_tags()
