@@ -434,7 +434,7 @@ def update_tenders_from_json():
         tender_verification_bd = d['tender_verification']
         if tender_verification_bd != '1':
             url_ten = d['tender_id']
-            print(f'Качаем тендер {url_ten}')
+            # print(f'Качаем тендер {url_ten}')
             response = requests.get(f"https://public-api.prozorro.gov.ua/api/2.5/tenders/{url_ten}", headers=headers)
             try:
                 json_data = response.json()
@@ -444,7 +444,7 @@ def update_tenders_from_json():
             filename_tender = os.path.join(json_path, f'tender_{url_ten}.json')
             with open(filename_tender, 'w', encoding='utf-8') as f:
                 json.dump(json_data, f, ensure_ascii=False, indent=4)  # Записываем в файл
-            print('Пауза 10сек')
+            # print('Пауза 10сек')
             time.sleep(10)
         else:
             print(f'Тендер {d["tender_id"]} завершен')
@@ -847,6 +847,8 @@ if passw == '12345677':
                 clean_sql_table()
         elif user_input == '2':
             update_tenders_from_json()
+            clear_to_sheet()
+            write_to_sheet()
         # elif user_input == '3':
         #     clear_to_sheet()
         #     write_to_sheet()
