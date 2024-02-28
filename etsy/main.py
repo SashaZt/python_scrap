@@ -1,16 +1,15 @@
-import time
 import glob
-import requests
-import os
 import json
-import re
-from config import cookies, headers, shop, time_a, time_b
-from bs4 import BeautifulSoup
-import gspread
-import numpy as np
-import pandas as pd
-from oauth2client.service_account import ServiceAccountCredentials
+import os
 import random
+import re
+import time
+
+import gspread
+import requests
+from oauth2client.service_account import ServiceAccountCredentials
+
+from config import cookies, headers, shop, time_a, time_b
 
 current_directory = os.getcwd()
 temp_directory = 'temp'
@@ -27,9 +26,31 @@ html_path = os.path.join(temp_path, 'html')
 spreadsheet_id = '1DVFlQ_UI2JdJb-smkjKXnMa20YwhKbOzJ1UAU9MGi-E'
 
 
+def get_cookies():
+    filename_cookies = os.path.join(current_directory, 'cookies.json')
+    with open(filename_cookies, 'r', encoding="utf-8") as f:
+        data_json = json.load(f)
+    shops_json = data_json['shops']
+    shops_cookies = []
+
+    for s in shops_json[:1]:
+        # Собираем информацию о каждом магазине
+        shop_info = {
+            "id_shop": s['id_shop'],
+            "cookies": s['cookies']
+        }
+        # Добавляем информацию о магазине в список
+        shops_cookies.append(shop_info)
+
+    # Возвращаем список с информацией о всех магазинах и их cookies
+    return shops_cookies
+
+
 def get_google():
-    scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/spreadsheets',
-             'https://www.googleapis.com/auth/drive.file', 'https://www.googleapis.com/auth/drive']
+    scope = ['https://spreadsheets.google.com/feeds',
+             'https://www.googleapis.com/auth/spreadsheets',
+             'https://www.googleapis.com/auth/drive.file',
+             'https://www.googleapis.com/auth/drive']
     creds_file = os.path.join(current_directory, 'access.json')
     creds = ServiceAccountCredentials.from_json_keyfile_name(creds_file, scope)
     client = gspread.authorize(creds)
@@ -43,29 +64,34 @@ def creative_temp_folders():
             os.makedirs(folder)
 
 
-def get_product():
+def get_product(date_range):
     all_products_keys = parsing_statistic()
-    for a in all_products_keys:
-        params = {
-            'date_range': 'this_year',
-            # За все время,  'this_year' - Этот год, 'this_month' - Этот месяц,'last_7' - последние 7дней,  'last_30' -последние 30 дней
-            'channel': 'etsy-retail',
-        }
-        product = a
-        filename_tender = os.path.join(json_product, f'product_{product}.json')
-        if not os.path.exists(filename_tender):
-            response = requests.get(
-                f'https://www.etsy.com/api/v3/ajax/bespoke/shop/{shop}/stats/dashboard-listing/{product}',
-                params=params,
-                cookies=cookies,
-                headers=headers,
-            )
-            json_data = response.json()
+    shops_cookies = get_cookies()
+    for s in shops_cookies:
+        # print(f"ID магазина: {shop['id_shop']}, Cookies: {shop['cookies']}")
+        shop = s['id_shop']
+        cookies = s['cookies']
+        for a in all_products_keys:
+            params = {
+                'date_range': date_range,
+                # За все время,  'this_year' - Этот год, 'this_month' - Этот месяц,'last_7' - последние 7дней,  'last_30' -последние 30 дней
+                'channel': 'etsy-retail',
+            }
+            product = a
+            filename_tender = os.path.join(json_product, f'product_{product}.json')
+            if not os.path.exists(filename_tender):
+                response = requests.get(
+                    f'https://www.etsy.com/api/v3/ajax/bespoke/shop/{shop}/stats/dashboard-listing/{product}',
+                    params=params,
+                    cookies=cookies,
+                    headers=headers,
+                )
+                json_data = response.json()
 
-            with open(filename_tender, 'w', encoding='utf-8') as f:
-                json.dump(json_data, f, ensure_ascii=False, indent=4)  # Записываем в файл
-            sleep_time = random.randint(time_a, time_b)
-            time.sleep(sleep_time)
+                with open(filename_tender, 'w', encoding='utf-8') as f:
+                    json.dump(json_data, f, ensure_ascii=False, indent=4)  # Записываем в файл
+                sleep_time = random.randint(time_a, time_b)
+                time.sleep(sleep_time)
 
 
 def split_into_words(text):
@@ -386,19 +412,24 @@ def get_tags():
     # Подсчёт количества найденных файлов
     number_of_files = (len(matching_files) // 40) + 1
 
-    list_state = ['active', 'draft', 'expired', 'sold_out', 'inactive']
-    for l in list_state:
+    # list_state = ['active', 'draft', 'expired', 'sold_out', 'inactive']
+    # for l in list_state:
+    shops_cookies = get_cookies()
+    for s in shops_cookies:
+        # print(f"ID магазина: {shop['id_shop']}, Cookies: {shop['cookies']}")
+        shop = s['id_shop']
+        cookies = s['cookies']
         offset = 0
-        skip_to_next_state = False  # Флаг для перехода к следующему состоянию
+        # skip_to_next_state = False  # Флаг для перехода к следующему состоянию
         for p in range(0, number_of_files):
-            if skip_to_next_state:  # Проверяем флаг перед выполнением запроса
-                break
+            # if skip_to_next_state:  # Проверяем флаг перед выполнением запроса
+            #     break
             params = {
                 'limit': '40',
                 'offset': offset,
                 'sort_field': 'ending_date',
                 'sort_order': 'descending',
-                'state': l,
+                'state': 'active',
                 'language_id': '0',
                 'query': '',
                 'shop_section_id': '',
@@ -416,7 +447,7 @@ def get_tags():
                 'is_waitlisted': '',
                 'has_video': '',
             }
-            filename_tender = os.path.join(json_tags, f'tags_{offset}_{l}.json')
+            filename_tender = os.path.join(json_tags, f'tags_{offset}.json')
             response = requests.get(
                 f'https://www.etsy.com/api/v3/ajax/shop/{shop}/listings/search',
                 params=params,
@@ -433,8 +464,8 @@ def get_tags():
                 json.dump(json_data, f, ensure_ascii=False, indent=4)
             offset += 40
 
-        sleep_time = random.randint(time_a, time_b)
-        time.sleep(sleep_time)
+            sleep_time = random.randint(time_a, time_b)
+            time.sleep(sleep_time)
 
 
 def par_tags():
@@ -474,47 +505,22 @@ def par_tags():
 """Скачать все индетификаторы продуктов"""
 
 
-def get_page_statistic():
-    params = {
-        'date_range': 'this_year',
-        'channel': 'etsy-retail',
-        'limit': '5',
-        'offset': '0',
-        'sort_direction': 'DESC',
-        'sort_by': 'visits',
-        'selected_listings_filter': 'all',
-    }
-    filename_tender_statistic = os.path.join(json_statistic, 'statistic.json')
-    if not os.path.exists(filename_tender_statistic):
-        response = requests.get(
-            f'https://www.etsy.com/api/v3/ajax/bespoke/shop/{shop}/shop-analytics-stats/listings',
-            params=params,
-            cookies=cookies,
-            headers=headers,
-        )
-        json_data = response.json()
-
-        with open(filename_tender_statistic, 'w', encoding='utf-8') as f:
-            json.dump(json_data, f, ensure_ascii=False, indent=4)  # Записываем в файл
-
-    with open(filename_tender_statistic, 'r', encoding="utf-8") as f:
-        data_json = json.load(f)
-    json_data = data_json
-    pages = int(json_data['pagination']['total_pages'])
-    print(f'Всего страниц {pages}')
-    pages = pages + 1
-    offset = 5
-    for p in range(2, pages):
+def get_page_statistic(date_range):
+    shops_cookies = get_cookies()
+    for s in shops_cookies:
+        # print(f"ID магазина: {shop['id_shop']}, Cookies: {shop['cookies']}")
+        shop = s['id_shop']
+        cookies = s['cookies']
         params = {
-            'date_range': 'this_year',
+            'date_range': date_range,
             'channel': 'etsy-retail',
             'limit': '5',
-            'offset': offset,
+            'offset': '0',
             'sort_direction': 'DESC',
             'sort_by': 'visits',
             'selected_listings_filter': 'all',
         }
-        filename_tender_statistic = os.path.join(json_statistic, f'statistic_{offset}.json')
+        filename_tender_statistic = os.path.join(json_statistic, 'statistic.json')
         if not os.path.exists(filename_tender_statistic):
             response = requests.get(
                 f'https://www.etsy.com/api/v3/ajax/bespoke/shop/{shop}/shop-analytics-stats/listings',
@@ -523,15 +529,45 @@ def get_page_statistic():
                 headers=headers,
             )
             json_data = response.json()
-            filename_tender_statistic = os.path.join(json_statistic, f'statistic_{offset}.json')
+
             with open(filename_tender_statistic, 'w', encoding='utf-8') as f:
                 json.dump(json_data, f, ensure_ascii=False, indent=4)  # Записываем в файл
 
-            offset += 5
-            sleep_time = random.randint(time_a, time_b)
-            print(f'Страница {p}')
+        with open(filename_tender_statistic, 'r', encoding="utf-8") as f:
+            data_json = json.load(f)
+        json_data = data_json
+        pages = int(json_data['pagination']['total_pages'])
+        print(f'Всего страниц {pages}')
+        pages = pages + 1
+        offset = 5
+        for p in range(2, pages):
+            params = {
+                'date_range': 'this_year',
+                'channel': 'etsy-retail',
+                'limit': '5',
+                'offset': offset,
+                'sort_direction': 'DESC',
+                'sort_by': 'visits',
+                'selected_listings_filter': 'all',
+            }
+            filename_tender_statistic = os.path.join(json_statistic, f'statistic_{offset}.json')
+            if not os.path.exists(filename_tender_statistic):
+                response = requests.get(
+                    f'https://www.etsy.com/api/v3/ajax/bespoke/shop/{shop}/shop-analytics-stats/listings',
+                    params=params,
+                    cookies=cookies,
+                    headers=headers,
+                )
+                json_data = response.json()
+                filename_tender_statistic = os.path.join(json_statistic, f'statistic_{offset}.json')
+                with open(filename_tender_statistic, 'w', encoding='utf-8') as f:
+                    json.dump(json_data, f, ensure_ascii=False, indent=4)  # Записываем в файл
 
-            time.sleep(sleep_time)
+                offset += 5
+                sleep_time = random.randint(time_a, time_b)
+                print(f'Страница {p}')
+
+                time.sleep(sleep_time)
 
 
 def parsing_statistic():
@@ -550,11 +586,24 @@ def parsing_statistic():
 
 if __name__ == '__main__':
     # creative_temp_folders()
-    # get_page_statistic()
-    # get_product()
+    # get_cookies()
+    print(
+        'Какой берем период? \n1 this_year - Этот год, \n2 this_month - Этот месяц,\n3 last_30 последние 30 дней \n4 last_7 - последние 7дней')
+
+    date_range = int(input())
+    if date_range == 1:
+        date_range = 'this_year'
+    if date_range == 2:
+        date_range = 'this_month'
+    if date_range == 3:
+        date_range = 'last_30'
+    if date_range == 4:
+        date_range = 'last_7'
+    get_page_statistic(date_range)
+    get_product(date_range)
     #
-    # get_tags()
+    get_tags()
     #
-    pars_product()
+    # pars_product()
 
     # par_tags()
