@@ -7,7 +7,6 @@ import os
 def crative_sql_bd():
     current_directory = os.getcwd()
     filename_db = os.path.join(current_directory, 'prozorro.db')
-    # Подключение к базе данных (файлу). Если файла нет, он будет создан.
     conn = sqlite3.connect(filename_db)
     c = conn.cursor()
 
@@ -19,6 +18,7 @@ def crative_sql_bd():
             url_tender TEXT,                       -- Ссылка на тендер
             customer TEXT,                         -- Заказчик
             status_tender TEXT,                    -- Статус тендера
+            complaint TEXT,                        -- Жалобы
             budget TEXT,                           -- Бюджет тендера
             date_auction TEXT,                     -- Дата аукциона
             time_auction TEXT,                     -- Время аукциона
@@ -33,7 +33,8 @@ def crative_sql_bd():
             time_pending TEXT,                     -- Время победившей ставки
             award_status TEXT,                     -- Статус переможця
             guarantee_amount TEXT,                 -- Розмір надання забезпечення пропозицій учасників
-            bank_garantiy TEXT                     -- забезпечення виконання договору
+            bank_garantiy TEXT,                    -- забезпечення виконання договору
+            tender_verification TEXT               -- Наличие статуса завершен
             )"""
     )
 
