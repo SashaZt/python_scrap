@@ -219,7 +219,7 @@ def guarantee_bank(json_data):
 
 
 def pars_tender():
-    dick_tender = get_all_tender_records_as_dicts()
+    # dick_tender = get_all_tender_records_as_dicts()
 
     filename_tender = os.path.join(json_path, 'tender*.json')
     filenames = glob.glob(filename_tender)
@@ -236,6 +236,13 @@ def pars_tender():
         url_tender = f"https://prozorro.gov.ua/tender/{tenderID}"
         customer = json_data.get('procuringEntity', {}).get('name', None)
         budget = json_data.get('value', [{}]).get('amount', None)
+
+        """Жалоба"""
+        complaints = json_data.get('complaints', [])
+        if complaints:
+            complaint = "Скарга"
+        else:
+            complaint = None
 
         """Аукцион дата и время"""
         date_auctionPeriod, time_auctionPeriod = extract_auction_period_dates(json_data)
@@ -348,6 +355,7 @@ def pars_tender():
                         if 'lotValues' in current_bid:
                             for lotValue in current_bid['lotValues']:
                                 bids_amount = lotValue.get('value', {}).get('amount', None)
+
                                 if bids_amount is not None:
                                     continue
                                     # print(f'Сумма ставки: {bids_amount}')
@@ -367,6 +375,7 @@ def pars_tender():
             'url_tender': url_tender,
             'customer': customer,
             'status_tender': status_tender,
+            'complaint': complaint,
             'budget': budget,
             'date_auction': date_auctionPeriod,
             'time_auction': time_auctionPeriod,
@@ -396,12 +405,12 @@ def pars_tender():
         if not exists:
             # Если записи не существует, выполняем вставку
             sql = '''INSERT INTO tender (
-                        tender_id, url_tender, customer, status_tender,budget, date_auction, time_auction,bids_amount, date_enquiryPeriod,
+                        tender_id, url_tender, customer, status_tender,complaint,budget, date_auction, time_auction,bids_amount, date_enquiryPeriod,
                         time_enquiryPeriod, date_auctionPeriod_auctionPeriod, time_auctionPeriod_auctionPeriod,
                         award_name_customer, award_value_customer, date_pending, time_pending, award_status, guarantee_amount,
                         bank_garantiy,tender_verification
                      ) VALUES (
-                        :tender_id, :url_tender, :customer, :status_tender,:budget, :date_auction, :time_auction, :bids_amount, :date_enquiryPeriod,
+                        :tender_id, :url_tender, :customer, :status_tender, :complaint, :budget, :date_auction, :time_auction, :bids_amount, :date_enquiryPeriod,
                         :time_enquiryPeriod, :date_auctionPeriod_auctionPeriod, :time_auctionPeriod_auctionPeriod,
                         :award_name_customer, :award_value_customer, :date_pending, :time_pending, :award_status, :guarantee_amount,
                         :bank_garantiy, :tender_verification
@@ -486,7 +495,12 @@ def update_tenders_from_json():
             new_status = dict_status_tenders.get(status_tender_json, "Неизвестный статус")
             for tender in dick_tender:
                 if tender['tender_id'] == tender_id_json and tender['status_tender'] != new_status:
-
+                    """Жалоба"""
+                    complaints = json_data.get('complaints', [])
+                    if complaints:
+                        complaint = "Скарга"
+                    else:
+                        complaint = None
                     """Аукціон"""
                     if new_status == 'Аукціон':
                         """Аукцион дата и время"""
@@ -500,9 +514,9 @@ def update_tenders_from_json():
                         guarantee_amount, bank_garantiy = guarantee_bank(json_data)
                         cursor.execute("""
                                 UPDATE tender
-                                SET status_tender = ?, date_auctionPeriod = ?, time_auctionPeriod = ?
+                                SET status_tender = ?, date_auctionPeriod = ?, time_auctionPeriod = ?, complaint = ?
                                 WHERE tender_id = ?
-                            """, (new_status, date_auctionPeriod, time_auctionPeriod, tender_id_json))
+                            """, (new_status, date_auctionPeriod, time_auctionPeriod, complaint, tender_id_json))
 
                         print(
                             f"Статус тендера {tender_id_json} обновлен на '{new_status}' с датой аукциона {date_auctionPeriod} и временем {time_auctionPeriod}.")
@@ -536,12 +550,11 @@ def update_tenders_from_json():
                             award_status = None
                         cursor.execute("""
                                 UPDATE tender
-                                SET status_tender = ?, award_name_customer = ?, award_value_customer = ?, date_pending = ?, time_pending = ?, award_status = ?
+                                SET status_tender = ?, award_name_customer = ?, award_value_customer = ?, date_pending = ?, time_pending = ?, award_status = ?, complaint = ?
                                 WHERE tender_id = ?
                             """, (
                             new_status, award_name_customer, award_value_customer, date_pending, time_pending,
-                            award_status,
-                            tender_id_json))
+                            award_status, complaint, tender_id_json))
 
                     """Завершена"""
                     if new_status == 'Завершена':
@@ -576,10 +589,10 @@ def update_tenders_from_json():
                         guarantee_amount, bank_garantiy = guarantee_bank(json_data)
                         cursor.execute("""UPDATE tender
                         SET status_tender = ?, award_name_customer = ?, award_value_customer = ?,
-                        date_pending = ?, time_pending = ?, award_status = ?, guarantee_amount =?,bank_garantiy =?, tender_verification=?
+                        date_pending = ?, time_pending = ?, award_status = ?, guarantee_amount =?,bank_garantiy =?, tender_verification=?, complaint = ?
                         WHERE tender_id = ? """, (
                             new_status, award_name_customer, award_value_customer, date_pending, time_pending,
-                            award_status, guarantee_amount, bank_garantiy, tender_verification,
+                            award_status, guarantee_amount, bank_garantiy, tender_verification, complaint,
                             tender_id_json))
 
                     """Подання пропозицій"""
@@ -595,10 +608,11 @@ def update_tenders_from_json():
                         """Розмір надання забезпечення пропозицій учасників"""
                         guarantee_amount, bank_garantiy = guarantee_bank(json_data)
                         cursor.execute(""" UPDATE tender
-                                                SET status_tender = ?,budget = ?, date_auctionPeriod = ?, time_auctionPeriod = ?
+                                                SET status_tender = ?,budget = ?, date_auctionPeriod = ?, time_auctionPeriod = ?, complaint = ?
                                                 WHERE tender_id = ?
                                             """,
-                                       (new_status, budget, date_auctionPeriod, time_auctionPeriod, tender_id_json))
+                                       (new_status, budget, date_auctionPeriod, time_auctionPeriod, complaint,
+                                        tender_id_json))
 
                         print(
                             f"Статус тендера {tender_id_json} обновлен на '{new_status}' с датой аукциона {date_auctionPeriod} и временем {time_auctionPeriod}.")
@@ -639,11 +653,11 @@ def update_tenders_from_json():
                             if award_value:  # Проверяем, что словарь 'value' существует
                                 award_value_customer = award_value.get('amount', None)  # Получаем стоимость
                         cursor.execute(""" UPDATE tender
-                                                SET status_tender = ?,date_pending = ?,time_pending = ?,award_status = ?,award_value_customer = ?,award_name_customer = ?
+                                                SET status_tender = ?,date_pending = ?,time_pending = ?,award_status = ?,award_value_customer = ?,award_name_customer = ?, complaint = ?
                                                 WHERE tender_id = ?
                                             """,
                                        (new_status, date_pending, time_pending, award_status, award_value_customer,
-                                        award_name_customer, tender_id_json))
+                                        award_name_customer, complaint, tender_id_json))
                     if new_status == 'Період уточнень':
                         pass
                     if new_status == 'Прекваліфікація (період оскарження)':
@@ -682,31 +696,31 @@ def get_all_tender_records_as_dicts():
     return [dict(record) for record in records]
 
 
-def export_to_csv():
-    # Подключаемся к базе данных
-    filename_db = os.path.join(current_directory, 'prozorro.db')
-    conn = sqlite3.connect(filename_db)
-    c = conn.cursor()
-
-    # Выполняем SQL-запрос для выбора данных
-    c.execute(
-        '''SELECT tender_id, url_tender, customer, status_tender, date_auction, time_auction, date_enquiryPeriod, time_enquiryPeriod, date_auctionPeriod_auctionPeriod, time_auctionPeriod_auctionPeriod, award_name_customer, award_value_customer, date_pending, time_pending, award_status, guarantee_amount, bank_garantiy FROM tender''')
-
-    # Получаем все строки
-    rows = c.fetchall()
-
-    # Открываем файл CSV для записи
-    with open('export_to_csv.csv', 'w', newline='', encoding='utf-8') as file:
-        writer = csv.writer(file, delimiter=';')
-
-        # Записываем заголовок
-        writer.writerow([i[0] for i in c.description])
-
-        # Записываем строки
-        writer.writerows(rows)
-
-    # Закрываем соединение с базой данных
-    conn.close()
+# def export_to_csv():
+#     # Подключаемся к базе данных
+#     filename_db = os.path.join(current_directory, 'prozorro.db')
+#     conn = sqlite3.connect(filename_db)
+#     c = conn.cursor()
+#
+#     # Выполняем SQL-запрос для выбора данных
+#     c.execute(
+#         '''SELECT tender_id, url_tender, customer, status_tender, date_auction, time_auction, date_enquiryPeriod, time_enquiryPeriod, date_auctionPeriod_auctionPeriod, time_auctionPeriod_auctionPeriod, award_name_customer, award_value_customer, date_pending, time_pending, award_status, guarantee_amount, bank_garantiy FROM tender''')
+#
+#     # Получаем все строки
+#     rows = c.fetchall()
+#
+#     # Открываем файл CSV для записи
+#     with open('export_to_csv.csv', 'w', newline='', encoding='utf-8') as file:
+#         writer = csv.writer(file, delimiter=';')
+#
+#         # Записываем заголовок
+#         writer.writerow([i[0] for i in c.description])
+#
+#         # Записываем строки
+#         writer.writerows(rows)
+#
+#     # Закрываем соединение с базой данных
+#     conn.close()
 
 
 """Очистить данные"""
@@ -723,7 +737,7 @@ def clear_to_sheet():
     # Выполняем SQL-запрос для выбора данных
     c.execute(
         '''SELECT tender_id, url_tender, customer,
-        status_tender, date_auction, time_auction,
+        status_tender,complaint, date_auction, time_auction,
          bids_amount, date_enquiryPeriod, time_enquiryPeriod,
          date_auctionPeriod_auctionPeriod,
          time_auctionPeriod_auctionPeriod,
@@ -737,8 +751,8 @@ def clear_to_sheet():
     """Очищаем поля"""
     for row in range(32):
         # for row in rows_clear:
-        new_row = [None, None, '', '', '', None, None, '', None, None, None, None, None, None, '', '', '', '', '', '',
-                   '', '', '', None, None, None, '', None, None, None, None]
+        new_row = [None, None, '', '', '', '', None, None, '', None, None, None, None, None, None, '', '', '', '', '',
+                   ''    '', '', '', None, None, None, '', None, None, None, None]
         # Здесь нужна логика преобразования row в соответствии с вашими правилами
         values.append(new_row)
     sheet.update(values, sheet_value, value_input_option='USER_ENTERED')
@@ -759,13 +773,9 @@ def write_to_sheet():
 
     # Выполняем SQL-запрос для выбора данных
     c.execute(
-        '''SELECT tender_id, url_tender, customer,
-        status_tender,budget,guarantee_amount,bank_garantiy,
-        date_enquiryPeriod,time_enquiryPeriod,
-        date_auctionPeriod_auctionPeriod,
-        time_auctionPeriod_auctionPeriod,
-         date_auction, time_auction,award_status,
-         award_value_customer
+        '''SELECT tender_id, url_tender, customer,status_tender,complaint,budget,guarantee_amount,bank_garantiy,
+        date_enquiryPeriod,time_enquiryPeriod,date_auctionPeriod_auctionPeriod,time_auctionPeriod_auctionPeriod,
+         date_auction, time_auction,award_status, award_value_customer
          FROM tender''')
     """         award_name_customer, award_value_customer,
              date_pending, time_pending, award_status"""
@@ -774,20 +784,23 @@ def write_to_sheet():
     for row in rows:
         # Создаем список из 32 элементов, заполненных None
         new_row = [None] * 32
+
         new_row[2] = row[1]  # url_tender
         new_row[3] = row[2]  # customer
         new_row[4] = row[3]  # status_tender
-        new_row[7] = row[4].replace('.', ',')  # budget
-        new_row[14] = row[5]  # guarantee_amount
-        new_row[15] = row[6]  # bank_garantiy
-        new_row[16] = row[7]  # date_enquiryPeriod
-        new_row[17] = row[8]  # time_enquiryPeriod
-        new_row[18] = row[9]  # date_auctionPeriod_auctionPeriod
-        new_row[19] = row[10]  # time_auctionPeriod_auctionPeriod
-        new_row[20] = row[11]  # date_auction
-        new_row[21] = row[12]  # time_auction
-        new_row[22] = row[13]  # award_status
-        new_row[26] = row[14].replace('.', ',')  # award_value_customer
+        new_row[5] = row[4]  # complaint
+        new_row[8] = row[5].replace('.', ',')  # budget
+        new_row[15] = row[6]  # guarantee_amount
+        new_row[16] = row[7]  # bank_garantiy
+        new_row[17] = row[8]  # date_enquiryPeriod
+        new_row[18] = row[9]  # time_enquiryPeriod
+        new_row[19] = row[10]  # date_auctionPeriod_auctionPeriod
+        new_row[20] = row[11]  # time_auctionPeriod_auctionPeriod
+        new_row[21] = row[12]  # date_auction
+        new_row[22] = row[13]  # time_auction
+        new_row[23] = row[14]  # award_status
+        new_row[27] = row[15].replace('.', ',') if row[15] is not None else None  # award_value_customer
+
         # new_row = [None, None, '', '', '', None, None, '', None, None, None, None, None, None, '', '', '', '', '', '',
         #            '', '', '', None, None, None, '', None, None, None, None]
         # new_row = [None, None, row[1], row[2], row[3], None, None, row[4], None, None,
@@ -796,7 +809,6 @@ def write_to_sheet():
         # new_row = [None, None, row[1], row[2], row[3], None, None, row[4], None, None, None, None, None, None, row[7], '', '', '', '', '', '',
         #            '', '', None, None, None, '', None, None, None, None]
         values.append(new_row)
-
     # Обновляем данные в Google Sheets, начиная с ячейки A15
     sheet.update(values, sheet_value, value_input_option='USER_ENTERED')
     print('Даннные записали')
@@ -862,7 +874,7 @@ else:
     # creative_temp_folders()
     # get_all_tenders()
     # pars_all_tenders()
-    # url_tender = 'https://prozorro.gov.ua/tender/UA-2024-01-09-001888-a'
+    # url_tender = 'https://prozorro.gov.ua/tender/UA-2024-02-26-009641-a'
     # get_tender(url_tender)
     # get_json_tender()
     # pars_tender()
