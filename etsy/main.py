@@ -4,7 +4,7 @@ import os
 import random
 import re
 import time
-
+import getpass
 import gspread
 import requests
 from oauth2client.service_account import ServiceAccountCredentials
@@ -206,7 +206,7 @@ def get_tags():
 
 def pars_product():
     shops_cookies = get_cookies()
-    for s in shops_cookies:
+    for s in shops_cookies[1:2]:
         shop = s['id_shop']
 
         filename_tender = os.path.join(json_product, shop, 'product*.json')
@@ -292,6 +292,8 @@ def pars_product():
 
             # Пример с удалением запятой перед преобразованием
             total_views_str = item['dict_table_01'].get('Total Views', '0')  # Получаем строку
+            if total_views_str == '0':
+                continue
             total_views_str = total_views_str.replace(',', '')  # Удаляем запятые
             total_views = float(total_views_str)  # Преобразуем в число с плавающей точкой
 
@@ -459,26 +461,38 @@ def parsing_statistic(shop):
 if __name__ == '__main__':
     # creative_temp_folders()
     # get_cookies()
+    print('Введите пароль')
+    passw = getpass.getpass("")
+    if passw == '12345677':
+        while True:
+            print(
+                'Какой берем период?'
+                '\nЭтот год - нажмите 1'
+                '\nЭтот месяц - нажмите 2'
+                '\nПоследние 30 дней - нажмите 3'
+                '\nПоследние 7дней - нажмите 4'
+                '\nЗакрыть программу - нажмите 0'
+            )
 
-    # print(
-    #     'Какой берем период?'
-    #     '\nЭтот год - нажмите 1'
-    #     '\nЭтот месяц - нажмите 2'
-    #     '\nПоследние 30 дней - нажмите 3'
-    #     '\nПоследние 7дней - нажмите 4')
-    #
-    # date_range = int(input())
-    # if date_range == 1:
-    #     date_range = 'this_year'
-    # if date_range == 2:
-    #     date_range = 'this_month'
-    # if date_range == 3:
-    #     date_range = 'last_30'
-    # if date_range == 4:
-    #     date_range = 'last_7'
-    # """Получение данных"""
-    # get_page_statistic(date_range)
-    # get_product(date_range)
-    # get_tags()
-    """Парсим данные"""
-    pars_product()
+            date_range = int(input())
+            if date_range == 1:
+                date_range = 'this_year'
+            if date_range == 2:
+                date_range = 'this_month'
+            if date_range == 3:
+                date_range = 'last_30'
+            if date_range == 4:
+                date_range = 'last_7'
+            elif date_range == 0:
+                print("Программа завершена.")
+                break  # Выход из цикла, завершение программы
+            else:
+                print("Неверный ввод, пожалуйста, введите корректный номер действия.")
+            """Получение данных"""
+            get_page_statistic(date_range)
+            get_product(date_range)
+            get_tags()
+            """Парсим данные"""
+            pars_product()
+    else:
+        print('Пароль не правильный')
