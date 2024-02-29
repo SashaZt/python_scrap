@@ -79,7 +79,7 @@ def get_page_statistic(date_range):
     shops_cookies = get_cookies()
     for s in shops_cookies:
         shop = s['id_shop']
-        print(f'Собираем статистику с магазина {shop}')
+        print(f'Збираємо статистику з магазину {shop}')
         cookies = s['cookies']
         params = {
             'date_range': date_range,
@@ -104,7 +104,7 @@ def get_page_statistic(date_range):
             data_json = json.load(f)
         json_data = data_json
         pages = int(json_data['pagination']['total_pages'])
-        print(f'Всего страниц {pages}')
+        print(f'Всього сторінок {pages}')
         pages = pages + 1
         offset = 5
         for p in range(2, pages):
@@ -126,7 +126,7 @@ def get_page_statistic(date_range):
                 with open(filename_tender_statistic, 'w', encoding='utf-8') as f:
                     json.dump(json_data, f, ensure_ascii=False, indent=4)  # Записываем в файл
                 sleep_time = random.randint(time_a, time_b)
-                print(f'Страница {p}')
+                print(f'Сторінка {p}')
 
                 time.sleep(sleep_time)
             offset += 5
@@ -137,7 +137,7 @@ def get_product(date_range):
     for s in shops_cookies:
         shop = s['id_shop']
         all_products_keys = parsing_statistic(shop)
-        print(f'Собираем продукты с магазина {shop}')
+        print(f'Збираємо продукти з магазину {shop}')
         cookies = s['cookies']
         for a in all_products_keys:
             params = {'date_range': date_range, 'channel': 'etsy-retail'}
@@ -206,7 +206,7 @@ def get_tags():
 
 def pars_product():
     shops_cookies = get_cookies()
-    for s in shops_cookies[1:2]:
+    for s in shops_cookies:
         shop = s['id_shop']
 
         filename_tender = os.path.join(json_product, shop, 'product*.json')
@@ -461,17 +461,18 @@ def parsing_statistic(shop):
 if __name__ == '__main__':
     # creative_temp_folders()
     # get_cookies()
-    print('Введите пароль')
+    print('Введіть пароль')
     passw = getpass.getpass("")
     if passw == '12345677':
         while True:
             print(
-                'Какой берем период?'
-                '\nЭтот год - нажмите 1'
-                '\nЭтот месяц - нажмите 2'
-                '\nПоследние 30 дней - нажмите 3'
-                '\nПоследние 7дней - нажмите 4'
-                '\nЗакрыть программу - нажмите 0'
+                'Який беремо період?'
+                '\nЦей рік - натисніть 1'
+                '\nЦей місяць - натисніть 2'
+                '\nОстанні 30 днів - натисніть 3'
+                '\nОстанні 7 днів - натисніть 4'
+                '\nЗакрити програму - натисніть 0'
+
             )
 
             date_range = int(input())
@@ -484,10 +485,10 @@ if __name__ == '__main__':
             if date_range == 4:
                 date_range = 'last_7'
             elif date_range == 0:
-                print("Программа завершена.")
-                break  # Выход из цикла, завершение программы
+                print("Програма завершена.")
+                break
             else:
-                print("Неверный ввод, пожалуйста, введите корректный номер действия.")
+                print("Невірний ввід, будь ласка, введіть коректний номер дії.")
             """Получение данных"""
             get_page_statistic(date_range)
             get_product(date_range)
@@ -495,4 +496,4 @@ if __name__ == '__main__':
             """Парсим данные"""
             pars_product()
     else:
-        print('Пароль не правильный')
+        print('Пароль не правильний')
