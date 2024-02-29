@@ -86,18 +86,7 @@ def get_tender(url_tender):
 """Парсинг одного тендера и извлечение json файла"""
 
 
-def parsing_tender(tenderID):
-    filename_tender = os.path.join(html_path, f'tender_{tenderID}.html')
-    with open(filename_tender, encoding="utf-8") as file:
-        src = file.read()
-    soup = BeautifulSoup(src, 'lxml')
-    try:
-        tender_id_full = soup.find('div', {'data-js': 'tender_sign_check'}).get('data-url')
-    except:
-        tender_id_full = soup.find('input', {'name': 'tenderId'}).get('value')
-    tender_id = tender_id_full.split('/')[-1]
 
-    return tender_id
 
 
 def get_json_tender():
@@ -120,7 +109,18 @@ def get_json_tender():
         with open(filename_tender, 'w', encoding='utf-8') as f:
             json.dump(json_data, f, ensure_ascii=False, indent=4)  # Записываем в файл
         time.sleep(10)
+def parsing_tender(tenderID):
+    filename_tender = os.path.join(html_path, f'tender_{tenderID}.html')
+    with open(filename_tender, encoding="utf-8") as file:
+        src = file.read()
+    soup = BeautifulSoup(src, 'lxml')
+    try:
+        tender_id_full = soup.find('div', {'data-js': 'tender_sign_check'}).get('data-url')
+    except:
+        tender_id_full = soup.find('input', {'name': 'tenderId'}).get('value')
+    tender_id = tender_id_full.split('/')[-1]
 
+    return tender_id
 
 """Функции которые будут извлекать значения"""
 
@@ -755,7 +755,7 @@ def clear_to_sheet():
                    ''    '', '', '', None, None, None, '', None, None, None, None]
         # Здесь нужна логика преобразования row в соответствии с вашими правилами
         values.append(new_row)
-    sheet.update(values, sheet_value, value_input_option='USER_ENTERED')
+    sheet.update(values, 'A3', value_input_option='USER_ENTERED')
     print('Даннные очистили')
     time.sleep(5)
 
@@ -790,7 +790,7 @@ def write_to_sheet():
         new_row[4] = row[3]  # status_tender
         new_row[5] = row[4]  # complaint
         new_row[8] = row[5].replace('.', ',')  # budget
-        new_row[15] = row[6]  # guarantee_amount
+        new_row[15] = row[6].replace('.', ',') if row[6] is not None else None  # guarantee_amount
         new_row[16] = row[7]  # bank_garantiy
         new_row[17] = row[8]  # date_enquiryPeriod
         new_row[18] = row[9]  # time_enquiryPeriod
@@ -810,7 +810,7 @@ def write_to_sheet():
         #            '', '', None, None, None, '', None, None, None, None]
         values.append(new_row)
     # Обновляем данные в Google Sheets, начиная с ячейки A15
-    sheet.update(values, sheet_value, value_input_option='USER_ENTERED')
+    sheet.update(values, 'A3', value_input_option='USER_ENTERED')
     print('Даннные записали')
 
 
@@ -836,8 +836,8 @@ if passw == '12345677':
         # Запрос ввода от пользователя
         print('\nВведите 1 для загрузки нового тендера'
               '\nВведите 2 для запуска обновления всех тендеров'
+              '\nВведите 3 для загрузки в Google Таблицу'
               '\nВведите 13 очистки таблицы БД, только если знаешь пароль'
-              # '\nВведите 3 для загрузки в Google Таблицу'
               '\nВведите 0 для закрытия программы')
         user_input = input("Выберите действие: ")
 
@@ -859,9 +859,9 @@ if passw == '12345677':
             update_tenders_from_json()
             clear_to_sheet()
             write_to_sheet()
-        # elif user_input == '3':
-        #     clear_to_sheet()
-        #     write_to_sheet()
+        elif user_input == '3':
+            clear_to_sheet()
+            write_to_sheet()
         elif user_input == '0':
             print("Программа завершена.")
             break  # Выход из цикла, завершение программы
