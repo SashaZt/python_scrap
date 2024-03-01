@@ -8,6 +8,7 @@ import getpass
 import gspread
 import requests
 from oauth2client.service_account import ServiceAccountCredentials
+import shutil
 
 from config import headers, time_a, time_b, spreadsheet_id
 
@@ -69,12 +70,46 @@ def creative_temp_folders():
                 os.makedirs(shop_folder)
 
 
+def delete_temp_directory():
+    current_directory = os.getcwd()
+
+    # Проверка существования директории и её удаление
+    if os.path.exists(temp_path) and os.path.isdir(temp_path):
+        try:
+            shutil.rmtree(temp_path)
+            print(f"The directory {temp_path} has been deleted successfully.")
+        except Exception as e:
+            print(f"Failed to delete the directory {temp_path}. Reason: {e}")
+    else:
+        print(f"The directory {temp_path} does not exist or is not a directory.")
+
+
+# def del_files():
+#     shops_cookies = get_cookies()
+#     for s in shops_cookies:
+#         shop = s['id_shop']
+#         # Перебор каждой целевой папки
+#         for base_folder in [json_path, json_product, json_tags, json_statistic]:
+#             shop_folder = os.path.join(base_folder, shop)  # Построение полного пути к папке магазина
+#             if os.path.exists(shop_folder):
+#                 # Удаление всех файлов внутри папки магазина
+#                 for filename in os.listdir(shop_folder):
+#                     file_path = os.path.join(shop_folder, filename)
+#                     try:
+#                         if os.path.isfile(file_path) or os.path.islink(file_path):
+#                             os.unlink(file_path)  # Удаление файла или символической ссылки
+#                         elif os.path.isdir(file_path):
+#                             shutil.rmtree(file_path)  # Удаление директории и всего её содержимого
+#                     except Exception as e:
+#                         print(f'Failed to delete {file_path}. Reason: {e}')
+
 def split_into_words(text):
     # Убираем знаки пунктуации и разбиваем по пробелам, приводя всё к нижнему регистру
     return re.findall(r'\b\w+\b', text.lower())
 
 
 def get_page_statistic(date_range):
+    delete_temp_directory()
     creative_temp_folders()
     shops_cookies = get_cookies()
     for s in shops_cookies:
@@ -208,11 +243,10 @@ def pars_product():
     shops_cookies = get_cookies()
     for s in shops_cookies:
         shop = s['id_shop']
-
         filename_tender = os.path.join(json_product, shop, 'product*.json')
         filenames = glob.glob(filename_tender)
         all_objects = []
-        all_tags = par_tags()
+        all_tags = par_tags(shop)
 
         for filename in filenames:
             with open(filename, 'r', encoding="utf-8") as f:
@@ -283,7 +317,7 @@ def pars_product():
 
             # Преобразуйте список тегов в строку, если теги найдены
             tags_str = ', '.join(tags) if tags else ''
-            dict_to_string = ', '.join([f"{k}: {v}" for k, v in item['dict_table_03'].items()]) if item[
+            dict_to_tags = ', '.join([f"{k}: {v}" for k, v in item['dict_table_03'].items()]) if item[
                 'dict_table_03'] else ''
             # Извлекаем числовые значения, обрабатываем случай отсутствия данных
             visits = item['dict_table_01'].get('Visits', 0)
@@ -300,8 +334,8 @@ def pars_product():
             orders = float(item['dict_table_01'].get('Orders', 0))
 
             # Обработка деления с проверкой на ноль и округлением
-            orders_to_visits_ratio = round(orders / visits, 2) if visits else None
-            visits_to_total_views_ratio = round(visits / total_views, 2) if total_views else None
+            orders_to_visits_ratio = ((round(orders / visits, 4)) * 100) if visits else None
+            visits_to_total_views_ratio = ((round(visits / total_views, 4)) * 100) if total_views else None
 
             row_data = [
                 item['object']['img_url_for_google'],
@@ -319,7 +353,7 @@ def pars_product():
                 item['dict_table_02']['Etsy marketing & SEO'],
                 item['dict_table_02']['Social media'],
                 item['dict_table_02']['Etsy search'],
-                dict_to_string,  # Используйте преобразованный словарь
+                dict_to_tags,  # Используйте преобразованный словарь
                 tags_str
             ]
             values.append(row_data)
@@ -329,14 +363,22 @@ def pars_product():
             unmatched_in_tags_set = set()
             matched_in_title_set = set()
             unmatched_in_title_set = set()
-            title = v[1]
-            products = v[15]
-            tags_listing = v[16]
+            title = v[1]  # B - Search Terms
+            dict_to_tags = v[15]  # P - Search Terms
+            tags_listing = v[16]  # Q - Tags
+
             title_words = set(split_into_words(title))
-            tags_words = set(split_into_words(tags_listing))
-            products_list = re.split(r' : \d+, ?', products)
-            for product_info in products_list:
+
+            tags_words = re.sub(": \d+", '', dict_to_tags)
+            words = re.findall(r'\w+', tags_words.lower())
+            unique_words = set(words)
+
+            tags_to_list = set(split_into_words(tags_listing))
+
+
+            for product_info in tags_to_list:
                 product_name = product_info.split(" : ")[0]
+
                 # print(f"\nАнализируем продукт: {product_name}")
                 # Определяем product_words заранее
                 product_words = split_into_words(product_name)
@@ -348,7 +390,6 @@ def pars_product():
                 # else:
                 #     print("\nНе найдено целиком в заголовке.")
                 # Шаг 2
-                product_words = split_into_words(product_name)
                 product_words = [re.sub(r'\d+', '', word) for word in product_words if re.sub(r'\d+', '', word)]
 
                 matched_in_title = [word for word in product_words if word in title_words]
@@ -358,8 +399,8 @@ def pars_product():
                 unmatched_in_title_set.update(unmatched_in_title)
 
                 # Шаг 3
-                matched_in_tags = [word for word in product_words if word in tags_words]
-                unmatched_in_tags = [word for word in product_words if word not in tags_words and word]
+                matched_in_tags = [word for word in product_words if word in unique_words]
+                unmatched_in_tags = [word for word in product_words if word not in unique_words and word]
                 matched_in_tags_set.update(matched_in_tags)
                 unmatched_in_tags_set.update(unmatched_in_tags)
 
@@ -369,23 +410,64 @@ def pars_product():
             unmatched_in_title_str = ", ".join(list(unmatched_in_title_set))
             new_row = v + [matched_in_tags_str, unmatched_in_tags_str, matched_in_title_str, unmatched_in_title_str]
             new_values.append(new_row)
+            # """Рабочий код"""
+            # for v in values:
+            #     matched_in_tags_set = set()
+            #     unmatched_in_tags_set = set()
+            #     matched_in_title_set = set()
+            #     unmatched_in_title_set = set()
+            #     title = v[1]
+            #     dict_to_tags = v[15] #Search Terms
+            #     tags_listing = v[16] #Tags
+            #     title_words = set(split_into_words(title))
+            #     tags_words = set(split_into_words(tags_listing))
+            #     tags_to_list = re.split(r' : \d+, ?', dict_to_tags)
+            #     for product_info in tags_to_list:
+            #         product_name = product_info.split(" : ")[0]
+            #         # print(f"\nАнализируем продукт: {product_name}")
+            #         # Определяем product_words заранее
+            #         product_words = split_into_words(product_name)
+            #
+            #         product_name = product_name.lower()
+            #         # Шаг 1
+            #         # if product_name.lower() in title.lower():
+            #         #     print("\nНайдено целиком в заголовке.")
+            #         # else:
+            #         #     print("\nНе найдено целиком в заголовке.")
+            #         # Шаг 2
+            #         product_words = split_into_words(product_name)
+            #         product_words = [re.sub(r'\d+', '', word) for word in product_words if re.sub(r'\d+', '', word)]
+            #
+            #         matched_in_title = [word for word in product_words if word in title_words]
+            #         unmatched_in_title = [word for word in product_words if word not in title_words]
+            #
+            #         matched_in_title_set.update(matched_in_title)
+            #         unmatched_in_title_set.update(unmatched_in_title)
+            #
+            #         # Шаг 3
+            #         matched_in_tags = [word for word in product_words if word in tags_words]
+            #         unmatched_in_tags = [word for word in product_words if word not in tags_words and word]
+            #         matched_in_tags_set.update(matched_in_tags)
+            #         unmatched_in_tags_set.update(unmatched_in_tags)
+            #
+            #     matched_in_tags_str = ", ".join(list(matched_in_tags_set))
+            #     unmatched_in_tags_str = ", ".join(list(unmatched_in_tags_set))
+            #     matched_in_title_str = ", ".join(list(matched_in_title_set))
+            #     unmatched_in_title_str = ", ".join(list(unmatched_in_title_set))
+            #     new_row = v + [matched_in_tags_str, unmatched_in_tags_str, matched_in_title_str, unmatched_in_title_str]
+            #     new_values.append(new_row)
 
         client, spreadsheet_id = get_google()
         sheet = client.open_by_key(spreadsheet_id)
+
         new_headers = [
-            ["img_url_for_google",
-             "title", "url_product",
-             "Visits", "Total Views",
-             "Orders", "Revenue",
-             "Конверсія", "клік рейт",
-             "Direct & other traffic",
-             "Etsy app & other Etsy pages",
-             "Etsy Ads", "Etsy marketing & SEO",
-             "Social media", "Etsy search",
-             "dict_table_03", "tags",
-             "Слова в тегах",
-             "Не слова в тегах", "Слова в title",
-             "Не слова в title"]]
+            [
+                'Title Photo', 'Title', 'Link', 'Visits', 'Total Views', 'Orders', 'Revenue', 'Conversion Rate',
+                'Сlick Rate', 'Direct & other traffic', 'Etsy app & other Etsy pages', 'Etsy Ads',
+                'Etsy marketing & SEO', 'Social media', 'Etsy search', 'Search Terms', 'Tags', 'Working Tags',
+                'Non-Working Tags', 'Working Title Words', 'Non-Working Title Words'
+            ]
+        ]
         try:
             worksheet = sheet.worksheet(shop)
         except gspread.WorksheetNotFound:
@@ -407,8 +489,8 @@ def pars_product():
             print(f"Произошла ошибка при обновлении Google Sheets: {e}")
 
 
-def par_tags():
-    filename_tags = os.path.join(json_tags, 'tags*.json')
+def par_tags(shop):
+    filename_tags = os.path.join(json_tags, shop, 'tags*.json')
     filenames = glob.glob(filename_tags)
     all_objects = []  # список для хранения всех словарей
     for filename in filenames:
@@ -461,39 +543,38 @@ def parsing_statistic(shop):
 if __name__ == '__main__':
     # creative_temp_folders()
     # get_cookies()
-    print('Введіть пароль')
-    passw = getpass.getpass("")
-    if passw == '12345677':
-        while True:
-            print(
-                'Який беремо період?'
-                '\nЦей рік - натисніть 1'
-                '\nЦей місяць - натисніть 2'
-                '\nОстанні 30 днів - натисніть 3'
-                '\nОстанні 7 днів - натисніть 4'
-                '\nЗакрити програму - натисніть 0'
-
-            )
-
-            date_range = int(input())
-            if date_range == 1:
-                date_range = 'this_year'
-            if date_range == 2:
-                date_range = 'this_month'
-            if date_range == 3:
-                date_range = 'last_30'
-            if date_range == 4:
-                date_range = 'last_7'
-            elif date_range == 0:
-                print("Програма завершена.")
-                break
-            else:
-                print("Невірний ввід, будь ласка, введіть коректний номер дії.")
-            """Получение данных"""
-            get_page_statistic(date_range)
-            get_product(date_range)
-            get_tags()
-            """Парсим данные"""
-            pars_product()
-    else:
-        print('Пароль не правильний')
+    # print('Введіть пароль')
+    # passw = getpass.getpass("")
+    # if passw == '12345677':
+    pars_product()
+    # while True:
+    #     print(
+    #         'Який беремо період?'
+    #         '\nЦей рік - натисніть 1'
+    #         '\nЦей місяць - натисніть 2'
+    #         '\nОстанні 30 днів - натисніть 3'
+    #         '\nОстанні 7 днів - натисніть 4'
+    #         '\nЗакрити програму - натисніть 0'
+    #
+    #     )
+    #
+    #     date_range = int(input())
+    #     if date_range == 1:
+    #         date_range = 'this_year'
+    #     if date_range == 2:
+    #         date_range = 'this_month'
+    #     if date_range == 3:
+    #         date_range = 'last_30'
+    #     if date_range == 4:
+    #         date_range = 'last_7'
+    #     elif date_range == 0:
+    #         print("Програма завершена.")
+    #         break
+    #     else:
+    #         print("Невірний ввід, будь ласка, введіть коректний номер дії.")
+    #     """Получение данных"""
+    #     get_page_statistic(date_range)
+    #     get_product(date_range)
+    #     get_tags()
+    #     """Парсим данные"""
+    #     pars_product()
