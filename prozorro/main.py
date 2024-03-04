@@ -696,14 +696,14 @@ def update_tenders_from_json():
 
                     # Сохраняем изменения
                 conn.commit()
-            """Открыть после завершения"""
-            files_json = glob.glob(os.path.join(json_path, '*'))
-            files_html = glob.glob(os.path.join(html_path, '*'))
-            # Объединяем списки файлов
-            all_files = files_json + files_html
-            for f in all_files:
-                if os.path.isfile(f):
-                    os.remove(f)
+    """Открыть после завершения"""
+    files_json = glob.glob(os.path.join(json_path, '*'))
+    files_html = glob.glob(os.path.join(html_path, '*'))
+    # Объединяем списки файлов
+    all_files = files_json + files_html
+    for f in all_files:
+        if os.path.isfile(f):
+            os.remove(f)
 #
 # def update_tenders_from_json_old():
 #     # # Получение списка текущих тендеров из базы данных
