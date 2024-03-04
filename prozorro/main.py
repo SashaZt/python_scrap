@@ -85,9 +85,6 @@ def get_tender(url_tender):
 """Парсинг одного тендера и извлечение json файла"""
 
 
-
-
-
 def get_json_tender():
     filename_tender = os.path.join(html_path, 'tender_*.html')
     filenames = glob.glob(filename_tender)
@@ -108,6 +105,8 @@ def get_json_tender():
         with open(filename_tender, 'w', encoding='utf-8') as f:
             json.dump(json_data, f, ensure_ascii=False, indent=4)  # Записываем в файл
         time.sleep(10)
+
+
 def parsing_tender(tenderID):
     filename_tender = os.path.join(html_path, f'tender_{tenderID}.html')
     with open(filename_tender, encoding="utf-8") as file:
@@ -120,6 +119,7 @@ def parsing_tender(tenderID):
     tender_id = tender_id_full.split('/')[-1]
 
     return tender_id
+
 
 """Функции которые будут извлекать значения"""
 
@@ -237,11 +237,20 @@ def pars_tender():
         budget = json_data.get('value', [{}]).get('amount', None)
 
         """Жалоба"""
-        complaints = json_data.get('complaints', [])
-        if complaints:
-            complaint = "Скарга"
-        else:
-            complaint = None
+        complaint = None  # Устанавливаем complaint в None по умолчанию
+        try:
+            questions_all = json_data.get('questions', None)  # Получаем список вопросов
+            if questions_all is not None:  # Проверяем, что список вопросов существует
+                for question in questions_all:  # Проходим по каждому вопросу
+                    if 'answer' not in question or not question[
+                        'answer'].strip():  # Проверяем наличие и не пустоту ответа
+                        complaint = "Увага!!!"  # Если хотя бы один вопрос без ответа, устанавливаем complaint в "Увага!!!"
+                        break  # Выходим из цикла, так как условие выполнено
+        except Exception as e:
+            print(f"Ошибка при обработке вопросов: {e}")
+            # В случае ошибки можно оставить complaint в значении None или обработать особым образом
+
+        # Дальнейшая логика работы с переменной complaint
 
         """Аукцион дата и время"""
         date_auctionPeriod, time_auctionPeriod = extract_auction_period_dates(json_data)
@@ -432,6 +441,7 @@ def pars_tender():
 
 """Обновление БД"""
 
+
 def update_tenders_from_json():
     # # Получение списка текущих тендеров из базы данных
     dick_tender = get_all_tender_records_as_dicts()
@@ -440,17 +450,21 @@ def update_tenders_from_json():
         tender_verification_bd = d['tender_verification']
         if tender_verification_bd != '1':
             url_ten = d['tender_id']
-            print(f'Качаем тендер {url_ten}')
-            response = requests.get(f"https://public-api.prozorro.gov.ua/api/2.5/tenders/{url_ten}", headers=headers)
-            try:
-                json_data = response.json()
-            except:
-                print(f'Пропустили тендер {url_ten}')
-                continue
             filename_tender = os.path.join(json_path, f'tender_{url_ten}.json')
-            with open(filename_tender, 'w', encoding='utf-8') as f:
-                json.dump(json_data, f, ensure_ascii=False, indent=4)  # Записываем в файл
-            time.sleep(10)
+            if not os.path.exists(filename_tender):
+                print(f'Качаем тендер {url_ten}')
+
+                response = requests.get(f"https://public-api.prozorro.gov.ua/api/2.5/tenders/{url_ten}",
+                                        headers=headers)
+                try:
+                    json_data = response.json()
+                except:
+                    print(f'Пропустили тендер {url_ten}')
+                    continue
+
+                with open(filename_tender, 'w', encoding='utf-8') as f:
+                    json.dump(json_data, f, ensure_ascii=False, indent=4)  # Записываем в файл
+                time.sleep(10)
         else:
             print(f'Тендер {d["tender_id"]} завершен')
 
@@ -483,17 +497,27 @@ def update_tenders_from_json():
                 bids_amount = None
                 tender_verification = None
 
-
                 customer = json_data.get('procuringEntity', {}).get('name', None)
                 budget = json_data.get('value', [{}]).get('amount', None)
 
                 """Жалоба"""
-                complaints = json_data.get('complaints', [])
-                if complaints:
-                    complaint = "Скарга"
-                else:
-                    complaint = None
+                complaint = None  # Устанавливаем complaint в None по умолчанию
+                try:
+                    questions_all = json_data.get('questions', None)  # Получаем список вопросов
+                    if questions_all is not None:  # Проверяем, что список вопросов существует
+                        for question in questions_all:  # Проходим по каждому вопросу
+                            if 'answer' not in question or not question[
+                                'answer'].strip():  # Проверяем наличие и не пустоту ответа
+                                complaint = "Увага!!!"  # Если хотя бы один вопрос без ответа, устанавливаем complaint в "Увага!!!"
+                                break  # Выходим из цикла, так как условие выполнено
+                except Exception as e:
+                    print(f"Ошибка при обработке вопросов: {e}")
+                    # В случае ошибки можно оставить complaint в значении None или обработать особым образом
 
+                # Дальнейшая логика работы с переменной complaint
+                    # В случае ошибки можно оставить complaint в значении None или обработать особым образом
+
+                # Дальнейшая логика работы с переменной complaint
                 """Аукцион дата и время"""
                 date_auctionPeriod, time_auctionPeriod = extract_auction_period_dates(json_data)
                 """Кінцевий строк подання тендерних пропозицій"""
@@ -619,7 +643,6 @@ def update_tenders_from_json():
 
                             else:
                                 continue
-
                 # Данные для вставки
                 tender_data = {
                     'tender_id': tender_id,
@@ -645,6 +668,7 @@ def update_tenders_from_json():
                     'tender_verification': tender_verification
 
                 }
+
                 # Проверяем, существует ли уже запись с таким tender_id
                 c.execute("SELECT COUNT(*) FROM tender WHERE tender_id = ?", (tender_data['tender_id'],))
                 exists = c.fetchone()[0] > 0
@@ -697,6 +721,8 @@ def update_tenders_from_json():
                     # Сохраняем изменения
                 conn.commit()
     """Открыть после завершения"""
+
+
     files_json = glob.glob(os.path.join(json_path, '*'))
     files_html = glob.glob(os.path.join(html_path, '*'))
     # Объединяем списки файлов
@@ -705,255 +731,11 @@ def update_tenders_from_json():
         if os.path.isfile(f):
             os.remove(f)
 #
-# def update_tenders_from_json_old():
-#     # # Получение списка текущих тендеров из базы данных
-#     dick_tender = get_all_tender_records_as_dicts()
-#
-#     for d in dick_tender:
-#         tender_verification_bd = d['tender_verification']
-#         if tender_verification_bd != '1':
-#             url_ten = d['tender_id']
-#             # print(f'Качаем тендер {url_ten}')
-#             response = requests.get(f"https://public-api.prozorro.gov.ua/api/2.5/tenders/{url_ten}", headers=headers)
-#             try:
-#                 json_data = response.json()
-#             except:
-#                 print(f'Пропустили тендер {url_ten}')
-#                 continue
-#             filename_tender = os.path.join(json_path, f'tender_{url_ten}.json')
-#             with open(filename_tender, 'w', encoding='utf-8') as f:
-#                 json.dump(json_data, f, ensure_ascii=False, indent=4)  # Записываем в файл
-#             # print('Пауза 10сек')
-#             time.sleep(10)
-#         else:
-#             print(f'Тендер {d["tender_id"]} завершен')
-#
-#     # Словарь для перевода статусов из json в читаемый вид
-#     dict_status_tenders = {
-#         'active.auction': 'Аукціон',
-#         'complete': 'Завершена',
-#         'active.qualification': 'Кваліфікація переможця',
-#         'active.tendering': 'Подання пропозицій',
-#         'active.awarded': 'Пропозиції розглянуті',
-#         'active.enquiries': 'Період уточнень',
-#         'active.pre-qualification.stand-still': 'Прекваліфікація (період оскарження)'
-#     }
-#
-#     filenames = glob.glob(os.path.join(json_path, 'tender*.json'))
-#     filename_db = os.path.join(current_directory, 'prozorro.db')
-#     with sqlite3.connect(filename_db) as conn:
-#         cursor = conn.cursor()
-#         conn.execute('PRAGMA journal_mode=WAL;')
-#         for filename in filenames:
-#             with open(filename, 'r', encoding="utf-8") as f:
-#                 data_json = json.load(f)
-#             json_data = data_json.get('data', {})
-#             tenderID = json_data.get('tenderID')
-#
-#             """Закачка файла"""
-#             url_te = f'https://prozorro.gov.ua/tender/{tenderID}'
-#             response = requests.get(url_te, headers=headers)
-#             src = response.text
-#             filename_tender = os.path.join(html_path, f'tender_{tenderID}.html')
-#
-#             with open(filename_tender, "w", encoding='utf-8') as file:
-#                 file.write(src)
-#
-#             tender_id_json = parsing_tender(tenderID)
-#             status_tender_json = json_data.get('status', None)
-#
-#             # Преобразование статуса и проверка на необходимость обновления
-#             new_status = dict_status_tenders.get(status_tender_json, "Неизвестный статус")
-#             for tender in dick_tender:
-#                 if tender['tender_id'] == tender_id_json and tender['status_tender'] != new_status:
-#                     """Жалоба"""
-#                     complaints = json_data.get('complaints', [])
-#                     if complaints:
-#                         complaint = "Скарга"
-#                     else:
-#                         complaint = None
-#                     """Аукціон"""
-#                     if new_status == 'Аукціон':
-#                         """Аукцион дата и время"""
-#                         date_auctionPeriod, time_auctionPeriod = extract_auction_period_dates(json_data)
-#                         """Кінцевий строк подання тендерних пропозицій"""
-#                         date_auctionPeriod_auctionPeriod, time_auctionPeriod_auctionPeriod = extract_auction_start_dates(
-#                             json_data)
-#                         """Звернення за роз’ясненням"""
-#                         date_enquiryPeriod_endDate, time_enquiryPeriod_endDate = enquiryPeriod_endDate(json_data)
-#                         """Розмір надання забезпечення пропозицій учасників"""
-#                         guarantee_amount, bank_garantiy = guarantee_bank(json_data)
-#                         cursor.execute("""
-#                                 UPDATE tender
-#                                 SET status_tender = ?, date_auctionPeriod = ?, time_auctionPeriod = ?, complaint = ?
-#                                 WHERE tender_id = ?
-#                             """, (new_status, date_auctionPeriod, time_auctionPeriod, complaint, tender_id_json))
-#
-#                         print(
-#                             f"Статус тендера {tender_id_json} обновлен на '{new_status}' с датой аукциона {date_auctionPeriod} и временем {time_auctionPeriod}.")
-#
-#                     """Кваліфікація переможця"""
-#                     if new_status == 'Кваліфікація переможця':
-#
-#                         """Победитель """
-#                         award_name_customer = json_data.get('awards', [{}])[0].get('suppliers', [{}])[0].get('name',
-#                                                                                                              None)
-#                         """Ставка которая победила"""
-#                         award_value_customer = json_data.get('awards', [{}])[0].get('value', [{}]).get('amount', None)
-#                         dara_pending = json_data['awards'][0]['date']
-#                         datetime_obj_pending = datetime.fromisoformat(dara_pending)
-#                         """Дата и время победившей ставки"""
-#                         date_pending = datetime_obj_pending.strftime("%d.%m.%Y")
-#                         time_pending = datetime_obj_pending.strftime("%H:%M")
-#                         """Победитель ЕДРПО"""
-#                         edrpo_customer = json_data.get('awards', [{}])[0].get('suppliers', [{}])[0].get(
-#                             'identifier').get('id',
-#                                               None)
-#                         award_status = json_data.get('awards', [{}])[0].get('status', None)
-#                         if edrpo_customer in dict_comany_edrpo.values():
-#                             if award_status == 'pending':
-#                                 award_status = None
-#                             if award_status == 'active':
-#                                 award_status = 'Победа'
-#                             if award_status == 'unsuccessful':
-#                                 award_status = None
-#                         else:
-#                             award_status = None
-#                         cursor.execute("""
-#                                 UPDATE tender
-#                                 SET status_tender = ?, award_name_customer = ?, award_value_customer = ?, date_pending = ?, time_pending = ?, award_status = ?, complaint = ?
-#                                 WHERE tender_id = ?
-#                             """, (
-#                             new_status, award_name_customer, award_value_customer, date_pending, time_pending,
-#                             award_status, complaint, tender_id_json))
-#
-#                     """Завершена"""
-#                     if new_status == 'Завершена':
-#                         budget = json_data.get('value', [{}]).get('amount', None)
-#                         tender_verification = 1
-#                         """Победитель """
-#                         award_name_customer = json_data.get('awards', [{}])[0].get('suppliers', [{}])[0].get('name',
-#                                                                                                              None)
-#                         """Ставка которая победила"""
-#                         award_value_customer = json_data.get('awards', [{}])[0].get('value', [{}]).get('amount', None)
-#                         dara_pending = json_data['awards'][0]['date']
-#                         datetime_obj_pending = datetime.fromisoformat(dara_pending)
-#                         """Дата и время победившей ставки"""
-#                         date_pending = datetime_obj_pending.strftime("%d.%m.%Y")
-#                         time_pending = datetime_obj_pending.strftime("%H:%M")
-#                         """Победитель ЕДРПО"""
-#                         edrpo_customer = json_data.get('awards', [{}])[0].get('suppliers', [{}])[0].get(
-#                             'identifier').get('id',
-#                                               None)
-#                         award_status = json_data.get('awards', [{}])[0].get('status', None)
-#                         if edrpo_customer in dict_comany_edrpo.values():
-#                             if award_status == 'pending':
-#                                 award_status = None
-#                             if award_status == 'active':
-#                                 award_status = 'Победа'
-#                             if award_status == 'unsuccessful':
-#                                 award_status = None
-#                         else:
-#                             award_status = None
-#
-#                         """Розмір надання забезпечення пропозицій учасників"""
-#                         guarantee_amount, bank_garantiy = guarantee_bank(json_data)
-#                         cursor.execute("""UPDATE tender
-#                         SET status_tender = ?, award_name_customer = ?, award_value_customer = ?,
-#                         date_pending = ?, time_pending = ?, award_status = ?, guarantee_amount =?,bank_garantiy =?, tender_verification=?, complaint = ?
-#                         WHERE tender_id = ? """, (
-#                             new_status, award_name_customer, award_value_customer, date_pending, time_pending,
-#                             award_status, guarantee_amount, bank_garantiy, tender_verification, complaint,
-#                             tender_id_json))
-#
-#                     """Подання пропозицій"""
-#                     if new_status == 'Подання пропозицій':
-#                         budget = json_data.get('value', [{}]).get('amount', None)
-#                         """Аукцион дата и время"""
-#                         date_auctionPeriod, time_auctionPeriod = extract_auction_period_dates(json_data)
-#                         """Кінцевий строк подання тендерних пропозицій"""
-#                         date_auctionPeriod_auctionPeriod, time_auctionPeriod_auctionPeriod = extract_auction_start_dates(
-#                             json_data)
-#                         """Звернення за роз’ясненням"""
-#                         date_enquiryPeriod_endDate, time_enquiryPeriod_endDate = enquiryPeriod_endDate(json_data)
-#                         """Розмір надання забезпечення пропозицій учасників"""
-#                         guarantee_amount, bank_garantiy = guarantee_bank(json_data)
-#                         cursor.execute(""" UPDATE tender
-#                                                 SET status_tender = ?,budget = ?, date_auctionPeriod = ?, time_auctionPeriod = ?, complaint = ?
-#                                                 WHERE tender_id = ?
-#                                             """,
-#                                        (new_status, budget, date_auctionPeriod, time_auctionPeriod, complaint,
-#                                         tender_id_json))
-#
-#                         print(
-#                             f"Статус тендера {tender_id_json} обновлен на '{new_status}' с датой аукциона {date_auctionPeriod} и временем {time_auctionPeriod}.")
-#
-#                     if new_status == 'Пропозиції розглянуті':
-#                         # Проверяем наличие и не пустоту списка 'awards'
-#                         if json_data.get('awards'):
-#                             first_award = json_data.get('awards')[0]  # Берем первый элемент из списка 'awards'
-#                             dara_pending = first_award['date']
-#                             datetime_obj_pending = datetime.fromisoformat(dara_pending)
-#                             """Дата и время победившей ставки"""
-#                             date_pending = datetime_obj_pending.strftime("%d.%m.%Y")
-#                             time_pending = datetime_obj_pending.strftime("%H:%M")
-#                             award_status = first_award.get('status', None)
-#
-#                             # Проверяем наличие и не пустоту списка 'suppliers'
-#                             if first_award.get('suppliers'):
-#                                 first_supplier = first_award.get('suppliers')[
-#                                     0]  # Берем первый элемент из списка 'suppliers'
-#
-#                                 # Извлекаем имя и EDRPOU код
-#                                 award_name_customer = first_supplier.get('name', None)  # Получаем имя
-#                                 identifier = first_supplier.get('identifier')  # Получаем identifier
-#                                 if identifier:  # Проверяем, что identifier существует
-#                                     edrpo_customer = identifier.get('id', None)  # Извлекаем 'id'
-#                                     if edrpo_customer in dict_comany_edrpo.values():
-#                                         if award_status == 'pending':
-#                                             award_status = None
-#                                         if award_status == 'active':
-#                                             award_status = 'Победа'
-#                                         if award_status == 'unsuccessful':
-#                                             award_status = None
-#                                     else:
-#                                         award_status = None
-#
-#                             # Для стоимости предложения победителя
-#                             award_value = first_award.get('value')  # Получаем словарь 'value'
-#                             if award_value:  # Проверяем, что словарь 'value' существует
-#                                 award_value_customer = award_value.get('amount', None)  # Получаем стоимость
-#                         cursor.execute(""" UPDATE tender
-#                                                 SET status_tender = ?,date_pending = ?,time_pending = ?,award_status = ?,award_value_customer = ?,award_name_customer = ?, complaint = ?
-#                                                 WHERE tender_id = ?
-#                                             """,
-#                                        (new_status, date_pending, time_pending, award_status, award_value_customer,
-#                                         award_name_customer, complaint, tender_id_json))
-#                     if new_status == 'Період уточнень':
-#                         pass
-#                     if new_status == 'Прекваліфікація (період оскарження)':
-#                         pass
-#
-#                     # # Обновление статуса в базе данных
-#                     # cursor.execute("UPDATE tender SET status_tender = ? WHERE tender_id = ?",
-#                     #                (new_status, tender_id_json))
-#                     # print(f"Статус тендера {tender_id_json} обновлен на '{new_status}'.")
-#                     break
-#
-#             # print(f'Пауза 10сек')
-#             time.sleep(10)
-#     """Открыть после завершения"""
-#     files_json = glob.glob(os.path.join(json_path, '*'))
-#     files_html = glob.glob(os.path.join(html_path, '*'))
-#     # Объединяем списки файлов
-#     all_files = files_json + files_html
-#     # Удаляем каждый файл
-#     for f in all_files:
-#         if os.path.isfile(f):
-#             os.remove(f)
-#
+
+
 
 """Выгружает данные с БД"""
+
 
 def get_url_from_sql():
     filename_db = os.path.join(current_directory, 'prozorro.db')
@@ -965,6 +747,7 @@ def get_url_from_sql():
     conn.close()
     return [dict(record) for record in records]
 
+
 def get_all_tender_records_as_dicts():
     filename_db = os.path.join(current_directory, 'prozorro.db')
     conn = sqlite3.connect(filename_db)
@@ -974,33 +757,6 @@ def get_all_tender_records_as_dicts():
     records = c.fetchall()
     conn.close()
     return [dict(record) for record in records]
-
-
-# def export_to_csv():
-#     # Подключаемся к базе данных
-#     filename_db = os.path.join(current_directory, 'prozorro.db')
-#     conn = sqlite3.connect(filename_db)
-#     c = conn.cursor()
-#
-#     # Выполняем SQL-запрос для выбора данных
-#     c.execute(
-#         '''SELECT tender_id, url_tender, customer, status_tender, date_auction, time_auction, date_enquiryPeriod, time_enquiryPeriod, date_auctionPeriod_auctionPeriod, time_auctionPeriod_auctionPeriod, award_name_customer, award_value_customer, date_pending, time_pending, award_status, guarantee_amount, bank_garantiy FROM tender''')
-#
-#     # Получаем все строки
-#     rows = c.fetchall()
-#
-#     # Открываем файл CSV для записи
-#     with open('export_to_csv.csv', 'w', newline='', encoding='utf-8') as file:
-#         writer = csv.writer(file, delimiter=';')
-#
-#         # Записываем заголовок
-#         writer.writerow([i[0] for i in c.description])
-#
-#         # Записываем строки
-#         writer.writerows(rows)
-#
-#     # Закрываем соединение с базой данных
-#     conn.close()
 
 
 """Очистить данные"""
@@ -1109,7 +865,6 @@ def clean_sql_table():
     conn.close()
 
 
-
 print('Введите пароль')
 passw = getpass.getpass("")
 if passw == '12345677':
@@ -1150,4 +905,3 @@ if passw == '12345677':
             print("Неверный ввод, пожалуйста, введите корректный номер действия.")
 else:
     print('Пароль не правильный')
-
