@@ -1,14 +1,15 @@
+import getpass
 import glob
 import json
 import os
 import random
 import re
+import shutil
 import time
-import getpass
+
 import gspread
 import requests
 from oauth2client.service_account import ServiceAccountCredentials
-import shutil
 
 from config import headers, time_a, time_b, spreadsheet_id
 
@@ -71,8 +72,6 @@ def creative_temp_folders():
 
 
 def delete_temp_directory():
-    current_directory = os.getcwd()
-
     # Проверка существования директории и её удаление
     if os.path.exists(temp_path) and os.path.isdir(temp_path):
         try:
@@ -84,24 +83,24 @@ def delete_temp_directory():
         print(f"The directory {temp_path} does not exist or is not a directory.")
 
 
-# def del_files():
-#     shops_cookies = get_cookies()
-#     for s in shops_cookies:
-#         shop = s['id_shop']
-#         # Перебор каждой целевой папки
-#         for base_folder in [json_path, json_product, json_tags, json_statistic]:
-#             shop_folder = os.path.join(base_folder, shop)  # Построение полного пути к папке магазина
-#             if os.path.exists(shop_folder):
-#                 # Удаление всех файлов внутри папки магазина
-#                 for filename in os.listdir(shop_folder):
-#                     file_path = os.path.join(shop_folder, filename)
-#                     try:
-#                         if os.path.isfile(file_path) or os.path.islink(file_path):
-#                             os.unlink(file_path)  # Удаление файла или символической ссылки
-#                         elif os.path.isdir(file_path):
-#                             shutil.rmtree(file_path)  # Удаление директории и всего её содержимого
-#                     except Exception as e:
-#                         print(f'Failed to delete {file_path}. Reason: {e}')
+def del_files():
+    shops_cookies = get_cookies()
+    for s in shops_cookies:
+        shop = s['id_shop']
+        # Перебор каждой целевой папки
+        for base_folder in [json_path, json_product, json_tags, json_statistic]:
+            shop_folder = os.path.join(base_folder, shop)  # Построение полного пути к папке магазина
+            if os.path.exists(shop_folder):
+                # Удаление всех файлов внутри папки магазина
+                for filename in os.listdir(shop_folder):
+                    file_path = os.path.join(shop_folder, filename)
+                    try:
+                        if os.path.isfile(file_path) or os.path.islink(file_path):
+                            os.unlink(file_path)  # Удаление файла или символической ссылки
+                        elif os.path.isdir(file_path):
+                            shutil.rmtree(file_path)  # Удаление директории и всего её содержимого
+                    except Exception as e:
+                        print(f'Failed to delete {file_path}. Reason: {e}')
 
 def split_into_words(text):
     # Убираем знаки пунктуации и разбиваем по пробелам, приводя всё к нижнему регистру
@@ -243,6 +242,7 @@ def pars_product():
     shops_cookies = get_cookies()
     for s in shops_cookies:
         shop = s['id_shop']
+        print(f'{shop}')
         filename_tender = os.path.join(json_product, shop, 'product*.json')
         filenames = glob.glob(filename_tender)
         all_objects = []
@@ -363,19 +363,19 @@ def pars_product():
             unmatched_in_tags_set = set()
             matched_in_title_set = set()
             unmatched_in_title_set = set()
-            title = v[1]  # B - Search Terms
-            dict_to_tags = v[15]  # P - Search Terms
-            tags_listing = v[16]  # Q - Tags
-
+            """B - Title"""
+            title = v[1]
             title_words = set(split_into_words(title))
-
+            """P - Search Terms"""
+            dict_to_tags = v[15]  #
             tags_words = re.sub(": \d+", '', dict_to_tags)
             words = re.findall(r'\w+', tags_words.lower())
-            unique_words = set(words)
-
+            unique_words_search_terms = set(words)
+            """ Q - Tags"""
+            tags_listing = v[16]
             tags_to_list = set(split_into_words(tags_listing))
 
-
+            """Только проверка тегов"""
             for product_info in tags_to_list:
                 product_name = product_info.split(" : ")[0]
 
@@ -391,18 +391,18 @@ def pars_product():
                 #     print("\nНе найдено целиком в заголовке.")
                 # Шаг 2
                 product_words = [re.sub(r'\d+', '', word) for word in product_words if re.sub(r'\d+', '', word)]
-
-                matched_in_title = [word for word in product_words if word in title_words]
-                unmatched_in_title = [word for word in product_words if word not in title_words]
-
-                matched_in_title_set.update(matched_in_title)
-                unmatched_in_title_set.update(unmatched_in_title)
-
                 # Шаг 3
-                matched_in_tags = [word for word in product_words if word in unique_words]
-                unmatched_in_tags = [word for word in product_words if word not in unique_words and word]
+                matched_in_tags = [word for word in product_words if word in unique_words_search_terms]
+                unmatched_in_tags = [word for word in product_words if word not in unique_words_search_terms and word]
                 matched_in_tags_set.update(matched_in_tags)
                 unmatched_in_tags_set.update(unmatched_in_tags)
+
+            for title in title_words:
+                title__words = split_into_words(title)
+                matched_in_title = [word for word in title__words if word in unique_words_search_terms]
+                unmatched_in_title = [word for word in title__words if word not in unique_words_search_terms and word]
+                matched_in_title_set.update(matched_in_title)
+                unmatched_in_title_set.update(unmatched_in_title)
 
             matched_in_tags_str = ", ".join(list(matched_in_tags_set))
             unmatched_in_tags_str = ", ".join(list(unmatched_in_tags_set))
@@ -541,40 +541,36 @@ def parsing_statistic(shop):
 
 
 if __name__ == '__main__':
-    # creative_temp_folders()
-    # get_cookies()
-    # print('Введіть пароль')
-    # passw = getpass.getpass("")
-    # if passw == '12345677':
-    pars_product()
-    # while True:
-    #     print(
-    #         'Який беремо період?'
-    #         '\nЦей рік - натисніть 1'
-    #         '\nЦей місяць - натисніть 2'
-    #         '\nОстанні 30 днів - натисніть 3'
-    #         '\nОстанні 7 днів - натисніть 4'
-    #         '\nЗакрити програму - натисніть 0'
-    #
-    #     )
-    #
-    #     date_range = int(input())
-    #     if date_range == 1:
-    #         date_range = 'this_year'
-    #     if date_range == 2:
-    #         date_range = 'this_month'
-    #     if date_range == 3:
-    #         date_range = 'last_30'
-    #     if date_range == 4:
-    #         date_range = 'last_7'
-    #     elif date_range == 0:
-    #         print("Програма завершена.")
-    #         break
-    #     else:
-    #         print("Невірний ввід, будь ласка, введіть коректний номер дії.")
-    #     """Получение данных"""
-    #     get_page_statistic(date_range)
-    #     get_product(date_range)
-    #     get_tags()
-    #     """Парсим данные"""
-    #     pars_product()
+    while True:
+        print(
+            'Який беремо період?'
+            '\nЦей рік - натисніть 1'
+            '\nЦей місяць - натисніть 2'
+            '\nОстанні 30 днів - натисніть 3'
+            '\nОстанні 7 днів - натисніть 4'
+            '\nЗакрити програму - натисніть 0'
+
+        )
+
+        date_range = int(input())
+        if date_range == 1:
+            date_range = 'this_year'
+        if date_range == 2:
+            date_range = 'this_month'
+        if date_range == 3:
+            date_range = 'last_30'
+        if date_range == 4:
+            date_range = 'last_7'
+        elif date_range == 0:
+            print("Програма завершена.")
+            break
+        else:
+            print("Невірний ввід, будь ласка, введіть коректний номер дії.")
+        """Получение данных"""
+        del_files()
+        print('Старые файлы удалили')
+        get_page_statistic(date_range)
+        get_product(date_range)
+        get_tags()
+        """Парсим данные"""
+        pars_product()
