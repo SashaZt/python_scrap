@@ -1557,6 +1557,8 @@ def get_table_04_to_google():
     sheet_payout_history.update([[current_datetime]], 'A1')
     if os.path.exists(filename):
         os.remove(filename)
+
+
 def get_asio():
     import asyncio
     import json
@@ -1718,29 +1720,37 @@ def get_asio():
         data_login_pass = await login_pass()
         for item in data_login_pass:
             """Список логинов у которых не правильные пароли"""
-            skip_logins = [
-                'Hardy_Alice',
-                'Wow_Adele',
-                'panchalaksuraphoem@gmail.com',
-                'Autumn Blossom'
-            ]
-
-            if item['login'] in skip_logins:
-                continue
+            # skip_logins = [
+            #     'Hardy_Alice',
+            #     'Wow_Adele',
+            #     'panchalaksuraphoem@gmail.com',
+            #     'Autumn Blossom'
+            # ]
+            #
+            # if item['login'] in skip_logins:
+            #     continue
             async with aiohttp.ClientSession() as session:
 
                 browser = await playwright.chromium.launch(headless=False, proxy=proxy)
                 context = await browser.new_context()
                 page = await context.new_page()
 
+                """Вход на страницу с логин и пароль"""
                 await page.goto('https://www.manyvids.com/Login/')
-                await page.fill('input#triggerUsername', item['login'])
+                try:
+                    # Ожидаем появления элемента h1 с текстом "Login to ManyVids"
+                    await page.wait_for_selector('h1:text("Login to ManyVids")', timeout=60000)
+                    await page.fill('input#triggerUsername', item['login'])
+                    await page.fill('input#triggerPassword', item['password'])
+                except TimeoutError:
+                    print(f"Страница не загрузилась для {item['login']} 60 секунд.")
+                    continue
 
-                await page.fill('input#triggerPassword', item['password'])
                 # Попытка входа и повтор в случае необходимости
-                max_attempts = 5  # Максимальное количество попыток
+                max_attempts = 3  # Максимальное количество попыток
                 attempts = 0  # Счетчик попыток
 
+                """Проверяем или кнопка login  пропала"""
                 while attempts < max_attempts:
                     await page.press('input#triggerPassword', 'Enter')
                     try:
@@ -1758,8 +1768,15 @@ def get_asio():
 
                 if attempts >= max_attempts:
                     print(f"Проверьте логин и пароль {item['login']}")
+
+                """Переход на страницу с данными"""
                 await page.goto('https://www.manyvids.com/View-my-earnings/')
-                await asyncio.sleep(10)
+                try:
+                    # Ожидаем элемент в течение 30 секунд
+                    element = await page.wait_for_selector('//div[@class="text-left"]', timeout=60000)
+                except TimeoutError:
+                    print(f"Страница не загрузилась для {item['login']} 60 секунд.")
+                    continue
 
                 await page.wait_for_selector('[data-mvtoken]')
                 mvtoken = await page.get_attribute('[data-mvtoken]', 'data-mvtoken')  # Используйте await здесь
