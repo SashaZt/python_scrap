@@ -1633,7 +1633,7 @@ def get_asio():
         filename = os.path.join(cookies_path, f"{identifier}_{mvtoken}.json")
         async with aiofiles.open(filename, 'w') as f:
             await f.write(json.dumps(cookies))
-        print(f"Сохранены куки для {identifier}")
+        # print(f"Сохранены куки для {identifier}")
         return filename
 
     async def load_cookies_and_update_session(session, filename):
@@ -1717,6 +1717,16 @@ def get_asio():
         proxy = await proxy_random()
         data_login_pass = await login_pass()
         for item in data_login_pass:
+            """Список логинов у которых не правильные пароли"""
+            skip_logins = [
+                'Hardy_Alice',
+                'Wow_Adele',
+                'panchalaksuraphoem@gmail.com',
+                'Autumn Blossom'
+            ]
+
+            if item['login'] in skip_logins:
+                continue
             async with aiohttp.ClientSession() as session:
 
                 browser = await playwright.chromium.launch(headless=False, proxy=proxy)
@@ -1725,15 +1735,7 @@ def get_asio():
 
                 await page.goto('https://www.manyvids.com/Login/')
                 await page.fill('input#triggerUsername', item['login'])
-                skip_logins = [
-                    'Hardy_Alice',
-                    'Wow_Adele',
-                    'panchalaksuraphoem@gmail.com',
-                    'Autumn Blossom'
-                ]
 
-                if item['login'] in skip_logins:
-                    continue
                 await page.fill('input#triggerPassword', item['password'])
                 # Попытка входа и повтор в случае необходимости
                 max_attempts = 5  # Максимальное количество попыток
