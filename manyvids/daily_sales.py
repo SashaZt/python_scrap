@@ -1343,42 +1343,26 @@ def get_pending_to_google():
     df = pd.read_sql_query(query, engine)
     filename_pending_custom = 'pending_custom.csv'
     # Преобразование DataFrame
+    # Предполагается, что df уже загружен и содержит необходимые данные.
+    # Создаем pivot_table.
     df_pivot = df.pivot_table(index='model_id', columns='sales_month',
                               values=['total_sum', 'pending_custom', 'chat_user'],
                               aggfunc='first').reset_index()
 
+    # Обновляем названия столбцов, чтобы они были более читаемыми.
     df_pivot.columns = ['_'.join(str(i) for i in col).strip() for col in df_pivot.columns.values]
 
-    # Замена NaN на 0
+    # Заменяем NaN на 0.
     df_pivot.fillna(0, inplace=True)
-    # Убедимся, что столбцы с 'total_sum' имеют числовой тип данных
+
+    # Убедимся, что столбцы, содержащие числовые значения, имеют числовой тип данных.
     for col in df_pivot.columns:
         if 'total_sum' in col or 'chat_user' in col or 'pending_custom' in col:
             df_pivot[col] = pd.to_numeric(df_pivot[col], errors='coerce')
 
-    # Сначала убедимся, что 'model_id' не участвует в операции суммирования
-    if 'model_id_' in df_pivot.columns:
-        numeric_cols = [col for col in df_pivot.columns if
-                        col != 'model_id_']  # Исключаем model_id_ из списка столбцов для суммирования
-        total_row = df_pivot[numeric_cols].sum(numeric_only=True)
-    else:
-        total_row = df_pivot.sum(numeric_only=True)
-
-    total_row.name = 'Итого'
-
-    # Теперь создадим итоговую строку как DataFrame для добавления к основному DataFrame
-    total_df = pd.DataFrame([total_row], index=['Итого'])
-
-    # Установим model_id в 'Итого' для итоговой строки, если это необходимо
-    # Поскольку мы уже создали total_df с индексом 'Итого', этот шаг может быть пропущен
-
-    # Добавляем итоговую строку к df_pivot
-    df_pivot_with_total = pd.concat([df_pivot, total_df], axis=0)
-
-    # Сохраняем результат в CSV, исключая индекс, если он не несет смысловой нагрузки
-    df_pivot_with_total.to_csv(filename_pending_custom, index=True)
+    # Сохраняем результат в CSV. Индекс не сохраняем, если он не несет важной информации.
+    df_pivot.to_csv(filename_pending_custom, index=False)
     #
-
     df = pd.read_csv(filename_pending_custom)
     months = range(1, 13)  # От 1 до 12
 
@@ -1425,8 +1409,18 @@ def get_pending_to_google():
             except gspread.WorksheetNotFound:
                 worksheet = spreadsheet.add_worksheet(title=sheet_name, rows="100", cols="20")
 
-            # Формируем данные для обновления листа
-            values = [df_subset.columns.tolist()] + df_subset.values.tolist()
+            # Добавляем строку "Итого" с подсчетом сумм по колонкам
+            totals = df_subset.select_dtypes(include=['number']).sum().tolist()  # Считаем суммы только для числовых колонок
+            # Создаем итоговую строку
+            totals_row = ['Итого'] + totals
+
+            # Убедимся, что итоговая строка правильно выровнена с заголовками
+            # Отнимаем 1, так как 'Итого' уже добавлено в totals_row
+            non_numeric_columns_count = len(df_subset.columns) - len(totals) - 1
+            totals_row = [''] * non_numeric_columns_count + totals_row
+
+            # Формируем данные для обновления листа, добавляя totals_row
+            values = [df_subset.columns.tolist()] + df_subset.values.tolist() + [totals_row]
 
             # Очистка и обновление листа
             worksheet.clear()
@@ -1472,7 +1466,7 @@ def get_table_03_to_google():
 
     total_row = pivot_df.sum().rename('Итого').to_frame().T
     pivot_df_with_total = pd.concat([pivot_df, total_row], axis=0)
-
+    pivot_df_with_total = pivot_df_with_total.round(2)
     # pivot_df.to_csv('payout_history.csv')
 
     pivot_df_with_total.to_csv(filename)
@@ -1488,7 +1482,11 @@ def get_table_03_to_google():
     # Читаем CSV файл
     df = pd.read_csv(filename)
     df.fillna(0, inplace=True)
-    df = df.astype(str)
+
+    # Поскольку мы уже округлили числа до сохранения в CSV,
+    # заменяем точку на запятую уже после чтения из файла, если это необходимо
+    df = df.astype(str).applymap(lambda x: x.replace('.', ','))
+
     # Конвертируем DataFrame в список списков
     values = df.values.tolist()
 
@@ -1499,6 +1497,7 @@ def get_table_03_to_google():
     sheet_payout_history.clear()
     # Обновляем данные в Google Sheets
     sheet_payout_history.update(values, 'A1')
+
     # Форматирование текущей даты и времени
     current_datetime = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
@@ -1944,10 +1943,13 @@ def job():
     get_sql_chat()
     # #
     get_table_01_to_google()
-    #
+
+
+    """payout_history"""
     get_table_03_to_google()
-    #
-    get_table_04_to_google()
+
+
+    # get_table_04_to_google()
     get_pending_to_google()
     unique_users_to_sql()
 
