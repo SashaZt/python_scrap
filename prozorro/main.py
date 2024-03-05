@@ -1,4 +1,3 @@
-import csv
 import getpass
 import glob
 import json
@@ -12,7 +11,7 @@ import requests
 from bs4 import BeautifulSoup
 from oauth2client.service_account import ServiceAccountCredentials
 
-from config import spreadsheet_id, headers, dict_comany_edrpo, sheet_value
+from config import spreadsheet_id, headers, dict_comany_edrpo
 
 current_directory = os.getcwd()
 temp_directory = 'temp'
@@ -44,31 +43,31 @@ def creative_temp_folders():
 """Получение всех тендеров"""
 
 
-def get_all_tenders():
-    params = {
-        'cpv[0]': '39160000-1',
-        'status[0]': 'active.enquiries',
-        'status[1]': 'active.tendering',
-        'filterType': 'tenders',
-    }
-
-    response = requests.post('https://prozorro.gov.ua/api/search/tenders', params=params,
-                             headers=headers)
-
-    json_data = response.json()
-    filename_all_tenders = os.path.join(json_path, 'all_tenders.json')
-    with open(filename_all_tenders, 'w', encoding='utf-8') as f:
-        json.dump(json_data, f, ensure_ascii=False, indent=4)  # Записываем в файл
+# def get_all_tenders():
+#     params = {
+#         'cpv[0]': '39160000-1',
+#         'status[0]': 'active.enquiries',
+#         'status[1]': 'active.tendering',
+#         'filterType': 'tenders',
+#     }
+#
+#     response = requests.post('https://prozorro.gov.ua/api/search/tenders', params=params,
+#                              headers=headers)
+#
+#     json_data = response.json()
+#     filename_all_tenders = os.path.join(json_path, 'all_tenders.json')
+#     with open(filename_all_tenders, 'w', encoding='utf-8') as f:
+#         json.dump(json_data, f, ensure_ascii=False, indent=4)  # Записываем в файл
 
 
 """Парсинг всех тендеров"""
 
 
-def pars_all_tenders():
-    filename_all_tenders = os.path.join(json_path, 'all_tenders.json')
-    with open(filename_all_tenders, 'r', encoding="utf-8") as f:
-        data_json = json.load(f)
-
+# def pars_all_tenders():
+#     filename_all_tenders = os.path.join(json_path, 'all_tenders.json')
+#     with open(filename_all_tenders, 'r', encoding="utf-8") as f:
+#         data_json = json.load(f)
+#
 
 """Получение одного тендера"""
 
@@ -238,19 +237,36 @@ def pars_tender():
 
         """Жалоба"""
         complaint = None  # Устанавливаем complaint в None по умолчанию
-        try:
-            questions_all = json_data.get('questions', None)  # Получаем список вопросов
-            if questions_all is not None:  # Проверяем, что список вопросов существует
-                for question in questions_all:  # Проходим по каждому вопросу
-                    if 'answer' not in question or not question[
-                        'answer'].strip():  # Проверяем наличие и не пустоту ответа
-                        complaint = "Увага!!!"  # Если хотя бы один вопрос без ответа, устанавливаем complaint в "Увага!!!"
-                        break  # Выходим из цикла, так как условие выполнено
-        except Exception as e:
-            print(f"Ошибка при обработке вопросов: {e}")
-            # В случае ошибки можно оставить complaint в значении None или обработать особым образом
 
-        # Дальнейшая логика работы с переменной complaint
+        # Получаем списки жалоб и вопросов
+        complaints_all = json_data.get('complaints', None)
+        questions_all = json_data.get('questions', None)
+
+        # Проверяем наличие и непустоту блоков complaints и/или questions
+        if complaints_all or questions_all:
+            complaint = "Увага!!!"
+        # complaint = None  # Устанавливаем complaint в None по умолчанию
+        # try:
+        #     if complaint is None:
+        #         complaints_all = json_data.get('complaints',
+        #                                        None)  # Используем .get() для безопасного получения данных
+        #         if complaints_all:  # Если есть жалобы для проверки
+        #             for complaint_data in complaints_all:
+        #                 if complaint_data.get('resolutionType') == 'resolved':  # Проверяем, решена ли жалоба
+        #                     break  # Выходим из цикла, так как нашли решенную жалобу
+        #             else:
+        #                 # Если цикл завершился без break, значит не нашли решенных жалоб
+        #                 complaint = "Увага!!!"
+        #     questions_all = json_data.get('questions', None)  # Получаем список вопросов
+        #     if questions_all is not None:  # Проверяем, что список вопросов существует
+        #         for question in questions_all:  # Проходим по каждому вопросу
+        #             if 'answer' not in question or not question[
+        #                 'answer'].strip():
+        #                 complaint = "Увага!!!"
+        #                 break
+        #
+        # except Exception as e:
+        #     print(f"Ошибка при обработке вопросов: {e}")
 
         """Аукцион дата и время"""
         date_auctionPeriod, time_auctionPeriod = extract_auction_period_dates(json_data)
@@ -502,22 +518,38 @@ def update_tenders_from_json():
 
                 """Жалоба"""
                 complaint = None  # Устанавливаем complaint в None по умолчанию
-                try:
-                    questions_all = json_data.get('questions', None)  # Получаем список вопросов
-                    if questions_all is not None:  # Проверяем, что список вопросов существует
-                        for question in questions_all:  # Проходим по каждому вопросу
-                            if 'answer' not in question or not question[
-                                'answer'].strip():  # Проверяем наличие и не пустоту ответа
-                                complaint = "Увага!!!"  # Если хотя бы один вопрос без ответа, устанавливаем complaint в "Увага!!!"
-                                break  # Выходим из цикла, так как условие выполнено
-                except Exception as e:
-                    print(f"Ошибка при обработке вопросов: {e}")
-                    # В случае ошибки можно оставить complaint в значении None или обработать особым образом
 
-                # Дальнейшая логика работы с переменной complaint
-                    # В случае ошибки можно оставить complaint в значении None или обработать особым образом
+                # Получаем списки жалоб и вопросов
+                complaints_all = json_data.get('complaints', None)
+                questions_all = json_data.get('questions', None)
 
-                # Дальнейшая логика работы с переменной complaint
+                # Проверяем наличие и непустоту блоков complaints и/или questions
+                if complaints_all or questions_all:
+                    complaint = "Увага!!!"
+                # """Жалоба"""
+                # complaint = None  # Устанавливаем complaint в None по умолчанию
+                # try:
+                #     if complaint is None:
+                #         complaints_all = json_data.get('complaints',
+                #                                        None)  # Используем .get() для безопасного получения данных
+                #         if complaints_all:  # Если есть жалобы для проверки
+                #             for complaint_data in complaints_all:
+                #                 if complaint_data.get('resolutionType') == 'resolved':  # Проверяем, решена ли жалоба
+                #                     break  # Выходим из цикла, так как нашли решенную жалобу
+                #             else:
+                #                 # Если цикл завершился без break, значит не нашли решенных жалоб
+                #                 complaint = "Увага!!!"
+                #     questions_all = json_data.get('questions', None)  # Получаем список вопросов
+                #     if questions_all is not None:  # Проверяем, что список вопросов существует
+                #         for question in questions_all:  # Проходим по каждому вопросу
+                #             if 'answer' not in question or not question[
+                #                 'answer'].strip():
+                #                 complaint = "Увага!!!"
+                #                 break
+                #
+                # except Exception as e:
+                #     print(f"Ошибка при обработке вопросов: {e}")
+
                 """Аукцион дата и время"""
                 date_auctionPeriod, time_auctionPeriod = extract_auction_period_dates(json_data)
                 """Кінцевий строк подання тендерних пропозицій"""
@@ -722,7 +754,6 @@ def update_tenders_from_json():
                 conn.commit()
     """Открыть после завершения"""
 
-
     files_json = glob.glob(os.path.join(json_path, '*'))
     files_html = glob.glob(os.path.join(html_path, '*'))
     # Объединяем списки файлов
@@ -730,8 +761,9 @@ def update_tenders_from_json():
     for f in all_files:
         if os.path.isfile(f):
             os.remove(f)
-#
 
+
+#
 
 
 """Выгружает данные с БД"""
