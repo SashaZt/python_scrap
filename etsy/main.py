@@ -83,24 +83,24 @@ def delete_temp_directory():
         print(f"The directory {temp_path} does not exist or is not a directory.")
 
 
-def del_files():
-    shops_cookies = get_cookies()
-    for s in shops_cookies:
-        shop = s['id_shop']
-        # Перебор каждой целевой папки
-        for base_folder in [json_path, json_product, json_tags, json_statistic]:
-            shop_folder = os.path.join(base_folder, shop)  # Построение полного пути к папке магазина
-            if os.path.exists(shop_folder):
-                # Удаление всех файлов внутри папки магазина
-                for filename in os.listdir(shop_folder):
-                    file_path = os.path.join(shop_folder, filename)
-                    try:
-                        if os.path.isfile(file_path) or os.path.islink(file_path):
-                            os.unlink(file_path)  # Удаление файла или символической ссылки
-                        elif os.path.isdir(file_path):
-                            shutil.rmtree(file_path)  # Удаление директории и всего её содержимого
-                    except Exception as e:
-                        print(f'Failed to delete {file_path}. Reason: {e}')
+# def del_files():
+#     shops_cookies = get_cookies()
+#     for s in shops_cookies:
+#         shop = s['id_shop']
+#         # Перебор каждой целевой папки
+#         for base_folder in [json_path, json_product, json_tags, json_statistic]:
+#             shop_folder = os.path.join(base_folder, shop)  # Построение полного пути к папке магазина
+#             if os.path.exists(shop_folder):
+#                 # Удаление всех файлов внутри папки магазина
+#                 for filename in os.listdir(shop_folder):
+#                     file_path = os.path.join(shop_folder, filename)
+#                     try:
+#                         if os.path.isfile(file_path) or os.path.islink(file_path):
+#                             os.unlink(file_path)  # Удаление файла или символической ссылки
+#                         elif os.path.isdir(file_path):
+#                             shutil.rmtree(file_path)  # Удаление директории и всего её содержимого
+#                     except Exception as e:
+#                         print(f'Failed to delete {file_path}. Reason: {e}')
 
 def split_into_words(text):
     # Убираем знаки пунктуации и разбиваем по пробелам, приводя всё к нижнему регистру
@@ -108,8 +108,11 @@ def split_into_words(text):
 
 
 def get_page_statistic(date_range):
-    delete_temp_directory()
-    creative_temp_folders()
+    """
+    Удаление старых файлов
+    """
+    # delete_temp_directory()
+    # creative_temp_folders()
     shops_cookies = get_cookies()
     for s in shops_cookies:
         shop = s['id_shop']
@@ -137,7 +140,12 @@ def get_page_statistic(date_range):
         with open(filename_tender_statistic, 'r', encoding="utf-8") as f:
             data_json = json.load(f)
         json_data = data_json
-        pages = int(json_data['pagination']['total_pages'])
+        try:
+            pages = int(json_data['pagination']['total_pages'])
+        except:
+            print(f"Помилка в магазині {shop} - {json_data['error']}")
+            print(f"Перевірте кукі магазину {shop}!!!!!!!!!!!!!!!!!!!!!!!")
+
         print(f'Всього сторінок {pages}')
         pages = pages + 1
         offset = 5
@@ -153,14 +161,15 @@ def get_page_statistic(date_range):
             }
             filename_tender_statistic = os.path.join(json_statistic, shop, f'statistic_{offset}.json')
             if not os.path.exists(filename_tender_statistic):
-                response = requests.get(
-                    f'https://www.etsy.com/api/v3/ajax/bespoke/shop/{shop}/shop-analytics-stats/listings',
-                    params=params, cookies=cookies, headers=headers)
+                response = requests.get(f'https://www.etsy.com/api/v3/ajax/bespoke/shop/{shop}/shop-analytics-stats/listings',
+                    params=params,
+                    cookies=cookies,
+                    headers=headers)
                 json_data = response.json()
                 with open(filename_tender_statistic, 'w', encoding='utf-8') as f:
                     json.dump(json_data, f, ensure_ascii=False, indent=4)  # Записываем в файл
                 sleep_time = random.randint(time_a, time_b)
-                print(f'Сторінка {p}')
+                # print(f'Сторінка {p}')
 
                 time.sleep(sleep_time)
             offset += 5
@@ -549,25 +558,27 @@ if __name__ == '__main__':
             '\nОстанні 30 днів - натисніть 3'
             '\nОстанні 7 днів - натисніть 4'
             '\nЗакрити програму - натисніть 0'
-
         )
 
         date_range = int(input())
         if date_range == 1:
             date_range = 'this_year'
-        if date_range == 2:
+            # Здесь может быть ваш код, который обрабатывает выбор пользователя.
+        elif date_range == 2:
             date_range = 'this_month'
-        if date_range == 3:
+            # Здесь может быть ваш код, который обрабатывает выбор пользователя.
+        elif date_range == 3:
             date_range = 'last_30'
-        if date_range == 4:
+            # Здесь может быть ваш код, который обрабатывает выбор пользователя.
+        elif date_range == 4:
             date_range = 'last_7'
+            # Здесь может быть ваш код, который обрабатывает выбор пользователя.
         elif date_range == 0:
             print("Програма завершена.")
             break
         else:
             print("Невірний ввід, будь ласка, введіть коректний номер дії.")
         """Получение данных"""
-        del_files()
         print('Старые файлы удалили')
         get_page_statistic(date_range)
         get_product(date_range)
