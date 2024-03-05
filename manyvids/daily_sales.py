@@ -807,8 +807,9 @@ def get_sql_data_day():
 
     for item in files_json:
         with open(item, 'r', encoding="utf-8") as f:
-            data_json = json.load(f)
-
+            raw_json_str = f.read()
+            data_json = json.loads(raw_json_str)
+            data_json = json.loads(data_json)
         try:
             dayItems = data_json['dayItems']
         except:
@@ -941,7 +942,9 @@ def get_sql_payout_history():
     id_models = get_id_models_from_sql()
     for item in files_json:
         with open(item, 'r', encoding="utf-8") as f:
-            data_json = json.load(f)
+            raw_json_str = f.read()
+            data_json = json.loads(raw_json_str)
+            data_json = json.loads(data_json)
         try:
             mvtoken = str(data_json['user_id'])
         except:
@@ -993,7 +996,9 @@ def get_sql_chat():
 
     for item in files_json:
         with open(item, 'r', encoding="utf-8") as f:
-            data_json = json.load(f)
+            raw_json_str = f.read()
+            data_json = json.loads(raw_json_str)
+            data_json = json.loads(data_json)
         try:
             json_data = data_json['conversations']
         except:
@@ -1930,8 +1935,11 @@ def job():
     log_message(f"[{currentTime}] Запуск задачи для месяца {month} и года {filterYear}.")
     # Ваши функции здесь
     # get_requests(month, filterYear)
+
     get_asio()
+
     get_sql_data_day()
+
     get_sql_payout_history()
     get_sql_chat()
     # #
