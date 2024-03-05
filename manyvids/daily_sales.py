@@ -1813,14 +1813,14 @@ def get_asio():
         proxy = await proxy_random()
         data_login_pass = await login_pass()
         for item in data_login_pass:
-            """Список логинов у которых не правильные пароли"""
-            skip_logins = [
-                'MaryRo',
-                'Real Sasha Grey',
-            ]
-
-            if item['login'] in skip_logins:
-                continue
+            #"""Список логинов у которых не правильные пароли"""
+            #skip_logins = [
+            #    'MaryRo',
+            #    'Real Sasha Grey',
+            #]
+            #
+            #if item['login'] in skip_logins:
+            #    continue
             async with aiohttp.ClientSession() as session:
 
                 browser = await playwright.chromium.launch(headless=False, proxy=proxy)
