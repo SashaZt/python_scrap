@@ -1816,7 +1816,7 @@ def job():
     get_asio()
     get_sql_data_day()
     get_sql_payout_history()
-    # get_sql_chat()
+    get_sql_chat()
     # #
     get_table_01_to_google()
     #
