@@ -796,7 +796,7 @@ def get_all_tender_records_as_dicts():
 
 def clear_to_sheet():
     client, spreadsheet_id = get_google()
-    sheet = client.open_by_key(spreadsheet_id).worksheet('Тендера')
+    sheet = client.open_by_key(spreadsheet_id).worksheet('Бюджетные')
     filename_db = os.path.join(current_directory, 'prozorro.db')
     # db_path = 'prozorro.db'
     conn = sqlite3.connect(filename_db)
@@ -833,7 +833,7 @@ def clear_to_sheet():
 
 def write_to_sheet():
     client, spreadsheet_id = get_google()
-    sheet = client.open_by_key(spreadsheet_id).worksheet('Тендера')
+    sheet = client.open_by_key(spreadsheet_id).worksheet('Бюджетные')
     filename_db = os.path.join(current_directory, 'prozorro.db')
     conn = sqlite3.connect(filename_db)
     c = conn.cursor()
