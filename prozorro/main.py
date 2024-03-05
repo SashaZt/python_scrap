@@ -42,7 +42,6 @@ def creative_temp_folders():
 
 """Получение всех тендеров"""
 
-
 # def get_all_tenders():
 #     params = {
 #         'cpv[0]': '39160000-1',
@@ -61,7 +60,6 @@ def creative_temp_folders():
 
 
 """Парсинг всех тендеров"""
-
 
 # def pars_all_tenders():
 #     filename_all_tenders = os.path.join(json_path, 'all_tenders.json')
@@ -905,11 +903,10 @@ if passw == '12345677':
         print('\nВведите 1 для загрузки нового тендера'
               '\nВведите 2 для запуска обновления всех тендеров'
               '\nВведите 3 для загрузки в Google Таблицу'
-              '\nВведите 13 очистки таблицы БД, только если знаешь пароль'
               '\nВведите 0 для закрытия программы')
-        user_input = input("Выберите действие: ")
+        user_input = int(input("Выберите действие: "))
 
-        if user_input == '1':
+        if user_input == 1:
             creative_temp_folders()
             print('Вставьте ссылку на тендер:')
             url_tender = input("")
@@ -918,19 +915,28 @@ if passw == '12345677':
             pars_tender()
             clear_to_sheet()
             write_to_sheet()
-        elif user_input == '13':
+        elif user_input == 777:
             print('Введите пароль для очистки таблицы')
             passw = getpass.getpass("")
-            if passw == 'DbrnjhbZ88':
-                clean_sql_table()
-        elif user_input == '2':
+            if passw == 'prozorro':
+                print("Вы удалите все данные в БД\nдействительно хотите этого?"
+                      "\n1 - если да"
+                      "\n0 - ЗАЧЕМ ВООБЩЕ ТУДА ПОЛЕЗЛИ")
+                clean_sql = int(input("Выберите действие: "))
+                if clean_sql == 1:
+                    clean_sql_table()
+                elif clean_sql == 0:
+                    print("Программа завершена.")
+                    break  # Выход из цикла, завершение программы
+
+        elif user_input == 2:
             update_tenders_from_json()
             clear_to_sheet()
             write_to_sheet()
-        elif user_input == '3':
+        elif user_input == 3:
             clear_to_sheet()
             write_to_sheet()
-        elif user_input == '0':
+        elif user_input == 0:
             print("Программа завершена.")
             break  # Выход из цикла, завершение программы
         else:
