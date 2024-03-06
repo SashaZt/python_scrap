@@ -3,6 +3,7 @@
 import requests
 import json
 from config import API_KEY
+
 cookies = {
     '_cf_7b': '2600665610.47873.0000',
     '__cf_bm': 'olIzZd.TYKgu36CNe55Sdo2y5aSrS1mIo1k04Kyk8C0-1709674122-1.0.1.1-_7fjVJm2uDm0lNYuC30BxmmkcZJ5ETS3Pbz5Ir2mnMo_xCqgP8jvOoAb6viy20Yy4aYydz15iIoC8UaPW9OQiw.ndeSqOxxcSnXRLnWtMyE',
@@ -34,27 +35,48 @@ headers = {
     'x-requested-with': 'XMLHttpRequest',
 }
 
-params = {
-    'page': '2',
-}
+# params = {
+#     'page': '2',
+# }
+"""Загруска с рендором JavaScript"""
+# proxies = {
+#     'http': f'http://scraperapi.render=true:{API_KEY}@proxy-server.scraperapi.com:8001',
+#     'https': f'http://scraperapi.render=true:{API_KEY}@proxy-server.scraperapi.com:8001',
+# }
 
+"""Обычные html"""
 proxies = {
-    'http': f'http://scraperapi.render=true:{API_KEY}@proxy-server.scraperapi.com:8001',
-    'https': f'http://scraperapi.render=true:{API_KEY}@proxy-server.scraperapi.com:8001',
+    'http': f'http://scraperapi:{API_KEY}@proxy-server.scraperapi.com:8001',
+    'https': f'http://scraperapi:{API_KEY}@proxy-server.scraperapi.com:8001',
 }
 
+# proxies = {
+#     'http': f'http://scraperapi.autoparse=true:{API_KEY}@proxy-server.scraperapi.com:8001',
+#     'https': f'http://scraperapi.autoparse=true:{API_KEY}@proxy-server.scraperapi.com:8001',
+# }
+# response = requests.post(
+#     'https://ee.bca-europe.com/buyer/facetedSearch/GetSaleCalendarViewModel',
+#     params=params,
+#     cookies=cookies,
+#     headers=headers,
+#     proxies=proxies,
+#     verify=False)
+# json_data = response.json()
+# with open(f'cda_02.json', 'w', encoding='utf-8') as f:
+#     json.dump(json_data, f, ensure_ascii=False, indent=4)  # Записываем в файл
 
-proxy_only_for_json = {
-    'http': f'http://scraperapi.autoparse=true:{API_KEY}@proxy-server.scraperapi.com:8001',
-    'https': f'http://scraperapi.autoparse=true:{API_KEY}@proxy-server.scraperapi.com:8001',
-}
-response = requests.post(
-    'https://ee.bca-europe.com/buyer/facetedSearch/GetSaleCalendarViewModel',
-    params=params,
-    cookies=cookies,
-    headers=headers,
-    proxies=proxy_only_for_json,
-    verify=False)
-json_data = response.json()
-with open(f'cda_02.json', 'w', encoding='utf-8') as f:
-    json.dump(json_data, f, ensure_ascii=False, indent=4)  # Записываем в файл
+# response = requests.get('https://www.vaurioajoneuvo.fi/', cookies=cookies, headers=headers,
+#                         proxies=proxies)
+#
+# src = response.text
+filename = f"manyvids.html"
+# with open(filename, "w", encoding='utf-8') as file:
+#     file.write(src)
+
+
+import requests
+
+r = requests.post(url = 'https://async.scraperapi.com/jobs', json={ 'apiKey': 'a818a4bc04f177c7ae82bb950ccf95ac', 'urls': ["https://www.vaurioajoneuvo.fi/"]  })
+src = r.text
+with open(filename, "w", encoding='utf-8') as file:
+    file.write(src)
