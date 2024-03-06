@@ -136,17 +136,17 @@ def pars():
     files_html = glob.glob(folder)
     # Задаем имя выходного файла
     # Задаем имя выходного файла
+    # Задаем имя выходного файла
     output_filename = 'company_info.csv'
 
     # Проверяем, существует ли файл, и определяем, нужно ли записывать заголовки
     file_exists = os.path.isfile(output_filename)
-    # Открываем файл на запись
-    with open(output_filename, mode='a', newline='', encoding='utf-8') as csvfile:
+
+    with open(output_filename, mode='w', newline='', encoding='utf-8') as csvfile:
         writer = csv.writer(csvfile)
 
         # Если файл не существует, мы пишем заголовки
-        if not file_exists:
-            writer.writerow(
+        writer.writerow(
                 ["Company Name", "Incorporation #", "Licence #", "Licence Type", "Status", "Expiry Date", "Closed Date",
                  "Person responsible for the company", "Contact Information"])
 
@@ -156,18 +156,21 @@ def pars():
 
             soup = BeautifulSoup(src, 'lxml')
 
+            # Функция для извлечения текста или возврата None, если элемент не найден
+            def get_text_or_none(search_query):
+                found = soup.find(string=search_query)
+                return found.find_next().get_text(strip=True) if found and found.find_next() else None
+
             company_info = {
-                "Company Name": soup.strong.text.strip(),
-                "Incorporation #": soup.find(string="Incorporation #:").find_next().get_text(strip=True),
-                "Licence #": soup.find(string="Licence #:").find_next().get_text(strip=True),
-                "Licence Type": soup.find(string="Licence Type:").find_next().get_text(strip=True),
-                "Status": soup.find(string="Status:").find_next().contents[2].strip() + " " + soup.find(
-                    string="Status:").find_next().span.get_text(strip=True),
-                "Expiry Date": soup.find(string="Expiry Date:").find_next().get_text(strip=True),
-                "Closed Date": soup.find(string="Closed Date:").find_next().get_text(strip=True),
-                "Person responsible for the company": soup.find(
-                    string="Person responsible for the company:").find_next().get_text(strip=True),
-                "Contact Information": " ".join(soup.find(string="Contact Information:").find_next().stripped_strings)
+                "Company Name": soup.strong.text.strip() if soup.strong else None,
+                "Incorporation #": get_text_or_none("Incorporation #:"),
+                "Licence #": get_text_or_none("Licence #:"),
+                "Licence Type": get_text_or_none("Licence Type:"),
+                "Status": get_text_or_none("Status:"),
+                "Expiry Date": get_text_or_none("Expiry Date:"),
+                "Closed Date": get_text_or_none("Closed Date:"),
+                "Person responsible for the company": get_text_or_none("Person responsible for the company:"),
+                "Contact Information": get_text_or_none("Contact Information:")
             }
 
             # Записываем данные компании
