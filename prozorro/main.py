@@ -565,7 +565,45 @@ def update_tenders_from_json():
                 # edrpo_customer = None
                 time_pending = None
                 date_pending = None
+                # if json_data.get('awards'):
+                #     first_award = json_data['awards'][0]
+                #     # Прямо здесь извлекаем дату и статус
+                #     dara_pending = first_award.get('date')
+                #     award_status = first_award.get('status')
+                #
+                #     # Обрабатываем 'suppliers', если он существует и не пуст
+                #     if first_award.get('suppliers'):
+                #         first_supplier = first_award['suppliers'][0]
+                #         award_name_customer = first_supplier.get('name')
+                #         identifier = first_supplier.get('identifier')
+                #         if identifier:
+                #             edrpo_customer = identifier.get('id')
+                #             # Проверяем, соответствует ли edrpo_customer значению в dict_comany_edrpo
+                #             if edrpo_customer in dict_comany_edrpo.values():
+                #                 if award_status == 'pending':
+                #                     award_status_resolved = None
+                #                 elif award_status == 'active':
+                #                     award_status_resolved = 'Победа'
+                #                 elif award_status == 'unsuccessful':
+                #                     award_status_resolved = None
+                #
+                #                 # Если статус 'Победа', обрабатываем 'value'
+                #                 if award_status_resolved == 'Победа' and first_award.get('value'):
+                #                     award_value_customer = first_award['value'].get('amount')
+                #             else:
+                #                 # Если edrpo_customer не находится в dict_comany_edrpo, обнуляем статус
+                #                 award_status_resolved = None
+                #
+                #     # Обработка даты и времени только если дата существует
+                #     if dara_pending:
+                #         datetime_obj_pending = datetime.fromisoformat(dara_pending)
+                #         date_pending = datetime_obj_pending.strftime("%d.%m.%Y")
+                #         time_pending = datetime_obj_pending.strftime("%H:%M")
+                # else:
+                #     # Если 'awards' отсутствует, все переменные остаются None
+                #     date_pending = time_pending = None
 
+                """Рабочий код"""
                 # Проверяем наличие и не пустоту списка 'awards'
                 if json_data.get('awards'):
                     first_award = json_data.get('awards')[0]  # Берем первый элемент из списка 'awards'
@@ -598,6 +636,10 @@ def update_tenders_from_json():
                     award_value = first_award.get('value')  # Получаем словарь 'value'
                     if award_value:  # Проверяем, что словарь 'value' существует
                         award_value_customer = award_value.get('amount', None)  # Получаем стоимость
+                if award_status == 'Победа':
+                    award_value_customer = award_value.get('amount', None)  # Получаем стоимость
+                else:
+                    award_value_customer = None
 
                 """Період уточнень"""
                 if status_tender == 'active.enquiries':
@@ -796,7 +838,6 @@ def clear_to_sheet():
     client, spreadsheet_id = get_google()
     sheet = client.open_by_key(spreadsheet_id).worksheet('Бюджетные')
     filename_db = os.path.join(current_directory, 'prozorro.db')
-    # db_path = 'prozorro.db'
     conn = sqlite3.connect(filename_db)
     c = conn.cursor()
 
@@ -816,10 +857,8 @@ def clear_to_sheet():
     values = []
     """Очищаем поля"""
     for row in range(32):
-        # for row in rows_clear:
         new_row = [None, None, '', '', '', '', None, None, '', None, None, None, None, None, None, '', '', '', '', '',
-                   ''    '', '', '', None, None, None, '', None, None, None, None]
-        # Здесь нужна логика преобразования row в соответствии с вашими правилами
+                   '', '', '', None, None, None, None, '', None, None, None, None]
         values.append(new_row)
     sheet.update(values, 'A3', value_input_option='USER_ENTERED')
     print('Даннные очистили')
@@ -895,51 +934,49 @@ def clean_sql_table():
     conn.close()
 
 
-print('Введите пароль')
-passw = getpass.getpass("")
-if passw == '12345677':
-    while True:
-        # Запрос ввода от пользователя
-        print('\nВведите 1 для загрузки нового тендера'
-              '\nВведите 2 для запуска обновления всех тендеров'
-              '\nВведите 3 для загрузки в Google Таблицу'
-              '\nВведите 0 для закрытия программы')
-        user_input = int(input("Выберите действие: "))
+# print('Введите пароль')
+# passw = getpass.getpass("")
+# if passw == '12345677':
+while True:
+    # Запрос ввода от пользователя
+    print('Введите 1 для загрузки нового тендера'
+          '\nВведите 2 для запуска обновления всех тендеров'
+          '\nВведите 3 для загрузки в Google Таблицу'
+          '\nВведите 0 для закрытия программы')
+    user_input = int(input("Выберите действие: "))
 
-        if user_input == 1:
-            creative_temp_folders()
-            print('Вставьте ссылку на тендер:')
-            url_tender = input("")
-            get_tender(url_tender)
-            get_json_tender()
-            pars_tender()
-            clear_to_sheet()
-            write_to_sheet()
-        elif user_input == 777:
-            print('Введите пароль для очистки таблицы')
-            passw = getpass.getpass("")
-            if passw == 'prozorro':
-                print("Вы удалите все данные в БД\nдействительно хотите этого?"
-                      "\n1 - если да"
-                      "\n0 - ЗАЧЕМ ВООБЩЕ ТУДА ПОЛЕЗЛИ")
-                clean_sql = int(input("Выберите действие: "))
-                if clean_sql == 1:
-                    clean_sql_table()
-                elif clean_sql == 0:
-                    print("Программа завершена.")
-                    break  # Выход из цикла, завершение программы
+    if user_input == 1:
+        creative_temp_folders()
+        print('Вставьте ссылку на тендер:')
+        url_tender = input("")
+        get_tender(url_tender)
+        get_json_tender()
+        pars_tender()
+        clear_to_sheet()
+        write_to_sheet()
+    elif user_input == 777:
+        print('Введите пароль для очистки таблицы')
+        passw = getpass.getpass("")
+        if passw == 'prozorro':
+            print("Вы удалите все данные в БД\nдействительно хотите этого?"
+                  "\n1 - если да"
+                  "\n0 - ЗАЧЕМ ВООБЩЕ ТУДА ПОЛЕЗЛИ")
+            clean_sql = int(input("Выберите действие: "))
+            if clean_sql == 1:
+                clean_sql_table()
+            elif clean_sql == 0:
+                print("Программа завершена.")
+                break  # Выход из цикла, завершение программы
 
-        elif user_input == 2:
-            update_tenders_from_json()
-            clear_to_sheet()
-            write_to_sheet()
-        elif user_input == 3:
-            clear_to_sheet()
-            write_to_sheet()
-        elif user_input == 0:
-            print("Программа завершена.")
-            break  # Выход из цикла, завершение программы
-        else:
-            print("Неверный ввод, пожалуйста, введите корректный номер действия.")
-else:
-    print('Пароль не правильный')
+    elif user_input == 2:
+        update_tenders_from_json()
+        clear_to_sheet()
+        write_to_sheet()
+    elif user_input == 3:
+        clear_to_sheet()
+        write_to_sheet()
+    elif user_input == 0:
+        print("Программа завершена.")
+        break  # Выход из цикла, завершение программы
+    else:
+        print("Неверный ввод, пожалуйста, введите корректный номер действия.")
