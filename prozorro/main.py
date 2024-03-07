@@ -146,26 +146,37 @@ def extract_auction_period_dates(json_data):
 
 """Кінцевий строк подання тендерних пропозицій"""
 
-
-def extract_auction_start_dates(json_data):
+def extract_tenderPeriod(json_data):
     lots = json_data.get('lots', [{}])
+    # Ваш изначальный код для получения значения
+    tenderPeriod_endDate = json_data.get('tenderPeriod', {}).get('endDate')
+
+    # Инициализируем возвращаемые переменные
+    date_tenderPeriod = None
+    time_tenderPeriod = None
+
     try:
-        # Пытаемся получить auctionPeriod из первого элемента списка lots
-        auctionPeriod_start = lots[0].get('auctionPeriod', {}).get('shouldStartAfter')
-        if not auctionPeriod_start:  # Если значение отсутствует, принудительно переходим к блоку except
-            raise KeyError("shouldStartAfter is missing")
-    except (KeyError, IndexError):  # Обрабатываем отсутствие ключа или доступа к элементу списка
-        auctionPeriod_start = json_data.get('tenderPeriod', {}).get('endDate')
+        # Проверяем, существует ли дата закрытия тендера
+        if tenderPeriod_endDate:
+            # Преобразуем строку в объект datetime
+            datetime_obj = datetime.fromisoformat(tenderPeriod_endDate)
 
-    if auctionPeriod_start:
-        datetime_obj = datetime.fromisoformat(auctionPeriod_start)
+            # Проверяем, равно ли время "00:00"
+            if datetime_obj.hour == 0 and datetime_obj.minute == 0:
+                # Вычитаем один день и устанавливаем время на "23:59"
+                date_tenderPeriod = (datetime_obj - timedelta(days=1)).strftime("%d.%m.%Y")
+                time_tenderPeriod = "23:59"
 
-        date_auctionPeriod_auctionPeriod = (datetime_obj - timedelta(days=1)).strftime("%d.%m.%Y")
-        time_auctionPeriod_auctionPeriod = (datetime_obj - timedelta(minutes=1)).strftime("%H:%M")
-    else:
-        date_auctionPeriod_auctionPeriod = time_auctionPeriod_auctionPeriod = None
+            else:
+                # Если время не "00:00", используем исходные дату и время
+                date_tenderPeriod = datetime_obj.strftime("%d.%m.%Y")
+                time_tenderPeriod = datetime_obj.strftime("%H:%M")
 
-    return date_auctionPeriod_auctionPeriod, time_auctionPeriod_auctionPeriod
+    except Exception as e:
+        # Выводим ошибку, если преобразование даты не удалось
+        print(f"Ошибка при обработке даты: {e}")
+    # Возвращаем обработанные дату и время
+    return date_tenderPeriod, time_tenderPeriod
 
 
 """Звернення за роз’ясненням"""
@@ -269,7 +280,7 @@ def pars_tender():
         """Аукцион дата и время"""
         date_auctionPeriod, time_auctionPeriod = extract_auction_period_dates(json_data)
         """Кінцевий строк подання тендерних пропозицій"""
-        date_auctionPeriod_auctionPeriod, time_auctionPeriod_auctionPeriod = extract_auction_start_dates(json_data)
+        date_tenderPeriod, time_tenderPeriod = extract_tenderPeriod(json_data)
         """Звернення за роз’ясненням"""
         date_enquiryPeriod_endDate, time_enquiryPeriod_endDate = enquiryPeriod_endDate(json_data)
         """Розмір надання забезпечення пропозицій учасників"""
@@ -404,8 +415,8 @@ def pars_tender():
             'bids_amount': bids_amount,
             'date_enquiryPeriod': date_enquiryPeriod_endDate,
             'time_enquiryPeriod': time_enquiryPeriod_endDate,
-            'date_auctionPeriod_auctionPeriod': date_auctionPeriod_auctionPeriod,
-            'time_auctionPeriod_auctionPeriod': time_auctionPeriod_auctionPeriod,
+            'date_auctionPeriod_auctionPeriod': date_tenderPeriod,
+            'time_auctionPeriod_auctionPeriod': time_tenderPeriod,
             'award_name_customer': award_name_customer,
             'award_value_customer': award_value_customer,
             'date_pending': date_pending,
@@ -433,7 +444,7 @@ def pars_tender():
                         bank_garantiy,tender_verification
                      ) VALUES (
                         :tender_id, :url_tender, :customer, :status_tender, :complaint, :budget, :date_auction, :time_auction, :bids_amount, :date_enquiryPeriod,
-                        :time_enquiryPeriod, :date_auctionPeriod_auctionPeriod, :time_auctionPeriod_auctionPeriod,
+                        :time_enquiryPeriod, :date_tenderPeriod, :time_tenderPeriod,
                         :award_name_customer, :award_value_customer, :date_pending, :time_pending, :award_status, :guarantee_amount,
                         :bank_garantiy, :tender_verification
                      )'''
@@ -551,8 +562,7 @@ def update_tenders_from_json():
                 """Аукцион дата и время"""
                 date_auctionPeriod, time_auctionPeriod = extract_auction_period_dates(json_data)
                 """Кінцевий строк подання тендерних пропозицій"""
-                date_auctionPeriod_auctionPeriod, time_auctionPeriod_auctionPeriod = extract_auction_start_dates(
-                    json_data)
+                date_tenderPeriod, time_tenderPeriod = extract_tenderPeriod(json_data)
                 """Звернення за роз’ясненням"""
                 date_enquiryPeriod_endDate, time_enquiryPeriod_endDate = enquiryPeriod_endDate(json_data)
                 """Розмір надання забезпечення пропозицій учасників"""
@@ -728,8 +738,8 @@ def update_tenders_from_json():
                     'bids_amount': bids_amount,
                     'date_enquiryPeriod': date_enquiryPeriod_endDate,
                     'time_enquiryPeriod': time_enquiryPeriod_endDate,
-                    'date_auctionPeriod_auctionPeriod': date_auctionPeriod_auctionPeriod,
-                    'time_auctionPeriod_auctionPeriod': time_auctionPeriod_auctionPeriod,
+                    'date_auctionPeriod_auctionPeriod': date_tenderPeriod,
+                    'time_auctionPeriod_auctionPeriod': time_tenderPeriod,
                     'award_name_customer': award_name_customer,
                     'award_value_customer': award_value_customer,
                     'date_pending': date_pending,
@@ -783,7 +793,7 @@ def update_tenders_from_json():
                             ) VALUES (
                                 :tender_id, :url_tender, :customer, :status_tender, :complaint, :budget, 
                                 :date_auction, :time_auction, :bids_amount, :date_enquiryPeriod, :time_enquiryPeriod, 
-                                :date_auctionPeriod_auctionPeriod, :time_auctionPeriod_auctionPeriod, :award_name_customer, 
+                                :date_tenderPeriod, :time_tenderPeriod, :award_name_customer, 
                                 :award_value_customer, :date_pending, :time_pending, :award_status, :guarantee_amount, 
                                 :bank_garantiy, :tender_verification
                             )
