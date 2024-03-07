@@ -30,7 +30,7 @@ def get_google():
     return client, spreadsheet_id
 
 
-"""Создание временых папок"""
+#Создание временых папок"""
 
 
 def creative_temp_folders():
@@ -40,7 +40,7 @@ def creative_temp_folders():
             os.makedirs(folder)
 
 
-"""Получение всех тендеров"""
+#Получение всех тендеров"""
 
 # def get_all_tenders():
 #     params = {
@@ -59,7 +59,7 @@ def creative_temp_folders():
 #         json.dump(json_data, f, ensure_ascii=False, indent=4)  # Записываем в файл
 
 
-"""Парсинг всех тендеров"""
+#Парсинг всех тендеров"""
 
 # def pars_all_tenders():
 #     filename_all_tenders = os.path.join(json_path, 'all_tenders.json')
@@ -67,7 +67,7 @@ def creative_temp_folders():
 #         data_json = json.load(f)
 #
 
-"""Получение одного тендера"""
+#Получение одного тендера"""
 
 
 def get_tender(url_tender):
@@ -79,7 +79,7 @@ def get_tender(url_tender):
         file.write(src)
 
 
-"""Парсинг одного тендера и извлечение json файла"""
+#Парсинг одного тендера и извлечение json файла"""
 
 
 def get_json_tender():
