@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+import re
 import csv
 import requests
 import os
@@ -129,7 +129,44 @@ def get_all_html():
 
                 with open(filename, "w", encoding='utf-8') as file:
                     file.write(src)
+def parse_contact_info(contact_info):
+    if not contact_info:
+        return None, None, None, None
 
+    # Удаление указанных фраз
+    phrases_to_remove = ["Public Contact Number", "Public Fax Number", "Public Alternate Phone Number"]
+    for phrase in phrases_to_remove:
+        contact_info = contact_info.replace(phrase, '')
+
+    # Ищем электронную почту
+    email_match = re.search(r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}', contact_info)
+    email = email_match.group(0) if email_match else None
+
+    # Извлекаем и удаляем электронную почту из строки
+    if email:
+        contact_info = contact_info.replace(email, '')
+    # Ищем веб-сайт
+    website_match = re.search(r'(?:http[s]?://)?[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}', contact_info)
+    website = website_match.group(0) if website_match else None
+
+    # Извлекаем и удаляем веб-сайт из строки
+    if website:
+        contact_info = contact_info.replace(website, '')
+
+
+
+    # Ищем телефоны
+    # Ищем телефоны в формате (123) 456-7890 или 123-456-7890
+    phones = re.findall(r'\(\d{3}\)\s?\d{3}[- ]?\d{4}|\d{3}-\d{3}-\d{4}|\d{3} \d{3}-\d{4}', contact_info)
+
+    # Удаляем телефоны из строки, чтобы оставить только адрес
+    for phone in phones:
+        contact_info = contact_info.replace(phone, '')
+
+    address = contact_info.strip()
+
+    # Возвращаем адрес, строку с телефонами, веб-сайт и электронную почту
+    return address, ', '.join(phones), website, email
 def pars():
     folder = os.path.join(temp_path, '*.html')
 
@@ -161,6 +198,9 @@ def pars():
                 found = soup.find(string=search_query)
                 return found.find_next().get_text(strip=True) if found and found.find_next() else None
 
+            contact_info_raw = get_text_or_none("Contact Information:")
+            address, phones, website, email = parse_contact_info(contact_info_raw)
+
             company_info = {
                 "Company Name": soup.strong.text.strip() if soup.strong else None,
                 "Incorporation #": get_text_or_none("Incorporation #:"),
@@ -170,7 +210,10 @@ def pars():
                 "Expiry Date": get_text_or_none("Expiry Date:"),
                 "Closed Date": get_text_or_none("Closed Date:"),
                 "Person responsible for the company": get_text_or_none("Person responsible for the company:"),
-                "Contact Information": get_text_or_none("Contact Information:")
+                "Address": address,
+                "Phone Numbers": phones,
+                "Website": website,
+                "Email": email
             }
 
             # Записываем данные компании
