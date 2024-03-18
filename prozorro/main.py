@@ -444,7 +444,7 @@ def pars_tender():
                         bank_garantiy,tender_verification
                      ) VALUES (
                         :tender_id, :url_tender, :customer, :status_tender, :complaint, :budget, :date_auction, :time_auction, :bids_amount, :date_enquiryPeriod,
-                        :time_enquiryPeriod, :date_tenderPeriod, :time_tenderPeriod,
+                        :time_enquiryPeriod, :date_auctionPeriod_auctionPeriod, :time_auctionPeriod_auctionPeriod,
                         :award_name_customer, :award_value_customer, :date_pending, :time_pending, :award_status, :guarantee_amount,
                         :bank_garantiy, :tender_verification
                      )'''
@@ -942,11 +942,15 @@ def clean_sql_table():
 
     # Закрываем соединение с базой данных
     conn.close()
-
-
-# print('Введите пароль')
-# passw = getpass.getpass("")
-# if passw == '12345677':
+# if __name__ == "__main__":
+#     # print('Вставьте ссылку на тендер:')
+#     # url_tender = input("")
+#     # get_tender(url_tender)
+#     # get_json_tender()
+#     pars_tender()
+# # print('Введите пароль')
+# # passw = getpass.getpass("")
+# # if passw == '12345677':
 while True:
     # Запрос ввода от пользователя
     print('Введите 1 для загрузки нового тендера'
